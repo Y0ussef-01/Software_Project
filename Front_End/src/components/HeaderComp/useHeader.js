@@ -2,7 +2,6 @@ import { useState } from "react";
 
 export const useHeader = () => {
   const [anchorEl, setAnchorEl] = useState(null);
-  // الحالة الافتراضية للغة هي En
   const [language, setLanguage] = useState("En");
 
   const open = Boolean(anchorEl);
@@ -15,7 +14,6 @@ export const useHeader = () => {
     setAnchorEl(null);
   };
 
-  // دالة لاختيار اللغة وتحديث النص وإغلاق القائمة
   const handleSelectLanguage = (lang) => {
     setLanguage(lang);
     handleClose();
