@@ -32,7 +32,7 @@ const Header = () => {
     <Box sx={{ bgcolor: NAV_BG }}>
       <CssBaseline />
       <AppBar
-        position="static" // 💡 خليناها static بدل sticky عشان متعملش مشاكل في الـ 100vh
+        position="static"
         elevation={0}
         sx={{
           bgcolor: NAV_BG,
@@ -49,7 +49,6 @@ const Header = () => {
             justifyContent: "space-between",
           }}
         >
-          {/* Logo Box */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Link to="/">
               <Box
@@ -66,7 +65,6 @@ const Header = () => {
             </Link>
           </Box>
 
-          {/* Actions Box (Language & Help) */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               id="lang-button"

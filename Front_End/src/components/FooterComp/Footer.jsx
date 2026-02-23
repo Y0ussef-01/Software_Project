@@ -6,8 +6,8 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
-        backgroundColor: "#152b48", // نفس لون الخلفية الأساسية بالظبط
-        borderRadius: 0, // لغينا أي كيرفات من هنا لأن الأبيض هو اللي مقصوص
+        backgroundColor: "#152b48",
+        borderRadius: 0,
         py: 3,
         mt: "auto",
       }}

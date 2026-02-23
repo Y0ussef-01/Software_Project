@@ -23,7 +23,7 @@ export default function LoginPage() {
           backgroundColor: "#f4f6f8",
           flexGrow: 1,
           display: "flex",
-          alignItems: "center", // خليناها center عشان تتوسطن في المساحة المتاحة بشكل مريح
+          alignItems: "center",
           pt: { xs: 4, md: 6 },
           pb: { xs: 8, md: 10 },
           borderTopLeftRadius: { xs: "50px", md: "120px" },
@@ -31,9 +31,7 @@ export default function LoginPage() {
           overflowY: "auto",
         }}
       >
-        {/* غيرنا الـ maxWidth لـ xl عشان ياخد مساحة عرض أكبر ومريحة */}
         <Container maxWidth="xl">
-          {/* ضفنا minHeight للجريد عشان يطول ويدي مساحة للصورة والفورم */}
           <Grid
             container
             spacing={4}

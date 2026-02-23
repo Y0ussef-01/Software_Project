@@ -7,7 +7,6 @@ export default function Advertisments() {
     <Paper
       elevation={3}
       sx={{
-        // شيلنا الـ mt: 40px عشان الإعلان يبدأ من نفس مستوى الفورم بالظبط
         height: "100%",
         borderRadius: "16px",
         p: 3,
@@ -22,7 +21,7 @@ export default function Advertisments() {
         sx={{
           width: "100%",
           height: "100%",
-          minHeight: "450px", // كبرنا الـ minHeight عشان الصورة تفرد بشكل أحسن
+          minHeight: "450px",
           objectFit: "cover",
           borderRadius: "12px",
         }}

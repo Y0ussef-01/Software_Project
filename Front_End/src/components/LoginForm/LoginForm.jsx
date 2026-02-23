@@ -29,25 +29,23 @@ export default function LoginForm() {
     <Paper
       elevation={3}
       sx={{
-        // شيلنا الـ mt: 40px عشان يتساوى مع الإعلان
-        p: { xs: 4, md: 6 }, // كبرنا البادينج الداخلي عشان يدي براح
-        borderRadius: "16px", // كبرنا الـ radius شوية
+        p: { xs: 4, md: 6 },
+        borderRadius: "16px",
         height: "100%",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
       }}
     >
-      {/* Header Section */}
       <Box sx={{ textAlign: "center", mb: 6 }}>
         <Typography
-          variant="subtitle1" // كبرنا الخط شوية
+          variant="subtitle1"
           sx={{ fontWeight: "bold", color: "text.secondary", mb: 1.5 }}
         >
           🇪🇬 Cairo - Egypt
         </Typography>
         <Typography
-          variant="h4" // كبرنا العنوان الأساسي من h5 لـ h4
+          variant="h4"
           sx={{ fontWeight: "bold", color: "#063f6d", mb: 1 }}
         >
           Welcome to Cairo university
@@ -57,11 +55,7 @@ export default function LoginForm() {
         </Typography>
       </Box>
 
-      {/* Inputs Section */}
       <Stack spacing={4}>
-        {" "}
-        {/* كبرنا المسافة بين الـ inputs لـ 4 بدل 3 */}
-        {/* User ID Field */}
         <Box>
           <Typography
             variant="subtitle1"
@@ -79,10 +73,9 @@ export default function LoginForm() {
                 <PersonOutlineIcon />
               </InputAdornment>
             }
-            sx={{ borderRadius: "12px", height: "55px" }} // زودنا طول الـ input لـ 55px
+            sx={{ borderRadius: "12px", height: "55px" }}
           />
         </Box>
-        {/* Password Field */}
         <Box>
           <Typography
             variant="subtitle1"
@@ -108,26 +101,25 @@ export default function LoginForm() {
                 </IconButton>
               </InputAdornment>
             }
-            sx={{ borderRadius: "12px", height: "55px" }} // زودنا طول الـ input لـ 55px
+            sx={{ borderRadius: "12px", height: "55px" }}
           />
         </Box>
       </Stack>
 
-      {/* Actions Section */}
       <Box sx={{ mt: 5 }}>
         <Button
           fullWidth
           variant="contained"
           disabled={isSubmitDisabled}
           sx={{
-            py: 2, // كبرنا حجم الزرار
+            py: 2,
             borderRadius: "12px",
             backgroundColor: isSubmitDisabled
               ? "action.disabledBackground"
               : "#152b48",
             color: isSubmitDisabled ? "text.disabled" : "#fff",
             fontWeight: "bold",
-            fontSize: "1.1rem", // كبرنا خط الزرار
+            fontSize: "1.1rem",
             textTransform: "none",
             "&:hover": {
               backgroundColor: "#0f1f35",
