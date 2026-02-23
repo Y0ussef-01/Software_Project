@@ -1,9 +1,14 @@
 import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router";
+import LoginPage from "./pages/LoginPage/LoginPage";
 function App() {
   return (
-    <>
-      <h1>eliwa</h1>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
