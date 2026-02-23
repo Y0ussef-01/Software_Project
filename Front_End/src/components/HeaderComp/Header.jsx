@@ -59,6 +59,7 @@ const Header = () => {
                   height: 50,
                   width: "auto",
                   objectFit: "contain",
+                  mt: "10px",
                   ml: "15px",
                 }}
               />
