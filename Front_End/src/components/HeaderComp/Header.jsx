@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -14,8 +15,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import logo from "../../assets/images/logo.png";
 import { useHeader } from "./useHeader";
 
-const NAV_BG = "#04365f";
-const CONTENT_BG = "#f4f6f8";
+const NAV_BG = "#152b48";
 
 const Header = () => {
   const {
@@ -29,22 +29,13 @@ const Header = () => {
   } = useHeader();
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        bgcolor: NAV_BG,
-      }}
-    >
+    <Box sx={{ bgcolor: NAV_BG }}>
       <CssBaseline />
-
       <AppBar
-        position="sticky"
+        position="static" // 💡 خليناها static بدل sticky عشان متعملش مشاكل في الـ 100vh
         elevation={0}
         sx={{
           bgcolor: NAV_BG,
-          top: 0,
           margin: 0,
           border: "none",
         }}
@@ -58,20 +49,24 @@ const Header = () => {
             justifyContent: "space-between",
           }}
         >
+          {/* Logo Box */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Box
-              component="img"
-              src={logo}
-              alt="جامعه القاهره"
-              sx={{
-                height: 50,
-                width: "auto",
-                objectFit: "contain",
-                ml: "10px",
-              }}
-            />
+            <Link to="/">
+              <Box
+                component="img"
+                src={logo}
+                alt="جامعه القاهره"
+                sx={{
+                  height: 50,
+                  width: "auto",
+                  objectFit: "contain",
+                  ml: "15px",
+                }}
+              />
+            </Link>
           </Box>
 
+          {/* Actions Box (Language & Help) */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               id="lang-button"
@@ -115,30 +110,14 @@ const Header = () => {
                 العربية
               </MenuItem>
             </Menu>
-
-            <IconButton
-              sx={{
-                color: "white",
-                ...interactiveStyles,
-              }}
-            >
-              <HelpOutlineIcon />
-            </IconButton>
+            <Link to="/help">
+              <IconButton sx={{ color: "white", ...interactiveStyles }}>
+                <HelpOutlineIcon />
+              </IconButton>
+            </Link>
           </Box>
         </Toolbar>
       </AppBar>
-
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: CONTENT_BG,
-          borderTopLeftRadius: { xs: "50px", md: "100px" },
-          marginTop: 0,
-          width: "100%",
-          p: { xs: 3, md: 6 },
-        }}
-      ></Box>
     </Box>
   );
 };
