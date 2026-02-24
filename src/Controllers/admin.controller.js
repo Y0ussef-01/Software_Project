@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const Teacher = require('../models/Teacher');
+const Admin = require('../models/Admin');
 const bcrypt = require('bcrypt');
 
 const addStudent = async (req, res) => {

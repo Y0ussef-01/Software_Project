@@ -19,7 +19,7 @@ const seedDatabase = async () => {
 
         const teachersData = [
             {
-                _id: '101',
+                _id: 'T-1',
                 name: 'Hassan Ayad',
                 email: 'Hassan@cu.edu.eg',
                 password: hashedPassword,
@@ -27,7 +27,7 @@ const seedDatabase = async () => {
                 profileImg: 'default-teacher.jpg'
             },
             {
-                _id: '102',
+                _id: 'T-2',
                 name: 'Hattem Moharram',
                 email: 'Hatem@cu.edu.eg',
                 password: hashedPassword,
@@ -35,7 +35,7 @@ const seedDatabase = async () => {
                 profileImg: 'default-teacher.jpg'
             },
             {
-                _id: '103',
+                _id: 'T-3',
                 name: 'Reem Ahmed',
                 email: 'Reem@cu.edu.eg',
                 password: hashedPassword,
@@ -43,7 +43,7 @@ const seedDatabase = async () => {
                 profileImg: 'default-teacher.jpg'
             },
             {
-                _id: '104',
+                _id: 'T-4',
                 name: 'Nasser Sweilam',
                 email: 'Nasser@cu.edu.eg',
                 password: hashedPassword,

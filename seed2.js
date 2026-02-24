@@ -12,14 +12,15 @@ const seedDatabase = async () => {
 
         await Admin.deleteMany();
 
-        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const hashedPassword = await bcrypt.hash('123456', 10);
 
         const adminData = [
             {
-                _id: 'admin01',
-                name: 'Youssef Admin',
-                email: 'admin@sci.cu.edu.eg',
-                password: hashedPassword
+                _id: 'A-1',
+                name: 'Walid Abdullah',
+                email: 'Walid@sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: "admin1.jpg"
             }
         ];
 
