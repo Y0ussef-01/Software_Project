@@ -3,13 +3,19 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
 import LoginPage from "./pages/LoginPage/LoginPage";
 import HelpPage from "./pages/HelpPage/helpPage";
+import ProfilePage from "./pages/ProfilePage/ProfilePage";
+import HomePage from "./pages/Home/HomePage";
+import Error404 from "./pages/Error404/Error404";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route index path="/" element={<LoginPage />} />
         <Route path="/help" element={<HelpPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Error404 />} />
       </Routes>
     </BrowserRouter>
   );
