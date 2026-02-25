@@ -29,7 +29,7 @@ export default function LoginForm() {
     <Paper
       elevation={3}
       sx={{
-        p: { xs: 3, sm: 4, md: 5 }, // مسافات داخلية متناسقة
+        p: { xs: 3, sm: 4, md: 5 },
         borderRadius: "16px",
         height: { xs: "auto", xl: "100%" },
         display: "flex",
@@ -55,7 +55,7 @@ export default function LoginForm() {
             fontWeight: "bold",
             color: "#063f6d",
             mb: 1,
-            fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.125rem" }, // خط متجاوب
+            fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.125rem" },
           }}
         >
           Welcome to Cairo university
@@ -94,7 +94,7 @@ export default function LoginForm() {
             }
             sx={{
               borderRadius: "12px",
-              height: { xs: "48px", md: "55px" }, // تصغير ارتفاع الإنپوت في الموبايل
+              height: { xs: "48px", md: "55px" },
             }}
           />
         </Box>

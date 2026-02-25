@@ -39,11 +39,9 @@ export default function LoginPage() {
             justifyContent="center"
             sx={{
               minHeight: "65vh",
-              // ✨ السر الأول هنا: منع الـ Wrap في شاشات xl فقط عشان ما ينزلوش تحت بعض أبداً
               flexWrap: { xs: "wrap", xl: "nowrap" },
             }}
           >
-            {/* مقاسات الفورم زي ما هي، ضفنا بس display flex في الـ xl عشان تطول صح */}
             <Grid
               item
               xs={12}
@@ -56,15 +54,13 @@ export default function LoginPage() {
               <LoginForm />
             </Grid>
 
-            {/* الصورة هتاخد باقي المساحة (8 أعمدة) وهتتمدد براحتها */}
             <Grid
               item
               xs={12}
               xl={8}
               sx={{
-                // ✨ السر التاني: استخدمنا flex بدل block في الـ xl عشان البوكس ياخد المساحة الكافية ويفرد
                 display: { xs: "none", xl: "flex" },
-                flexGrow: 1, // بيجبر البوكس إنه ياخد أي مساحة فاضية جنبه
+                flexGrow: 1,
                 maxWidth: { xl: "100%" },
               }}
             >

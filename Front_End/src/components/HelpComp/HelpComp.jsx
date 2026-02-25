@@ -16,17 +16,15 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useHelp } from "./useHelp";
 
-// ✨ الدالة دي بتاخد أي لينك يوتيوب عادي وتطلعلك لينك الـ Embed المظبوط
 const getYouTubeEmbedUrl = (url) => {
   if (!url) return "";
-  // كود بيستخرج الـ ID بتاع الفيديو من أي صيغة للينك يوتيوب
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
 
   if (match && match[2].length === 11) {
     return `https://www.youtube.com/embed/${match[2]}`;
   }
-  return url; // لو اللينك مش يوتيوب، هيرجعه زي ما هو
+  return url;
 };
 
 const HelpComp = () => {
@@ -118,7 +116,6 @@ const HelpComp = () => {
         </Paper>
       </Box>
 
-      {/* الـ Popup (Modal) */}
       <Dialog
         open={Boolean(selectedItem)}
         onClose={handleClose}
@@ -174,7 +171,6 @@ const HelpComp = () => {
                 height: "100%",
                 border: 0,
               }}
-              /* ✨ هنا استخدمنا الدالة عشان تحول اللينك تلقائي للـ Embed */
               src={getYouTubeEmbedUrl(selectedItem?.videoUrl)}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

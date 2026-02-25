@@ -11,7 +11,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function VideoPopup() {
-  // State للتحكم في فتح وقفل الـ Popup
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => setOpen(true);
@@ -19,7 +18,6 @@ export default function VideoPopup() {
 
   return (
     <Box sx={{ p: 4, textAlign: "center" }}>
-      {/* الزرار اللي بيفتح الـ Popup (ممكن تغيره وتنقله في أي مكان في كودك) */}
       <Button
         variant="contained"
         onClick={handleOpen}
@@ -28,27 +26,25 @@ export default function VideoPopup() {
         Show Video
       </Button>
 
-      {/* الـ Popup نفسه */}
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="md" // بيحدد أقصى عرض للـ Modal (sm, md, lg, xl)
-        fullWidth // بيخليه ياخد العرض المتاح لحد الـ maxWidth
+        maxWidth="md"
+        fullWidth
         PaperProps={{
           sx: {
-            borderRadius: "12px", // عشان ياخد نفس الانحناء الجمالي اللي في موقعك
-            m: 2, // Margin عشان ميكونش لازق في حواف الشاشة في الموبايل
+            borderRadius: "12px",
+            m: 2,
           },
         }}
       >
-        {/* الهيدر: بيحتوي على العنوان وزرار القفل */}
         <DialogTitle
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             p: 2.5,
-            pb: 1, // تقليل المسافة تحت العنوان عشان الفيديو يبان متناسق
+            pb: 1,
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
@@ -60,19 +56,18 @@ export default function VideoPopup() {
             onClick={handleClose}
             sx={{
               color: "text.secondary",
-              "&:hover": { color: "#d32f2f", backgroundColor: "#ffebee" }, // تأثير خفيف عند الـ hover
+              "&:hover": { color: "#d32f2f", backgroundColor: "#ffebee" },
             }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        {/* المحتوى: بيحتوي على الـ iframe */}
         <DialogContent sx={{ p: 2.5, pt: 1 }}>
           <Box
             sx={{
               position: "relative",
-              paddingBottom: "56.25%", // دي خدعة بالـ CSS عشان نخلي الـ Box يحافظ على نسبة 16:9 للفيديو
+              paddingBottom: "56.25%",
               height: 0,
               overflow: "hidden",
               borderRadius: "8px",
@@ -88,7 +83,7 @@ export default function VideoPopup() {
                 height: "100%",
                 border: 0,
               }}
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ" // حط لينك الفيديو بتاعك هنا بدل ده
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

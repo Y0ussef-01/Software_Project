@@ -7,7 +7,7 @@ export default function Advertisments() {
     <Paper
       elevation={3}
       sx={{
-        height: "100%", // هياخد نفس ارتفاع الجريد اللي هو نفس ارتفاع الفورم
+        height: "100%",
         borderRadius: "16px",
         p: 3,
         display: "flex",
@@ -21,7 +21,7 @@ export default function Advertisments() {
         sx={{
           width: "100%",
           height: "100%",
-          objectFit: "cover", // عشان الصورة تتقص بشكل جمالي وتملى المربع من غير ما تتمط
+          objectFit: "cover",
           borderRadius: "12px",
           flexGrow: 1,
         }}

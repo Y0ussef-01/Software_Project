@@ -13,16 +13,12 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import RestStud from "../../assets/images/restStud.jpg";
 
-// ✨ هنا هتعمل استدعاء (import) لصورة النتيجة بتاعتك
-// import calendarImage from "../../assets/images/calendar.jpg";
-
 export default function Footer() {
-  // State للتحكم في فتح وقفل الـ Popup
   const [open, setOpen] = useState(false);
 
   // دوال الفتح والقفل
   const handleOpen = (e) => {
-    e.preventDefault(); // عشان نمنع اللينك إنه يعمل ريفريش أو يطلع لأول الصفحة
+    e.preventDefault();
     setOpen(true);
   };
   const handleClose = () => {
@@ -52,7 +48,6 @@ export default function Footer() {
             </Typography>
 
             <Stack direction="row" spacing={3}>
-              {/* ✨ حولنا اللينك لزرار بيفتح الـ Popup لما ندوس عليه */}
               <Link
                 href="#"
                 onClick={handleOpen}
@@ -60,7 +55,7 @@ export default function Footer() {
                 sx={{
                   color: "#fff",
                   fontSize: "0.875rem",
-                  cursor: "pointer", // عشان يظهر شكل الإيد لما نقف عليه
+                  cursor: "pointer",
                 }}
               >
                 Academic Calendar
@@ -70,11 +65,10 @@ export default function Footer() {
         </Container>
       </Box>
 
-      {/* ✨ الـ Popup (Modal) الخاص بصورة النتيجة */}
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="md" // مقاس مناسب عشان الصورة تكون واضحة ومقروءة
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -107,17 +101,15 @@ export default function Footer() {
         </DialogTitle>
 
         <DialogContent sx={{ p: 3, pt: 1, textAlign: "center" }}>
-          {/* Box لعرض الصورة بشكل متجاوب */}
           <Box
             component="img"
-            /* حط مسار الصورة هنا (calendarImage) بدل الرابط المؤقت */
             src={RestStud}
             alt="Academic Calendar"
             sx={{
-              width: "100%", // عشان تملى عرض الـ Popup
-              height: "auto", // عشان تحافظ على نسبة الطول والعرض ومتمطش
+              width: "100%",
+              height: "auto",
               borderRadius: "8px",
-              boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", // ظل خفيف بيدي شكل جمالي
+              boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
             }}
           />
         </DialogContent>
