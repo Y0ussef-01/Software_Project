@@ -17,7 +17,7 @@ const userLogin = async (id, password) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error('Invalid Password');
-
+    user.password=undefined;
     const token = generateToken(user._id, role);
     return { user, token, role };
 };
@@ -29,7 +29,7 @@ const adminLogin = async (id, password) => {
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) throw new Error('Invalid Admin Password');
-
+    admin.password=undefined;
     const token = generateToken(admin._id, 'admin');
     return { user: admin, token, role: 'admin' };
 };
