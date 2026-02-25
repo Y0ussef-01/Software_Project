@@ -29,37 +29,56 @@ export default function LoginForm() {
     <Paper
       elevation={3}
       sx={{
-        p: { xs: 4, md: 6 },
+        p: { xs: 3, sm: 4, md: 5 }, // مسافات داخلية متناسقة
         borderRadius: "16px",
-        height: "100%",
+        height: { xs: "auto", xl: "100%" },
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
       }}
     >
-      <Box sx={{ textAlign: "center", mb: 6 }}>
+      <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
         <Typography
           variant="subtitle1"
-          sx={{ fontWeight: "bold", color: "text.secondary", mb: 1.5 }}
+          sx={{
+            fontWeight: "bold",
+            color: "text.secondary",
+            mb: 1.5,
+            fontSize: { xs: "0.875rem", md: "1rem" },
+          }}
         >
           🇪🇬 Cairo - Egypt
         </Typography>
         <Typography
           variant="h4"
-          sx={{ fontWeight: "bold", color: "#063f6d", mb: 1 }}
+          sx={{
+            fontWeight: "bold",
+            color: "#063f6d",
+            mb: 1,
+            fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.125rem" }, // خط متجاوب
+          }}
         >
           Welcome to Cairo university
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
+        >
           Sign in to your account
         </Typography>
       </Box>
 
-      <Stack spacing={4}>
+      <Stack spacing={{ xs: 3, md: 4 }}>
         <Box>
           <Typography
             variant="subtitle1"
-            sx={{ fontWeight: 600, mb: 1.5, color: "#333" }}
+            sx={{
+              fontWeight: 600,
+              mb: 1,
+              color: "#333",
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             User ID
           </Typography>
@@ -73,13 +92,21 @@ export default function LoginForm() {
                 <PersonOutlineIcon />
               </InputAdornment>
             }
-            sx={{ borderRadius: "12px", height: "55px" }}
+            sx={{
+              borderRadius: "12px",
+              height: { xs: "48px", md: "55px" }, // تصغير ارتفاع الإنپوت في الموبايل
+            }}
           />
         </Box>
         <Box>
           <Typography
             variant="subtitle1"
-            sx={{ fontWeight: 600, mb: 1.5, color: "#333" }}
+            sx={{
+              fontWeight: 600,
+              mb: 1,
+              color: "#333",
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             Password
           </Typography>
@@ -101,25 +128,28 @@ export default function LoginForm() {
                 </IconButton>
               </InputAdornment>
             }
-            sx={{ borderRadius: "12px", height: "55px" }}
+            sx={{
+              borderRadius: "12px",
+              height: { xs: "48px", md: "55px" },
+            }}
           />
         </Box>
       </Stack>
 
-      <Box sx={{ mt: 5 }}>
+      <Box sx={{ mt: { xs: 4, md: 5 } }}>
         <Button
           fullWidth
           variant="contained"
           disabled={isSubmitDisabled}
           sx={{
-            py: 2,
+            py: { xs: 1.5, md: 2 },
             borderRadius: "12px",
             backgroundColor: isSubmitDisabled
               ? "action.disabledBackground"
               : "#152b48",
             color: isSubmitDisabled ? "text.disabled" : "#fff",
             fontWeight: "bold",
-            fontSize: "1.1rem",
+            fontSize: { xs: "1rem", md: "1.1rem" },
             textTransform: "none",
             "&:hover": {
               backgroundColor: "#0f1f35",

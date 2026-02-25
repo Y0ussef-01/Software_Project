@@ -35,19 +35,38 @@ export default function LoginPage() {
           <Grid
             container
             spacing={4}
-            alignItems="stretch"
-            sx={{ minHeight: "65vh" }}
+            alignItems={{ xs: "center", xl: "stretch" }}
+            justifyContent="center"
+            sx={{
+              minHeight: "65vh",
+              // ✨ السر الأول هنا: منع الـ Wrap في شاشات xl فقط عشان ما ينزلوش تحت بعض أبداً
+              flexWrap: { xs: "wrap", xl: "nowrap" },
+            }}
           >
-            <Grid item xs={12} md={5} lg={4}>
-              <LoginForm />
-            </Grid>
-
+            {/* مقاسات الفورم زي ما هي، ضفنا بس display flex في الـ xl عشان تطول صح */}
             <Grid
               item
               xs={12}
-              md={7}
-              lg={8}
-              sx={{ display: { xs: "none", md: "block" } }}
+              sm={8}
+              md={6}
+              lg={5}
+              xl={4}
+              sx={{ display: { xl: "flex" } }}
+            >
+              <LoginForm />
+            </Grid>
+
+            {/* الصورة هتاخد باقي المساحة (8 أعمدة) وهتتمدد براحتها */}
+            <Grid
+              item
+              xs={12}
+              xl={8}
+              sx={{
+                // ✨ السر التاني: استخدمنا flex بدل block في الـ xl عشان البوكس ياخد المساحة الكافية ويفرد
+                display: { xs: "none", xl: "flex" },
+                flexGrow: 1, // بيجبر البوكس إنه ياخد أي مساحة فاضية جنبه
+                maxWidth: { xl: "100%" },
+              }}
             >
               <Advertisments />
             </Grid>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -8,11 +8,38 @@ import {
   ListItemText,
   Button,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { useHelp } from "./useHelp";
+
+// ✨ الدالة دي بتاخد أي لينك يوتيوب عادي وتطلعلك لينك الـ Embed المظبوط
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return "";
+  // كود بيستخرج الـ ID بتاع الفيديو من أي صيغة للينك يوتيوب
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+  return url; // لو اللينك مش يوتيوب، هيرجعه زي ما هو
+};
 
 const HelpComp = () => {
   const { helpData } = useHelp();
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleOpen = (item) => {
+    setSelectedItem(item);
+  };
+
+  const handleClose = () => {
+    setSelectedItem(null);
+  };
 
   return (
     <Box
@@ -70,6 +97,7 @@ const HelpComp = () => {
 
                   <Button
                     variant="outlined"
+                    onClick={() => handleOpen(item)}
                     sx={{
                       textTransform: "none",
                       borderRadius: "8px",
@@ -89,6 +117,72 @@ const HelpComp = () => {
           </List>
         </Paper>
       </Box>
+
+      {/* الـ Popup (Modal) */}
+      <Dialog
+        open={Boolean(selectedItem)}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "16px",
+            m: 2,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            pb: 1,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
+            {selectedItem?.title || "Video Tutorial"}
+          </Typography>
+
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              color: "text.secondary",
+              "&:hover": { color: "#d32f2f", backgroundColor: "#ffebee" },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 3, pt: 1 }}>
+          <Box
+            sx={{
+              position: "relative",
+              paddingBottom: "56.25%",
+              height: 0,
+              overflow: "hidden",
+              borderRadius: "12px",
+              backgroundColor: "#000",
+            }}
+          >
+            <iframe
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+              }}
+              /* ✨ هنا استخدمنا الدالة عشان تحول اللينك تلقائي للـ Embed */
+              src={getYouTubeEmbedUrl(selectedItem?.videoUrl)}
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
