@@ -1,35 +1,37 @@
-const Student = require('../models/Student');
-const Admin = require('../models/Admin');
-const Teacher = require('../models/Teacher');
-const bcrypt = require('bcrypt');
 const generateToken = require('../utils/generateToken');
-
-const unifiedLogin = async (id, password) => {
-    let user = null;
-    let role = '';
-
-    user = await Student.findById(id).select('+password');
-    if (user) role = 'student';
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
+const Admin = require('../models/Admin');
+const userLogin = async (id, password) => {
+    let user = await Student.findById(id).select('+password');
+    let role = 'student';
 
     if (!user) {
         user = await Teacher.findById(id).select('+password');
-        if (user) role = 'teacher';
+        role = 'teacher';
     }
 
-    if (!user) {
-        user = await Admin.findById(id).select('+password');
-        if (user) role = 'admin';
-    }
-
-    if (!user) throw new Error('Invalid ID');
+    if (!user) throw new Error('User not found');
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error('Invalid Password');
 
     const token = generateToken(user._id, role);
-    user.password = undefined;
-
     return { user, token, role };
 };
 
-module.exports = { unifiedLogin };
+const adminLogin = async (id, password) => {
+    const admin = await Admin.findById(id).select('+password');
+
+    if (!admin) throw new Error('Admin not found - Access Denied');
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) throw new Error('Invalid Admin Password');
+
+    const token = generateToken(admin._id, 'admin');
+    return { user: admin, token, role: 'admin' };
+};
+
+module.exports = { userLogin, adminLogin };

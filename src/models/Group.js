@@ -5,7 +5,7 @@ const groupSchema = new mongoose.Schema({
     _id:{ type: String, required: true }, //course name-groupName-type(نظري , عملي , تدريب)
     Room: { type: String, required: true },
     type: { type: String, enum: ['نظري','عملي','تدريب'], required: true },
-    enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
+    enrolledStudents: [{ type: String, ref: "Student" }],
     capacity: { type: Number, required: true },
     appointment: [{
         day: { type: String, required: true },

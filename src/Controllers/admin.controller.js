@@ -6,7 +6,9 @@ const bcrypt = require('bcrypt');
 const addStudent = async (req, res) => {
     try {
         const { _id, name, email, password, profileImg } = req.body;
-
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newStudent = new Student({
@@ -48,12 +50,14 @@ const getStudent = async (req, res) => {
 
 const updateStudent = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updateData = req.body;
+        const {id} = req.params;
+        const updateData = { ...req.body };
+        delete updateData._id;
 
-        // لو الأدمن بيعدل الباسورد، لازم نشفره تاني
-        if (updateData.password) {
+        if (updateData.password && updateData.password.trim() !== "") {
             updateData.password = await bcrypt.hash(updateData.password, 10);
+        } else {
+            delete updateData.password;
         }
 
         const student = await Student.findByIdAndUpdate(id, updateData, { new: true });
@@ -69,7 +73,9 @@ const updateStudent = async (req, res) => {
 const addTeacher = async (req, res) => {
     try {
         const { _id, name, email, password, department, profileImg } = req.body;
-
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newTeacher = new Teacher({
@@ -117,10 +123,13 @@ const getTeacher = async (req, res) => {
 const updateTeacher = async (req, res) => {
     try {
         const { id } = req.params;
-        const updateData = req.body;
+        const updateData = { ...req.body };
+        delete updateData._id;
 
-        if (updateData.password) {
+        if (updateData.password && updateData.password.trim() !== "") {
             updateData.password = await bcrypt.hash(updateData.password, 10);
+        } else {
+            delete updateData.password;
         }
 
         const teacher = await Teacher.findByIdAndUpdate(id, updateData, { new: true });
@@ -135,7 +144,9 @@ const updateTeacher = async (req, res) => {
 const addAdmin = async (req, res) => {
     try {
         const { _id, name, email, password, permissions } = req.body;
-
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newAdmin = new Admin({
@@ -152,10 +163,13 @@ const addAdmin = async (req, res) => {
 const updateAdminProfile = async (req, res) => {
     try {
         const id = req.params.id || req.user.id;
-        const updateData = req.body;
+        const updateData = { ...req.body };
+        delete updateData._id;
 
-        if (updateData.password) {
+        if (updateData.password && updateData.password.trim() !== "") {
             updateData.password = await bcrypt.hash(updateData.password, 10);
+        } else {
+            delete updateData.password;
         }
 
         const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
