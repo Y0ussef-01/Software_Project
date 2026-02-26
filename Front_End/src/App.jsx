@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
 import LoginPage from "./pages/LoginPage/LoginPage";
-import HelpPage from "./pages/HelpPage/helpPage";
+import HelpPage from "./pages/HelpPage/HelpPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import HomePage from "./pages/Home/HomePage";
 import Error404 from "./pages/Error404/Error404";
