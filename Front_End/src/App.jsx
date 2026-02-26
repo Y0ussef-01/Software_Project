@@ -6,6 +6,7 @@ import HelpPage from "./pages/HelpPage/HelpPage";
 import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import HomePage from "./pages/Home/HomePage";
 import Error404 from "./pages/Error404/Error404";
+import Students from "./pages/AdminPage/Students/Students";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/add" element={<Students />} />
         <Route path="*" element={<Error404 />} />
       </Routes>
     </BrowserRouter>
