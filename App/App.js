@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PROPage from './screens/PROPage'
 import Home from './screens/Home'
+import LogePage from './screens/LogePage';
 import TechProfile from './screens/TechProfile'
 
 import { useFonts } from 'expo-font';
@@ -24,9 +25,10 @@ export default function App() {
     < >
       <StatusBar style='light' />
       <NavigationContainer>
-        <Stack.Navigator initialRouteName='Home' screenOptions={
+        <Stack.Navigator initialRouteName='LogePage' screenOptions={
           { headerShown: false, }
-        } >
+        } > 
+          <Stack.Screen name='LogePage' component={LogePage} />
           <Stack.Screen name='TechProfile' component={TechProfile} />
           <Stack.Screen name='PROPage' component={PROPage} />
           <Stack.Screen name='Home' component={Home} />

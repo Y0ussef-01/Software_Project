@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   HeaderStyle: {
     width: '100%',
     height: 120,
-    backgroundColor: '#02013f',
+    backgroundColor: "rgb(23, 42, 70)",
     elevation: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   dataLabel: {
     fontWeight: 'bold',
-    color: '#02013f',
+    color: "rgb(23, 42, 70)",
     width: 100,
   },
   dataValue: {

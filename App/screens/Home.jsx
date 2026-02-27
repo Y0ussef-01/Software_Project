@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     HeaderStyle: {
         width: '100%',
         height: 120,
-        backgroundColor: '#02013f',
+        backgroundColor: "rgb(23, 42, 70)",
         elevation: 15,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 5,
-        shadowColor: '#02013f',
+        shadowColor: "rgb(23, 42, 70)",
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
         shadowRadius: 5,
@@ -247,11 +247,11 @@ const styles = StyleSheet.create({
     gridText: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#02013f',
+        color: "rgb(23, 42, 70)",
         marginTop: 10,
     },
     gridItemActive: {
-        backgroundColor: '#02013f',
+        backgroundColor: "rgb(23, 42, 70)",
     },
     gridTextActive: {
         color: '#fff',
