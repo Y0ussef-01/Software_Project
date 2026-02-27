@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";  
 import { Box, Grid, Typography, Paper } from "@mui/material";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -12,21 +13,25 @@ export default function FeaturesComp() {
       title: "Registration",
       icon: <AppRegistrationIcon fontSize="inherit" />,
       active: true,
+      path: "/registration", 
     },
     {
       id: 2,
       title: "Schedule",
       icon: <CalendarMonthIcon fontSize="inherit" />,
+      path: "/schedule",
     },
     {
       id: 3,
       title: "Grades",
       icon: <WorkspacePremiumIcon fontSize="inherit" />,
+      path: "/grades", 
     },
     {
       id: 5,
       title: "Profile",
       icon: <ComputerIcon fontSize="inherit" />,
+      path: "/profile",
     },
   ];
 
@@ -44,6 +49,8 @@ export default function FeaturesComp() {
             sx={{ display: "flex", justifyContent: "center" }}
           >
             <Paper
+              component={Link}
+              to={feature.path}
               elevation={0}
               sx={{
                 width: { xs: "100%", md: "180px", lg: "200px", xl: "240px" },
@@ -59,6 +66,7 @@ export default function FeaturesComp() {
                 backgroundColor: feature.active ? "#152b48" : "#fff",
                 color: feature.active ? "#fff" : "#152b48",
                 cursor: "pointer",
+                textDecoration: "none", 
                 transition: "all 0.3s ease",
                 boxShadow: feature.active
                   ? "0px 8px 20px rgba(21, 43, 72, 0.2)"

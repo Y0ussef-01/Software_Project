@@ -10,8 +10,8 @@ import TopBar from "./TopBar";
 import SideBar from "./SideBar";
 import { getDesignTokens } from "./theme";
 
-import { useThemeMode } from "../hooks/useThemeMode";
-import { useDrawerState } from "../hooks/useDrawerState";
+import { useThemeMode } from "../../hooks/useThemeMode";
+import { useDrawerState } from "../../hooks/useDrawerState";
 
 const drawerWidth = 240;
 

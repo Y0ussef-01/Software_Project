@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import {
   Box,
   Paper,
@@ -7,61 +7,57 @@ import {
   Avatar,
   IconButton,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import SchoolIcon from "@mui/icons-material/School";
+import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";     
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { useAuth } from "../../context/AuthContext";
 
-export default function ProfileComp() {
-  const studentData = {
-    _id: "2327443",
-    name: "Youssef Ashraf Mahmoud",
-    email: "202327443@std.sci.cu.edu.eg",
-    hours: 0,
-    profileImg: "https://via.placeholder.com/150",
-    department: "Computer Science",
-    grade: "المستوي الثالث",
-    GPA: 0.0,
-    maxHours: 19,
-  };
+import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
 
-  const [profileImage, setProfileImage] = useState(studentData.profileImg);
-  const fileInputRef = useRef(null);
+export default function ProfileTeacherComp() {
+  const {
+    teacherData,
+    loading,
+    isImageUpdating,
+    fileInputRef,
+    handleImageClick,
+    handleImageChange,
+    handleRemoveImage,
+  } = useTeacherProfile();
 
-  const handleImageClick = () => {
-    fileInputRef.current.click();
-  };
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "40vh",
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: "#152b48" }} />
+      </Box>
+    );
+  }
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
-    }
-  };
-
-  const handleRemoveImage = (e) => {
-    e.stopPropagation();
-    setProfileImage(studentData.profileImg);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  if (!teacherData) {
+    return (
+      <Typography color="error" align="center" variant="h6" sx={{ mt: 5 }}>
+        No Teacher Profile Data Found.
+      </Typography>
+    );
+  }
 
   const details = [
-    { label: "Student ID", value: studentData._id },
-    { label: "Email", value: studentData.email },
-    { label: "Department", value: studentData.department },
-    { label: "Level", value: studentData.grade },
-    { label: "Cumulative GPA", value: studentData.GPA },
-    { label: "Completed Hours", value: studentData.hours },
-    { label: "Max Hours", value: studentData.maxHours },
+    { label: "Teacher ID", value: teacherData._id },
+    { label: "Email", value: teacherData.email },
+    { label: "Department", value: teacherData.department },
+    { label: "Total Courses", value: teacherData.courses?.length || 0 },    
   ];
 
-  const isImageChanged = profileImage !== studentData.profileImg;
-
-  const { user, logout } = useAuth();
+  const hasCustomImage =
+    teacherData.profileImg && !teacherData.profileImg.includes("default");
 
   return (
     <Paper
@@ -120,7 +116,9 @@ export default function ProfileComp() {
               mb: { xs: 4, lg: 0 },
             }}
           >
-            <SchoolIcon sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }} />
+            <LocalLibraryIcon
+              sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
+            />
             <Typography
               variant="h5"
               sx={{
@@ -129,7 +127,7 @@ export default function ProfileComp() {
                 letterSpacing: "0.5px",
               }}
             >
-              Student Profile
+              Teacher Profile
             </Typography>
           </Box>
 
@@ -145,44 +143,63 @@ export default function ProfileComp() {
                 sx={{
                   position: "relative",
                   display: "inline-block",
-                  cursor: "pointer",
+                  cursor: isImageUpdating ? "default" : "pointer",
                   borderRadius: "50%",
                   overflow: "hidden",
-                  "&:hover .overlay": { opacity: 1 },
+                  "&:hover .overlay": { opacity: isImageUpdating ? 0 : 1 },
                 }}
                 onClick={handleImageClick}
               >
                 <Avatar
-                  src={profileImage}
-                  alt={user?.name}
+                  src={teacherData.profileImg}
+                  alt={teacherData.name}
                   sx={{
                     width: { xs: 130, lg: 150, xl: 170 },
                     height: { xs: 130, lg: 150, xl: 170 },
                     boxShadow: "0px 8px 24px rgba(21,43,72,0.15)",
                     border: "5px solid #fff",
-                  }}
-                />
-                <Box
-                  className="overlay"
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(21, 43, 72, 0.6)",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    opacity: 0,
+                    opacity: isImageUpdating ? 0.5 : 1,
                     transition: "opacity 0.3s ease",
                   }}
-                >
-                  <PhotoCameraIcon sx={{ color: "#fff", fontSize: 45 }} />
-                </Box>
+                />
+
+                {isImageUpdating && (
+                  <CircularProgress
+                    size={40}
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      marginTop: "-20px",
+                      marginLeft: "-20px",
+                      color: "#152b48",
+                    }}
+                  />
+                )}
+
+                {!isImageUpdating && (
+                  <Box
+                    className="overlay"
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(21, 43, 72, 0.6)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      opacity: 0,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  >
+                    <PhotoCameraIcon sx={{ color: "#fff", fontSize: 45 }} />
+                  </Box>
+                )}
               </Box>
 
-              {isImageChanged && (
+              {hasCustomImage && !isImageUpdating && (
                 <Tooltip title="Remove photo" placement="left">
                   <IconButton
                     onClick={handleRemoveImage}
@@ -221,13 +238,13 @@ export default function ProfileComp() {
                 lineHeight: 1.2,
               }}
             >
-              {studentData.name}
+              Dr. {teacherData.name} {/* إضافة Dr. لشياكة العرض */}
             </Typography>
             <Typography
               variant="body2"
               sx={{ color: "#64748b", textAlign: "center", mt: 0.5 }}
             >
-              {studentData.department}
+              {teacherData.department}
             </Typography>
           </Box>
         </Box>

@@ -1,5 +1,3 @@
-
-
 import { IconButton, styled } from "@mui/material";
 import React from "react";
 import MuiAppBar from "@mui/material/AppBar";
@@ -18,19 +16,19 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useNavigate } from "react-router-dom";
 
+// ✨ 1. استدعاء العقل المدبر (تأكد أن مسار الملف صحيح حسب مجلدات مشروعك)
+import { useAuth } from "../../context/AuthContext";
+
 const drawerWidth = 240;
 
-//دي شغلانتها ان لما اجي افتح السايد بار يتحرك يمين ويكبر 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
 })(({ theme }) => ({
-  //دي فدفها التوب بار يبقي فوق السايد بار وميغطيهوش
   zIndex: theme.zIndex.drawer + 1,
   transition: theme.transitions.create(["width", "margin"], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  //دي بتقولك لو ترو خلي التوب بار يتحرك يمين عشان السايد بار يكبر
   variants: [
     {
       props: ({ open }) => open,
@@ -45,7 +43,7 @@ const AppBar = styled(MuiAppBar, {
     },
   ],
 }));
-//دي بتاعى خانه البحث اسيرش دي بتحدد شكل خانه البحث من حيث الالوان والمسافات والحدود
+
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -61,7 +59,7 @@ const Search = styled("div")(({ theme }) => ({
     width: "auto",
   },
 }));
-//دي بتحدد شكل ايقونه البحث من حيث المسافات والالوان
+
 const SearchIconWrapper = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 2),
   height: "100%",
@@ -71,7 +69,7 @@ const SearchIconWrapper = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
 }));
-//
+
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: "inherit",
   "& .MuiInputBase-input": {
@@ -86,13 +84,13 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const TopBar = ({ open, handleDrawerOpen, setMode }) => {
-  //دي بترجعلك الثين=م الحالي بتعرفك احنا دارك ولا لايت
   const Theme = useTheme();
-  //دي هوك بيخليك تتنقل بين الصفحات عشان لو دوست علي ايقونه في التوب بار ولا حاجه
   const navigate = useNavigate();
-//ده منيو الاعدادات بتشوف هل المنيو مفتوحه ولا مقفوله
-  const [anchorEl, setAnchorEl] = React.useState(null);
 
+  // ✨ 2. سحب دالة تسجيل الخروج من الـ Context
+  const { logout } = useAuth();
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
   const openMenu = Boolean(anchorEl);
 
   const handleSettingsClick = (event) => {
@@ -102,16 +100,17 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-//ده بتاع تسجيل الخروج من الحساب لما دوست علي لوج اوت في منيو الاعدادات
-  const handleLogout = () => {
-    // 🗑️ احذف التوكن والبيانات من localStorage
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
-    localStorage.removeItem("adminRole");
 
-    // 🔄 انتقل للصفحة الرئيسية
-    navigate("/", { replace: true });
+  // ✨ 3. دالة تسجيل الخروج الاحترافية المتصلة بالـ Context
+  const handleLogout = () => {
+    // إغلاق المنيو أولاً لعدم حدوث أخطاء في الـ UI
     handleClose();
+
+    // استدعاء دالة المسح من الـ Context (والتي ستمسح token و user و role بشكل صحيح)
+    logout();
+
+    // توجيه المستخدم لصفحة تسجيل الدخول فوراً
+    navigate("/", { replace: true });
   };
 
   return (
@@ -120,7 +119,6 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
         <IconButton
           color="inherit"
           aria-label="open drawer"
-
           onClick={handleDrawerOpen}
           edge="start"
           sx={[
@@ -146,7 +144,6 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
         <Box flexGrow={1} />
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          //دي يتقولك لو الثيم لايت اظهر ايثونه الشمس لو دارك اظهر ايقونه القمر 
           {Theme.palette.mode === "light" ? (
             <IconButton
               onClick={() => {
@@ -164,7 +161,6 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
             </IconButton>
           ) : (
             <IconButton
-
               onClick={() => {
                 localStorage.setItem(
                   "CurrentMode",
@@ -179,11 +175,9 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
               <DarkModeOutlinedIcon />
             </IconButton>
           )}
-
           <IconButton color="inherit">
             <NotificationsNoneOutlinedIcon />
           </IconButton>
-
           <IconButton
             color="inherit"
             onClick={handleSettingsClick}
@@ -193,7 +187,6 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
           >
             <SettingsOutlinedIcon />
           </IconButton>
-
           <Menu
             id="settings-menu"
             anchorEl={anchorEl}
@@ -207,10 +200,13 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
           >
             <MenuItem onClick={handleClose}>Settings</MenuItem>
             <MenuItem onClick={handleClose}>Help/Support</MenuItem>
+            {/* ✨ ربط الزر بدالة الخروج الجديدة */}
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
-
-          <IconButton color="inherit" onClick={() => navigate("/profile")}>
+          <IconButton
+            color="inherit"
+            onClick={() => navigate("/adminPanel/profile")}
+          >
             <Person2OutlinedIcon />
           </IconButton>
         </Box>

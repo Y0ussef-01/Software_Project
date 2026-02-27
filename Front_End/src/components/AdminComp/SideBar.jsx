@@ -111,9 +111,9 @@ const Array3 = [
 ];
 
 const SideBar = ({ open, handleDrawerClose }) => {
-  let location = useLocation(); // عشان نعرف فين احنا دلوقتي وعشان لما نقف علي ايقونه من الي في الجنب يحط اللون الي انا محددو دي بتقولو اقف علي نفس المسار
-  const navigate = useNavigate(); // استخدمناها عشان نروح من صفحة لصفحة
-  const theme = useTheme(); // الألوان والستايل الحالي
+  let location = useLocation();
+  const navigate = useNavigate();
+  const theme = useTheme();
 
   return (
     // القائمة الجانبية الأساسية
@@ -128,8 +128,6 @@ const SideBar = ({ open, handleDrawerClose }) => {
         </IconButton>
       </DrawerHeader>
       <Divider />
-      // الجزء الخاص بالبيانات الشخصية في السايد بار زي الصورة والاسم والوظيفة
-      وكان بيتحكم في سرعه خروج السايد بار
       <Avatar
         sx={{
           mx: "auto",
@@ -142,7 +140,6 @@ const SideBar = ({ open, handleDrawerClose }) => {
         alt="User"
         src="https://ichef.bbci.co.uk/ace/ws/640/amz/worldservice/live/assets/images/2016/02/12/160212210518_624x351_3.jpg.webp"
       />
-      //الكلام الي مكتوب زي اسم المستخدموالادمن
       <Typography
         align="center"
         sx={{
@@ -152,7 +149,6 @@ const SideBar = ({ open, handleDrawerClose }) => {
       >
         Anishtain
       </Typography>
-      //الكلام الي مكتوب زي اسم المستخدموالادمن
       <Typography
         align="center"
         sx={{

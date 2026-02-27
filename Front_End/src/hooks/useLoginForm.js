@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../api/axiosInstance";
+import { toast } from "react-toastify";
 
 export const useLoginForm = () => {
   const [userId, setUserId] = useState("");
@@ -14,7 +15,6 @@ export const useLoginForm = () => {
 
   const validateForm = () => {
     setError("");
-    // ✨ هنا نتأكد فقط أن الحقل ليس فارغاً، مما يسمح بإدخال حروف وأرقام معاً (مثل A-1)
     if (!userId.trim() || !password.trim()) {
       setError("Please fill in all fields.");
       return false;
@@ -36,27 +36,41 @@ export const useLoginForm = () => {
 
       const { user, token, role } = response.data;
 
-      // 1. تسجيل الدخول وحفظ التوكن
-      login(user, token, role);
+      // ✨ 1. إظهار الإشعار فوراً (قبل أن نخبر النظام بتسجيل الدخول)
+      toast.success(`Login Successful! Welcome ${user.name || ""}`, {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+      });
 
-      // 2. التوجيه الذكي الآمن بناءً على الدور
-      if (role === "admin") {
-        navigate("/adminPanel", { replace: true });
-      } else if (role === "teacher") {
-        navigate("/teacher", { replace: true });
-      } else if (role === "student") {
-        navigate("/home", { replace: true });
-      } else {
-        setError("Unauthorized role type.");
-      }
+      // ✨ 2. تأخير تحديث النظام والنقل لمدة ثانيتين عشان اليوزر يلحق يشوف الإشعار
+      setTimeout(() => {
+        // 🚨 هنا السر: وضعنا دالة الـ login داخل الـ setTimeout
+        // بمجرد تنفيذ هذا السطر، الـ PublicRoute هيشتغل وينقلك فوراً بكل سلاسة
+        login(user, token, role);
+
+        // زيادة تأكيد للتوجيه
+        if (role === "admin") {
+          navigate("/adminPanel", { replace: true });
+        } else if (role === "teacher") {
+          navigate("/teacher", { replace: true });
+        } else if (role === "student") {
+          navigate("/home", { replace: true });
+        } else {
+          setError("Unauthorized role type.");
+          setLoading(false);
+        }
+      }, 2000);
     } catch (err) {
+      setLoading(false);
       if (err.response && err.response.status === 401) {
         setError("Invalid User ID or Password.");
       } else {
         setError("Server Error. Please try again later.");
       }
-    } finally {
-      setLoading(false);
     }
   };
 

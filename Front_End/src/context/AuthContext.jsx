@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // استرجاع الجلسة عند عمل Refresh للصفحة
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
