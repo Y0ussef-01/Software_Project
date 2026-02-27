@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
@@ -41,6 +41,7 @@ export default function Index() {
       return false;
     } else {
       setErrors({});
+      router.replace("/home");
       return true;
     }
   };
@@ -64,7 +65,7 @@ export default function Index() {
           />
           <View style={styles.headerContainer}>
             <Image
-              source={require("/home/ahmed-amria/MobileApps/first-app/assets/images/logo (2) (1).png")}
+              source={require("../assets/images/logo (2) (1).png")}
               style={styles.image}
             />
             <View style={styles.headerIconsContainer}>
