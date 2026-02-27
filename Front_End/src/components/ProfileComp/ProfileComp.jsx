@@ -11,6 +11,7 @@ import {
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SchoolIcon from "@mui/icons-material/School";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ProfileComp() {
   const studentData = {
@@ -59,6 +60,8 @@ export default function ProfileComp() {
   ];
 
   const isImageChanged = profileImage !== studentData.profileImg;
+
+  const { user, logout } = useAuth();
 
   return (
     <Paper
@@ -151,7 +154,7 @@ export default function ProfileComp() {
               >
                 <Avatar
                   src={profileImage}
-                  alt={studentData.name}
+                  alt={user?.name}
                   sx={{
                     width: { xs: 130, lg: 150, xl: 170 },
                     height: { xs: 130, lg: 150, xl: 170 },

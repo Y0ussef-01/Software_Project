@@ -15,6 +15,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { useAuth } from "../../../context/AuthContext";
 
 const Teachers = () => {
   const [rows, setRows] = useState([]);
@@ -239,7 +240,7 @@ const Teachers = () => {
       ),
     },
   ];
-
+  const { user, logout } = useAuth();
   return (
     <Box>
       <Box
@@ -317,7 +318,7 @@ const Teachers = () => {
             fullWidth
             label="Name"
             name="name"
-            value={formData.name}
+            value={user?.name}
             onChange={handleInputChange}
             variant="outlined"
             required

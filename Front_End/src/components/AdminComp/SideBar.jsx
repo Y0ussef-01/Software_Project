@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import React from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import MuiDrawer from "@mui/material/Drawer";
@@ -117,7 +118,6 @@ const SideBar = ({ open, handleDrawerClose }) => {
   return (
     // القائمة الجانبية الأساسية
     <Drawer variant="permanent" open={open}>
-      
       <DrawerHeader>
         <IconButton onClick={handleDrawerClose}>
           {theme.direction === "rtl" ? (
@@ -127,9 +127,9 @@ const SideBar = ({ open, handleDrawerClose }) => {
           )}
         </IconButton>
       </DrawerHeader>
-
       <Divider />
-          // الجزء الخاص بالبيانات الشخصية في السايد بار زي الصورة والاسم والوظيفة وكان بيتحكم في سرعه خروج السايد بار
+      // الجزء الخاص بالبيانات الشخصية في السايد بار زي الصورة والاسم والوظيفة
+      وكان بيتحكم في سرعه خروج السايد بار
       <Avatar
         sx={{
           mx: "auto",
@@ -142,7 +142,6 @@ const SideBar = ({ open, handleDrawerClose }) => {
         alt="User"
         src="https://ichef.bbci.co.uk/ace/ws/640/amz/worldservice/live/assets/images/2016/02/12/160212210518_624x351_3.jpg.webp"
       />
-
       //الكلام الي مكتوب زي اسم المستخدموالادمن
       <Typography
         align="center"
@@ -153,7 +152,7 @@ const SideBar = ({ open, handleDrawerClose }) => {
       >
         Anishtain
       </Typography>
-       //الكلام الي مكتوب زي اسم المستخدموالادمن
+      //الكلام الي مكتوب زي اسم المستخدموالادمن
       <Typography
         align="center"
         sx={{
@@ -164,9 +163,7 @@ const SideBar = ({ open, handleDrawerClose }) => {
       >
         Admin
       </Typography>
-
       <Divider />
-
       <List>
         {Array1.map((item) => (
           <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
@@ -227,9 +224,7 @@ const SideBar = ({ open, handleDrawerClose }) => {
           </ListItem>
         ))}
       </List>
-
       <Divider />
-
       <List>
         {Array2.map((item) => (
           <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
@@ -284,9 +279,7 @@ const SideBar = ({ open, handleDrawerClose }) => {
           </ListItem>
         ))}
       </List>
-
       <Divider />
-
       <List>
         {Array3.map((item) => (
           <ListItem key={item.path} disablePadding sx={{ display: "block" }}>

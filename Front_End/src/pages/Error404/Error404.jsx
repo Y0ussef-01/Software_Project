@@ -94,7 +94,7 @@ export default function Error404() {
         <Button
           variant="contained"
           startIcon={<HomeRoundedIcon sx={{ fontSize: "1.5rem !important" }} />}
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/home")}
           sx={{
             backgroundColor: "#152b48",
             color: "#fff",

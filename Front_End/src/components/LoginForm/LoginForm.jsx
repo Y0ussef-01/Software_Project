@@ -8,18 +8,36 @@ import {
   IconButton,
   Button,
   Stack,
+  Alert, // ✨ تمت الإضافة لعرض الأخطاء
+  CircularProgress, // ✨ تمت الإضافة لعرض حالة التحميل
 } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
+// 1. استدعاء العقل المدبر (الـ Hook)
+// 💡 تأكد من أن المسار صحيح بناءً على هيكلة ملفاتك
+import { useLoginForm } from "../../hooks/useLoginForm.js";
+
 export default function LoginForm() {
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
+  // 2. سحب البيانات والدوال من الـ Hook
+  const {
+    userId,
+    setUserId,
+    password,
+    setPassword,
+    error,
+    loading,
+    handleLogin,
+  } = useLoginForm();
+
+  // 3. حالة إظهار وإخفاء كلمة المرور تبقى هنا لأنها تخص الـ UI فقط
   const [showPassword, setShowPassword] = useState(false);
 
-  const isSubmitDisabled = userId.trim() === "" || password.trim() === "";
+  // 4. الزر سيتم إيقافه إذا كانت الحقول فارغة أو إذا كان هناك تحميل جاري
+  const isSubmitDisabled =
+    userId.trim() === "" || password.trim() === "" || loading;
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -28,6 +46,8 @@ export default function LoginForm() {
   return (
     <Paper
       elevation={3}
+      component="form" // ✨ تحويل المكون إلى نموذج (Form)
+      onSubmit={handleLogin} // ✨ ربط دالة الإرسال بالنموذج
       sx={{
         p: { xs: 3, sm: 4, md: 5 },
         borderRadius: "16px",
@@ -69,6 +89,13 @@ export default function LoginForm() {
         </Typography>
       </Box>
 
+      {/* ✨ عرض رسالة الخطأ إن وجدت (مربوطة بالـ Hook) */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, borderRadius: "10px" }}>
+          {error}
+        </Alert>
+      )}
+
       <Stack spacing={{ xs: 3, md: 4 }}>
         <Box>
           <Typography
@@ -85,17 +112,15 @@ export default function LoginForm() {
           <OutlinedInput
             fullWidth
             placeholder="Enter your userID"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            value={userId} // ✨ مربوط بالـ Hook
+            onChange={(e) => setUserId(e.target.value)} // ✨ مربوط بالـ Hook
+            disabled={loading} // ✨ إيقاف الإدخال أثناء التحميل
             startAdornment={
               <InputAdornment position="start">
                 <PersonOutlineIcon />
               </InputAdornment>
             }
-            sx={{
-              borderRadius: "12px",
-              height: { xs: "48px", md: "55px" },
-            }}
+            sx={{ borderRadius: "12px", height: { xs: "48px", md: "55px" } }}
           />
         </Box>
         <Box>
@@ -114,8 +139,9 @@ export default function LoginForm() {
             fullWidth
             type={showPassword ? "text" : "password"}
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={password} // ✨ مربوط بالـ Hook
+            onChange={(e) => setPassword(e.target.value)} // ✨ مربوط بالـ Hook
+            disabled={loading} // ✨ إيقاف الإدخال أثناء التحميل
             startAdornment={
               <InputAdornment position="start">
                 <LockOutlinedIcon />
@@ -128,10 +154,7 @@ export default function LoginForm() {
                 </IconButton>
               </InputAdornment>
             }
-            sx={{
-              borderRadius: "12px",
-              height: { xs: "48px", md: "55px" },
-            }}
+            sx={{ borderRadius: "12px", height: { xs: "48px", md: "55px" } }}
           />
         </Box>
       </Stack>
@@ -139,6 +162,7 @@ export default function LoginForm() {
       <Box sx={{ mt: { xs: 4, md: 5 } }}>
         <Button
           fullWidth
+          type="submit" // ✨ نوع الزر submit لكي يطلق حدث onSubmit للـ Form
           variant="contained"
           disabled={isSubmitDisabled}
           sx={{
@@ -151,12 +175,11 @@ export default function LoginForm() {
             fontWeight: "bold",
             fontSize: { xs: "1rem", md: "1.1rem" },
             textTransform: "none",
-            "&:hover": {
-              backgroundColor: "#0f1f35",
-            },
+            "&:hover": { backgroundColor: "#0f1f35" },
           }}
         >
-          Login
+          {/* ✨ التبديل بين كلمة Login ودائرة التحميل */}
+          {loading ? <CircularProgress size={26} color="inherit" /> : "Login"}
         </Button>
       </Box>
     </Paper>
