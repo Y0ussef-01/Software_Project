@@ -17,7 +17,6 @@ export default function HomePage() {
         backgroundColor: "#f4f6f8",
       }}
     >
-      <ToastContainer />
       <Header />
 
       <Box sx={{ flexGrow: 1, py: { xs: 4, md: 6 } }}>

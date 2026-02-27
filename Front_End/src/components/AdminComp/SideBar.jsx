@@ -138,7 +138,7 @@ const SideBar = ({ open, handleDrawerClose }) => {
           transition: "0.5s",
         }}
         alt="User"
-        src="https://ichef.bbci.co.uk/ace/ws/640/amz/worldservice/live/assets/images/2016/02/12/160212210518_624x351_3.jpg.webp"
+        src=""
       />
       <Typography
         align="center"

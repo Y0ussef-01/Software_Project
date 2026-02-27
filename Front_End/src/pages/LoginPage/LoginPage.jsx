@@ -5,7 +5,6 @@ import Advertisments from "../../components/AdvertisementsComp/Advertisments.jsx
 import LoginForm from "../../components/LoginForm/LoginForm.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
 
-// ✨ تم إزالة ToastContainer و استدعاءات الـ CSS من هنا تماماً
 
 export default function LoginPage() {
   return (
@@ -18,8 +17,6 @@ export default function LoginPage() {
         overflow: "hidden",
       }}
     >
-      {/* ✨ تم إزالة <ToastContainer /> من هنا */}
-
       <Header />
 
       <Box

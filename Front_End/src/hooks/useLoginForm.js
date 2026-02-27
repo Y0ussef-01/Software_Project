@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -10,7 +9,6 @@ export const useLoginForm = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
   const { login } = useAuth();
 
   const validateForm = () => {
@@ -36,8 +34,7 @@ export const useLoginForm = () => {
 
       const { user, token, role } = response.data;
 
-      // ✨ 1. إظهار الإشعار فوراً (قبل أن نخبر النظام بتسجيل الدخول)
-      toast.success(`Login Successful! Welcome ${user.name || ""}`, {
+      toast.success(`Login Successful! Welcome ${user?.name || ""}`, {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: false,
@@ -46,23 +43,8 @@ export const useLoginForm = () => {
         draggable: true,
       });
 
-      // ✨ 2. تأخير تحديث النظام والنقل لمدة ثانيتين عشان اليوزر يلحق يشوف الإشعار
       setTimeout(() => {
-        // 🚨 هنا السر: وضعنا دالة الـ login داخل الـ setTimeout
-        // بمجرد تنفيذ هذا السطر، الـ PublicRoute هيشتغل وينقلك فوراً بكل سلاسة
         login(user, token, role);
-
-        // زيادة تأكيد للتوجيه
-        if (role === "admin") {
-          navigate("/adminPanel", { replace: true });
-        } else if (role === "teacher") {
-          navigate("/teacher", { replace: true });
-        } else if (role === "student") {
-          navigate("/home", { replace: true });
-        } else {
-          setError("Unauthorized role type.");
-          setLoading(false);
-        }
       }, 2000);
     } catch (err) {
       setLoading(false);

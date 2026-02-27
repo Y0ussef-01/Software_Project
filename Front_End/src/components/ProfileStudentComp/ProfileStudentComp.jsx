@@ -65,7 +65,6 @@ export default function ProfileComp() {
 
   return (
     <>
-      <ToastContainer />
       <Paper
         elevation={0}
         sx={{
