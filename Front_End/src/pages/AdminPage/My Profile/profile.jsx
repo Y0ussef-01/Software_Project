@@ -63,7 +63,7 @@ const Profile = () => {
     phone: "+20 123 456 7890",
     role: "Admin",
     profileImage:
-      "https://ichef.bbci.co.uk/ace/ws/640/amz/worldservice/live/assets/images/2016/02/12/160212210518_624x351_3.jpg.webp",
+      "",
     password: "••••••••",
     department: "Administration",
   };

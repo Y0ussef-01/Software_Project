@@ -16,7 +16,6 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useNavigate } from "react-router-dom";
 
-// ✨ 1. استدعاء العقل المدبر (تأكد أن مسار الملف صحيح حسب مجلدات مشروعك)
 import { useAuth } from "../../context/AuthContext";
 
 const drawerWidth = 240;
@@ -87,7 +86,6 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
   const Theme = useTheme();
   const navigate = useNavigate();
 
-  // ✨ 2. سحب دالة تسجيل الخروج من الـ Context
   const { logout } = useAuth();
 
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -101,15 +99,11 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
     setAnchorEl(null);
   };
 
-  // ✨ 3. دالة تسجيل الخروج الاحترافية المتصلة بالـ Context
   const handleLogout = () => {
-    // إغلاق المنيو أولاً لعدم حدوث أخطاء في الـ UI
     handleClose();
 
-    // استدعاء دالة المسح من الـ Context (والتي ستمسح token و user و role بشكل صحيح)
     logout();
 
-    // توجيه المستخدم لصفحة تسجيل الدخول فوراً
     navigate("/", { replace: true });
   };
 
@@ -200,7 +194,7 @@ const TopBar = ({ open, handleDrawerOpen, setMode }) => {
           >
             <MenuItem onClick={handleClose}>Settings</MenuItem>
             <MenuItem onClick={handleClose}>Help/Support</MenuItem>
-            {/* ✨ ربط الزر بدالة الخروج الجديدة */}
+
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
           <IconButton
