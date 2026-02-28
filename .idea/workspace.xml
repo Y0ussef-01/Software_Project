@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Back_End/src/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/api/axiosConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Mobile/api/axiosConfig.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Y0ussef-01&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Y0ussef-01/Software_Project&quot;,
+    &quot;accountId&quot;: &quot;bac686c5-b299-49d3-9462-22e689341448&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="3A05TioDrG0Hvp393ogK9YaHafl" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Node.js.app.js.executor": "Run",
+    "Node.js.seed.js.executor": "Run",
+    "Node.js.seed2.js.executor": "Run",
+    "Node.js.server.js.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "javascript.preferred.runtime.type.id": "node",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/youssef/WebstormProjects/Software_Project",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "/home/youssef/WebstormProjects/Software_Project/Mobile/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/Back_End" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="server.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/Back_End/server.js" working-dir="$PROJECT_DIR$/Back_End">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Node.js.server.js" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.31033.133" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="" />
+      <created>1771716656640</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1771716656640</updated>
+      <workItem from="1771716657792" duration="702000" />
+      <workItem from="1771765161871" duration="29953000" />
+      <workItem from="1771800639883" duration="3848000" />
+      <workItem from="1771833988603" duration="3082000" />
+      <workItem from="1771866480563" duration="7554000" />
+      <workItem from="1771878749839" duration="3776000" />
+      <workItem from="1771884213535" duration="3682000" />
+      <workItem from="1771888644141" duration="276000" />
+      <workItem from="1771889035943" duration="1112000" />
+      <workItem from="1771936747388" duration="4001000" />
+      <workItem from="1771942667851" duration="4756000" />
+      <workItem from="1771956829554" duration="5600000" />
+      <workItem from="1772006681524" duration="92000" />
+      <workItem from="1772038605337" duration="2685000" />
+      <workItem from="1772044167467" duration="510000" />
+      <workItem from="1772048602187" duration="1159000" />
+      <workItem from="1772054871786" duration="6301000" />
+      <workItem from="1772100913904" duration="455000" />
+      <workItem from="1772109156030" duration="1749000" />
+      <workItem from="1772124432364" duration="853000" />
+      <workItem from="1772138515490" duration="3968000" />
+      <workItem from="1772142650707" duration="760000" />
+      <workItem from="1772156576794" duration="485000" />
+      <workItem from="1772157145490" duration="1455000" />
+      <workItem from="1772184229444" duration="515000" />
+      <workItem from="1772185400802" duration="209000" />
+      <workItem from="1772204333305" duration="1284000" />
+      <workItem from="1772206793924" duration="743000" />
+      <workItem from="1772209056507" duration="4202000" />
+      <workItem from="1772224343627" duration="264000" />
+      <workItem from="1772224628304" duration="3000" />
+      <workItem from="1772225274878" duration="147000" />
+      <workItem from="1772228355912" duration="142000" />
+      <workItem from="1772236884204" duration="3153000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/FrontEnd_Project/Front_End/src/App.jsx</url>
+          <line>21</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

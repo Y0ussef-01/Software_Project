@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-
 const Student = require("./models/Student");
 const teacherRoutes = require("./routes/teacher.routes");
 const studentRoutes = require("./routes/student.routes");
