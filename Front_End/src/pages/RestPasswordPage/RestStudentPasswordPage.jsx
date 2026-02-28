@@ -2,10 +2,9 @@ import React from "react";
 import { Box, Container } from "@mui/material";
 import Header from "../../components/HeaderComp/Header.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
-import TeacherResetPasswordComp from "../../components/RestTeacherPassword/RestTeacherPassword.jsx";
-import ProfileTeacherComp from "../../components/ProfileTeacherComp/ProfileTeacherComp.jsx";
+import ResetPasswordComp from "../../components/RestStudentPassword/RestStudentPasswordComp.jsx";
 
-export default function TeacherResetPasswordPage() {
+export default function ResetStudentPasswordPage() {
   return (
     <Box
       sx={{
@@ -26,7 +25,7 @@ export default function TeacherResetPasswordPage() {
         }}
       >
         <Container maxWidth="md">
-          <ProfileTeacherComp />
+          <ResetPasswordComp />
         </Container>
       </Box>
 

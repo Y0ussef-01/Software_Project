@@ -8,11 +8,14 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Button,    
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";     
+import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";    
 
+import { useNavigate } from "react-router-dom";  
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
 
 export default function ProfileTeacherComp() {
@@ -25,6 +28,8 @@ export default function ProfileTeacherComp() {
     handleImageChange,
     handleRemoveImage,
   } = useTeacherProfile();
+
+  const navigate = useNavigate();   
 
   if (loading) {
     return (
@@ -53,7 +58,7 @@ export default function ProfileTeacherComp() {
     { label: "Teacher ID", value: teacherData._id },
     { label: "Email", value: teacherData.email },
     { label: "Department", value: teacherData.department },
-    { label: "Total Courses", value: teacherData.courses?.length || 0 },    
+    { label: "Total Courses", value: teacherData.courses?.length || 0 },
   ];
 
   const hasCustomImage =
@@ -82,7 +87,6 @@ export default function ProfileTeacherComp() {
           background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
         }}
       />
-
       <Box
         sx={{
           position: "absolute",
@@ -111,24 +115,47 @@ export default function ProfileTeacherComp() {
           <Box
             sx={{
               display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
               alignItems: "center",
-              alignSelf: { xs: "flex-start", lg: "flex-start" },
+              alignSelf: { xs: "center", lg: "flex-start" },
+              gap: 3,
               mb: { xs: 4, lg: 0 },
             }}
           >
-            <LocalLibraryIcon
-              sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
-            />
-            <Typography
-              variant="h5"
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <LocalLibraryIcon
+                sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
+              />
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: "900",
+                  color: "#152b48",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Teacher Profile
+              </Typography>
+            </Box>
+
+            <Button
+              variant="outlined"
+              startIcon={<VpnKeyOutlinedIcon />}
+              onClick={() => navigate("/teacher/reset-password")}
               sx={{
-                fontWeight: "900",
                 color: "#152b48",
-                letterSpacing: "0.5px",
+                borderColor: "#152b48",
+                borderRadius: "10px",
+                textTransform: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  backgroundColor: "rgba(21, 43, 72, 0.04)",
+                  borderColor: "#152b48",
+                },
               }}
             >
-              Teacher Profile
-            </Typography>
+              Reset Password
+            </Button>
           </Box>
 
           <Box
@@ -162,7 +189,6 @@ export default function ProfileTeacherComp() {
                     transition: "opacity 0.3s ease",
                   }}
                 />
-
                 {isImageUpdating && (
                   <CircularProgress
                     size={40}
@@ -176,7 +202,6 @@ export default function ProfileTeacherComp() {
                     }}
                   />
                 )}
-
                 {!isImageUpdating && (
                   <Box
                     className="overlay"
@@ -218,7 +243,6 @@ export default function ProfileTeacherComp() {
                   </IconButton>
                 </Tooltip>
               )}
-
               <input
                 type="file"
                 accept="image/*"
@@ -238,7 +262,7 @@ export default function ProfileTeacherComp() {
                 lineHeight: 1.2,
               }}
             >
-              Dr. {teacherData.name} {/* إضافة Dr. لشياكة العرض */}
+              Dr. {teacherData.name}
             </Typography>
             <Typography
               variant="body2"
@@ -252,7 +276,7 @@ export default function ProfileTeacherComp() {
         <Box>
           <Grid container spacing={3}>
             {details.map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={index}>
                 <Box
                   sx={{
                     p: 2.5,

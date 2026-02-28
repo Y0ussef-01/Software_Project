@@ -3,7 +3,6 @@ import { Box, Container } from "@mui/material";
 import Header from "../../components/HeaderComp/Header.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
 import TeacherResetPasswordComp from "../../components/RestTeacherPassword/RestTeacherPassword.jsx";
-import ProfileTeacherComp from "../../components/ProfileTeacherComp/ProfileTeacherComp.jsx";
 
 export default function TeacherResetPasswordPage() {
   return (
@@ -26,7 +25,7 @@ export default function TeacherResetPasswordPage() {
         }}
       >
         <Container maxWidth="md">
-          <ProfileTeacherComp />
+          <TeacherResetPasswordComp />
         </Container>
       </Box>
 

@@ -8,14 +8,18 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SchoolIcon from "@mui/icons-material/School";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
+import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../hooks/Student/useStudentProfile";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 export default function ProfileComp() {
   const {
     studentData,
@@ -26,6 +30,8 @@ export default function ProfileComp() {
     handleImageChange,
     handleRemoveImage,
   } = useProfile();
+
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -87,7 +93,6 @@ export default function ProfileComp() {
             background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
           }}
         />
-
         <Box
           sx={{
             position: "absolute",
@@ -116,22 +121,45 @@ export default function ProfileComp() {
             <Box
               sx={{
                 display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
                 alignItems: "center",
-                alignSelf: { xs: "flex-start", lg: "flex-start" },
+                alignSelf: { xs: "center", lg: "flex-start" },
+                gap: 3,
                 mb: { xs: 4, lg: 0 },
               }}
             >
-              <SchoolIcon sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }} />
-              <Typography
-                variant="h5"
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <SchoolIcon sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }} />
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "900",
+                    color: "#152b48",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Student Profile
+                </Typography>
+              </Box>
+
+              <Button
+                variant="outlined"
+                startIcon={<VpnKeyOutlinedIcon />}
+                onClick={() => navigate("/reset-password")}
                 sx={{
-                  fontWeight: "900",
                   color: "#152b48",
-                  letterSpacing: "0.5px",
+                  borderColor: "#152b48",
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "rgba(21, 43, 72, 0.04)",
+                    borderColor: "#152b48",
+                  },
                 }}
               >
-                Student Profile
-              </Typography>
+                Reset Password
+              </Button>
             </Box>
 
             <Box
@@ -165,7 +193,6 @@ export default function ProfileComp() {
                       transition: "opacity 0.3s ease",
                     }}
                   />
-
                   {isImageUpdating && (
                     <CircularProgress
                       size={40}
@@ -179,7 +206,6 @@ export default function ProfileComp() {
                       }}
                     />
                   )}
-
                   {!isImageUpdating && (
                     <Box
                       className="overlay"
@@ -201,7 +227,6 @@ export default function ProfileComp() {
                     </Box>
                   )}
                 </Box>
-
                 {hasCustomImage && !isImageUpdating && (
                   <Tooltip title="Remove photo" placement="left">
                     <IconButton
@@ -221,7 +246,6 @@ export default function ProfileComp() {
                     </IconButton>
                   </Tooltip>
                 )}
-
                 <input
                   type="file"
                   accept="image/*"
@@ -255,7 +279,7 @@ export default function ProfileComp() {
           <Box>
             <Grid container spacing={3}>
               {details.map((item, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={index}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={index}>
                   <Box
                     sx={{
                       p: 2.5,
