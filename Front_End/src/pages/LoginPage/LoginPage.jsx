@@ -5,7 +5,6 @@ import Advertisments from "../../components/AdvertisementsComp/Advertisments.jsx
 import LoginForm from "../../components/LoginForm/LoginForm.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
 
-
 export default function LoginPage() {
   return (
     <Box
