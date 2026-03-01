@@ -12,7 +12,8 @@ import { toast } from "react-toastify";
 
 export default function AdminTopbar() {
   const theme = useTheme();
-  const colorMode = useColorMode();
+
+  const { toggleColorMode, resetColorMode } = useColorMode();
 
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function AdminTopbar() {
 
     setTimeout(() => {
       logout();
+      resetColorMode();
       navigate("/");
     }, 2000);
   };
@@ -72,10 +74,7 @@ export default function AdminTopbar() {
 
       <Box sx={{ display: "flex", gap: 1 }}>
         <Tooltip title="Toggle Theme">
-          <IconButton
-            sx={{ color: "#fff" }}
-            onClick={colorMode.toggleColorMode}
-          >
+          <IconButton sx={{ color: "#fff" }} onClick={toggleColorMode}>
             {theme.palette.mode === "dark" ? (
               <LightModeOutlinedIcon />
             ) : (

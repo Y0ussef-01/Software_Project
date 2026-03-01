@@ -22,47 +22,54 @@ function App() {
   return (
     <AuthProvider>
       <ToastContainer style={{ zIndex: 99999 }} />
-      <CustomThemeProvider>
-        <BrowserRouter>
-          <Routes>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+
+          {/* 🛡️ منطقة الطالب (Student Zone) */}
+          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+            <Route path="/home" element={<HomeStuentPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/profile" element={<ProfileStudnetPage />} />
             <Route
-              path="/"
-              element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              }
+              path="/reset-password"
+              element={<ResetStudentPasswordPage />}
             />
+          </Route>
 
-            {/* 🛡️ منطقة الطالب (Student Zone) */}
-            <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-              <Route path="/home" element={<HomeStuentPage />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/profile" element={<ProfileStudnetPage />} />
-              <Route
-                path="/reset-password"
-                element={<ResetStudentPasswordPage />}
-              />
-            </Route>
+          {/* 🛡️ منطقة الأستاذ (Teacher Zone) */}
+          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+            <Route path="/teacher" element={<HomeTeacherPage />} />
+            <Route
+              path="/teacher/reset-password"
+              element={<RestTeacherPasswordPage />}
+            />
+          </Route>
 
-            {/* 🛡️ منطقة الأستاذ (Teacher Zone) */}
-            <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
-              <Route path="/teacher" element={<HomeTeacherPage />} />
-              <Route
-                path="/teacher/reset-password"
-                element={<RestTeacherPasswordPage />}
-              />
+          {/* 🛡️ منطقة الإدارة (Admin Zone) */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route
+              path="/adminPanel"
+              element={
+                <CustomThemeProvider>
+                  <AdminLayout />
+                </CustomThemeProvider>
+              }
+            >
+              <Route path="profile" element={<AdminProfilePage />} />
             </Route>
+          </Route>
 
-            {/* 🛡️ منطقة الإدارة (Admin Zone) */}
-            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-              <Route path="/adminPanel" element={<AdminLayout />}>
-                <Route path="profile" element={<AdminProfilePage />} />
-              </Route>
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </CustomThemeProvider>
+          <Route path="*" element={<Error404 />} />
+        </Routes>
+      </BrowserRouter>
     </AuthProvider>
   );
 }

@@ -1,18 +1,38 @@
-import React, { createContext, useState, useMemo, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useContext,
+  useEffect,
+} from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
-const ColorModeContext = createContext({ toggleColorMode: () => {} });
+const ColorModeContext = createContext({
+  toggleColorMode: () => {},
+  resetColorMode: () => {},
+});
 
 export const useColorMode = () => useContext(ColorModeContext);
 
 export const CustomThemeProvider = ({ children }) => {
-  const [mode, setMode] = useState("light");
+  const [mode, setMode] = useState(() => {
+    const savedMode = localStorage.getItem("adminThemeMode");
+    return savedMode ? savedMode : "light";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("adminThemeMode", mode);
+  }, [mode]);
 
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
         setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+      },
+      resetColorMode: () => {
+        setMode("light");
+        localStorage.removeItem("adminThemeMode");
       },
     }),
     [],
