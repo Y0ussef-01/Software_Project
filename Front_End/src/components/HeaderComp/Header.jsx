@@ -48,7 +48,6 @@ const Header = () => {
       closeOnClick: true,
       pauseOnHover: false,
       draggable: true,
-      theme: "colored",
     });
 
     setTimeout(() => {
