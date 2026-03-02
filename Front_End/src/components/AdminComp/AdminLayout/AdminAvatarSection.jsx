@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -29,6 +29,23 @@ export default function AdminAvatarSection({
   const role = adminData?.role || "Super Admin";
   const profileImg = adminData?.profileImg || "";
 
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [profileImg]);
+
+  const isStringValid =
+    profileImg &&
+    typeof profileImg === "string" &&
+    profileImg.trim() !== "" &&
+    profileImg !== "null" &&
+    profileImg !== "undefined" &&
+    !profileImg.endsWith("/null") &&
+    !profileImg.endsWith("/undefined");
+
+  const isValid = isStringValid && !imageError;
+
   return (
     <Box
       sx={{
@@ -52,7 +69,12 @@ export default function AdminAvatarSection({
           }}
         >
           <Avatar
-            src={profileImg}
+            src={isValid ? profileImg : ""}
+            imgProps={{
+              onError: () => {
+                setImageError(true);
+              },
+            }}
             sx={{
               width: isProfile
                 ? { xs: 100, sm: 120, md: 150 }
@@ -79,7 +101,7 @@ export default function AdminAvatarSection({
               transition: "all 0.3s ease",
             }}
           >
-            {!profileImg && name.charAt(0)}
+            {!isValid && name.charAt(0)}
           </Avatar>
 
           {isImageUpdating && (
@@ -92,7 +114,7 @@ export default function AdminAvatarSection({
 
         {isProfile && (
           <>
-            {profileImg && !isImageUpdating && (
+            {isValid && !isImageUpdating && (
               <Tooltip title="Remove photo" placement="left">
                 <IconButton
                   onClick={removeProfileImage}
@@ -116,7 +138,7 @@ export default function AdminAvatarSection({
             )}
 
             <Tooltip
-              title={profileImg ? "Change photo" : "Upload photo"}
+              title={isValid ? "Change photo" : "Upload photo"}
               placement="right"
             >
               <IconButton

@@ -18,6 +18,7 @@ import AdminLayout from "./pages/AdminPage/Dashboard/AdminLayout";
 import { CustomThemeProvider } from "./context/Admin/ThemeContext";
 import AdminProfilePage from "./pages/AdminPage/AdminProfilePage/AdminProfilePage";
 import { AdminProfileProvider } from "./context/Admin/AdminProfileContext";
+import RestAdminPasswordPage from "./pages/AdminPage/RestAdminPage/RestAdminPasswordPage";
 
 function App() {
   return (
@@ -67,6 +68,10 @@ function App() {
               }
             >
               <Route path="profile" element={<AdminProfilePage />} />
+              <Route
+                path="reset-password"
+                element={<RestAdminPasswordPage />}
+              />
             </Route>
           </Route>
 

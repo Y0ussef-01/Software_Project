@@ -74,13 +74,13 @@ export const AdminProfileProvider = ({ children }) => {
 
       await axios.put(
         "http://localhost:5000/admin/updateProfileImg",
-        { profileImg: null },
+        { profileImg: "default.jpg" },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
       toast.success("Image removed successfully!");
 
-      setAdminData((prev) => ({ ...prev, profileImg: "" }));
+      setAdminData((prev) => ({ ...prev, profileImg: "default.jpg" }));
     } catch (error) {
       console.error("Error removing image:", error);
       toast.error("Failed to remove image.");

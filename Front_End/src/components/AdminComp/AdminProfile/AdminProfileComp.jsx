@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import { useNavigate } from "react-router-dom";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
@@ -48,9 +49,9 @@ export default function AdminProfileComp() {
       sx={{
         position: "relative",
         width: "100%",
-        maxWidth: "850px",
-        p: { xs: 3, sm: 4, md: 5 },
-        borderRadius: "24px",
+        maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" },
+        p: { xs: 3, sm: 4, md: 5, lg: 6, xl: 7 },
+        borderRadius: { xs: "24px", xl: "32px" },     
         backgroundColor: theme.palette.background.paper,
         boxShadow:
           theme.palette.mode === "dark"
@@ -66,7 +67,7 @@ export default function AdminProfileComp() {
           top: 0,
           left: 0,
           bottom: 0,
-          width: "8px",
+          width: { xs: "8px", lg: "10px" },
           backgroundColor: theme.palette.primary.main,
         }}
       />
@@ -75,8 +76,20 @@ export default function AdminProfileComp() {
           position: "absolute",
           top: "-15%",
           right: "-5%",
-          width: { xs: "200px", sm: "280px", md: "350px" },
-          height: { xs: "200px", sm: "280px", md: "350px" },
+          width: {
+            xs: "200px",
+            sm: "280px",
+            md: "350px",
+            lg: "450px",
+            xl: "550px",
+          },
+          height: {
+            xs: "200px",
+            sm: "280px",
+            md: "350px",
+            lg: "450px",
+            xl: "550px",
+          },
           borderRadius: "50%",
           background:
             theme.palette.mode === "dark"
@@ -92,11 +105,11 @@ export default function AdminProfileComp() {
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/adminPanel")}
           sx={{
-            mb: { xs: 2, sm: 3, md: 4 },
+            mb: { xs: 2, sm: 3, md: 4, lg: 5 },
             color: theme.palette.text.secondary,
             fontWeight: 700,
             textTransform: "none",
-            fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            fontSize: { xs: "0.8rem", sm: "0.9rem", lg: "1rem" },
             "&:hover": {
               backgroundColor: "transparent",
               color: theme.palette.primary.main,
@@ -112,7 +125,7 @@ export default function AdminProfileComp() {
             flexDirection: { xs: "column", md: "row" },
             justifyContent: "space-between",
             alignItems: { xs: "center", md: "flex-start" },
-            mb: 5,
+            mb: { xs: 5, lg: 7 },      
             gap: { xs: 3, md: 2 },
           }}
         >
@@ -121,37 +134,72 @@ export default function AdminProfileComp() {
               display: "flex",
               alignItems: "center",
               alignSelf: { xs: "center", md: "flex-start" },
+              flexWrap: "wrap",
+              gap: { xs: 2, lg: 3 },
             }}
           >
-            <AdminPanelSettingsIcon
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <AdminPanelSettingsIcon
+                sx={{
+                  fontSize: { xs: 28, sm: 34, md: 40, lg: 48, xl: 56 },   
+                  color: theme.palette.primary.main,
+                  mr: { xs: 1, sm: 2 },
+                }}
+              />
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: "900",
+                  color: theme.palette.text.primary,
+                  fontSize: {
+                    xs: "1.5rem",
+                    sm: "1.8rem",
+                    md: "2.125rem",
+                    lg: "2.5rem",
+                    xl: "3rem",
+                  },
+                }}
+              >
+                Admin Profile
+              </Typography>
+            </Box>
+
+            <Button
+              variant="outlined"
+              startIcon={<KeyOutlinedIcon />}
+              onClick={() => navigate("/adminPanel/reset-password")}
+              size="small"
               sx={{
-                fontSize: { xs: 28, sm: 34, md: 40 },
-                color: theme.palette.primary.main,
-                mr: { xs: 1, sm: 2 },
-              }}
-            />
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "900",
+                borderRadius: "8px",
+                textTransform: "none",
+                fontWeight: 600,
+                px: { xs: 2, lg: 3 },    
+                py: { xs: 0.5, lg: 1 },
+                fontSize: { lg: "1rem" },
+                borderWidth: "1px",
+                borderColor: theme.palette.text.secondary,
                 color: theme.palette.text.primary,
-                fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.125rem" },
+                "&:hover": {
+                  borderWidth: "1px",
+                  borderColor: theme.palette.primary.main,
+                  backgroundColor: theme.palette.action.hover,
+                },
               }}
             >
-              Admin Profile
-            </Typography>
+              Reset Password
+            </Button>
           </Box>
 
           <AdminAvatarSection variant="profile" />
         </Box>
 
-        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+        <Grid container spacing={{ xs: 1.5, sm: 2, lg: 3, xl: 4 }}>
           {details.map((item, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Box
                 sx={{
-                  p: { xs: 2, sm: 2.5 },
-                  height: "100%",
+                  p: { xs: 2, sm: 2.5, lg: 3.5, xl: 4 },     
+                  minHeight: { lg: "120px", xl: "140px" },     
                   backgroundColor:
                     theme.palette.mode === "dark"
                       ? "rgba(255,255,255,0.02)"
@@ -164,7 +212,7 @@ export default function AdminProfileComp() {
                   justifyContent: "center",
                   "&:hover": {
                     borderColor: theme.palette.primary.main,
-                    transform: "translateY(-3px)",
+                    transform: "translateY(-5px)",    
                     backgroundColor:
                       theme.palette.mode === "dark"
                         ? "rgba(255,255,255,0.05)"
@@ -172,7 +220,7 @@ export default function AdminProfileComp() {
                     boxShadow:
                       theme.palette.mode === "dark"
                         ? "0px 8px 20px rgba(0,0,0,0.4)"
-                        : "0px 8px 20px rgba(21,43,72,0.06)",
+                        : "0px 12px 25px rgba(21,43,72,0.08)",
                   },
                 }}
               >
@@ -183,9 +231,14 @@ export default function AdminProfileComp() {
                     fontWeight: 800,
                     letterSpacing: "0.5px",
                     display: "block",
-                    mb: 0.5,
+                    mb: { xs: 0.5, lg: 1 },
                     textTransform: "uppercase",
-                    fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                    fontSize: {
+                      xs: "0.65rem",
+                      sm: "0.75rem",
+                      lg: "0.85rem",
+                      xl: "0.95rem",
+                    },
                   }}
                 >
                   {item.label}
@@ -196,7 +249,13 @@ export default function AdminProfileComp() {
                     fontWeight: 900,
                     color: theme.palette.text.primary,
                     wordBreak: "break-word",
-                    fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
+                    fontSize: {
+                      xs: "0.9rem",
+                      sm: "1rem",
+                      md: "1.1rem",
+                      lg: "1.25rem",
+                      xl: "1.4rem",
+                    },
                   }}
                 >
                   {item.value}

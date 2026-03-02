@@ -212,25 +212,19 @@ const updatePassword = async (req, res) => {
 
 const updateProfileImg = async (req, res) => {
   try {
-    let { profileImg } = req.body;
-
-    if (profileImg === null || profileImg === "") {
-      profileImg = "";
-    }
+    const { profileImg } = req.body;
 
     const admin = await Admin.findByIdAndUpdate(
       req.user.id,
       { profileImg },
-      { new: true, runValidators: false },
+      { new: true, runValidators: true },
     );
-
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
 
     res.json({ message: "The data was successfully updated", admin: admin });
   } catch (err) {
-    console.error("Update Profile Img Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -244,6 +238,7 @@ const getAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 module.exports = {
   addStudent,
   deleteStudent,
