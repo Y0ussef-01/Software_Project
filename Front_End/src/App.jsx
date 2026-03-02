@@ -17,6 +17,7 @@ import RestTeacherPasswordPage from "./pages/RestPasswordPage/RestTeacherPasswor
 import AdminLayout from "./pages/AdminPage/Dashboard/AdminLayout";
 import { CustomThemeProvider } from "./context/Admin/ThemeContext";
 import AdminProfilePage from "./pages/AdminPage/AdminProfilePage/AdminProfilePage";
+import { AdminProfileProvider } from "./context/Admin/AdminProfileContext";
 
 function App() {
   return (
@@ -59,7 +60,9 @@ function App() {
               path="/adminPanel"
               element={
                 <CustomThemeProvider>
-                  <AdminLayout />
+                  <AdminProfileProvider>
+                    <AdminLayout />
+                  </AdminProfileProvider>
                 </CustomThemeProvider>
               }
             >

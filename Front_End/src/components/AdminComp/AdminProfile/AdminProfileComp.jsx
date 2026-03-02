@@ -1,27 +1,45 @@
 import React from "react";
-import { Box, Paper, Typography, Grid, Button, useTheme } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Button,
+  useTheme,
+  CircularProgress,
+} from "@mui/material";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
+import { useAdminProfile } from "../../../context/Admin/AdminProfileContext";
 
 export default function AdminProfileComp() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { adminData, isLoading } = useAdminProfile();
 
-  const adminData = {
-    _id: "A-2",
-    email: "admin@cu.edu.eg",
-    role: "Super Admin",
-    status: "Active",
-  };
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const details = [
-    { label: "Admin ID", value: adminData._id },
-    { label: "Email Address", value: adminData.email },
-    { label: "Role", value: adminData.role },
-    { label: "Account Status", value: adminData.status },
+    { label: "Admin ID", value: adminData?._id || "N/A" },
+    { label: "Email Address", value: adminData?.email || "N/A" },
+    { label: "Role", value: adminData?.role || "Super Admin" },
+    { label: "Account Status", value: adminData?.status || "Active" },
   ];
 
   return (
