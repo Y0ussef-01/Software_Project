@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -148,7 +146,9 @@
       <workItem from="1772291302037" duration="721000" />
       <workItem from="1772303653534" duration="11000" />
       <workItem from="1772303843025" duration="946000" />
-      <workItem from="1772375803624" duration="1179000" />
+      <workItem from="1772375803624" duration="1352000" />
+      <workItem from="1772393789466" duration="1761000" />
+      <workItem from="1772449748125" duration="1686000" />
     </task>
     <servers />
   </component>

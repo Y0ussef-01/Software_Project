@@ -1,0 +1,964 @@
+
+// =========================================
+// File: ./seed2.js
+// =========================================
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const Student = require('./src/models/Student');
+const Teacher = require('./src/models/Teacher');
+const Admin = require('./src/models/Admin');
+
+const seedDatabase = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URL);
+        console.log('⏳ جاري تهيئة قاعدة البيانات...');
+
+        await Admin.deleteMany();
+        const hashedPassword = await bcrypt.hash('123456', 10);
+
+        const adminData = [
+            {
+                _id: 'A-1',
+                name: 'Walid Abdullah',
+                email: 'Walid@sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: "admin1.jpg"
+            }
+        ];
+
+
+        await Admin.insertMany(adminData);
+        console.log('✅ تم إضافة أول أدمن (ID: admin01) والطلاب والمدرسين بنجاح!');
+        process.exit();
+
+    } catch (error) {
+        console.error('❌ إيرور في الـ Seed:', error);
+        process.exit(1);
+    }
+};
+
+seedDatabase();
+// =========================================
+// File: ./src/models/Student.js
+// =========================================
+const mongoose = require('mongoose');
+
+const StudentSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, unique: true, trim: true },
+    password: { type: String, required: true,select: false },
+    hours: { type: Number, default: 0 },
+    profileImg: { type: String, required: true },
+    department: { type: String, default: 'عام' },
+    grade: { type: String, default: 'المستوي الاول' },
+    AcademicRecord: { type: String },
+    GPA: { type: Number, default: 0 },
+    maxHours: { type: Number, default: 19 },
+    registeredCourses: [
+        {
+            course: { type: String, ref: 'Course' },
+            group: { type: String, ref: 'Group' }
+        }
+    ],
+    passedCourses: [{
+        course:{ type: String, ref: 'Course' },
+        degree:{ type: String }
+    }],
+});
+
+module.exports = mongoose.model('Student', StudentSchema);
+// =========================================
+// File: ./src/models/Group.js
+// =========================================
+const mongoose = require('mongoose');
+
+const groupSchema = new mongoose.Schema({
+    groupName: { type: String, required: true },
+    _id:{ type: String, required: true }, //course name-groupName-type(نظري , عملي , تدريب)
+    Room: { type: String, required: true },
+    type: { type: String, enum: ['نظري','عملي','تدريب'], required: true },
+    enrolledStudents: [{ type: String, ref: "Student" }],
+    capacity: { type: Number, required: true },
+    appointment: [{
+        day: { type: String, required: true },
+        startTime: { type: String, required: true },
+        endTime: { type: String, required: true }
+    }]
+});
+
+module.exports = mongoose.model('Group', groupSchema);
+// =========================================
+// File: ./src/models/Course.js
+// =========================================
+const mongoose = require('mongoose');
+
+const courseSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
+    hours: { type: Number, required: true },
+    groups: [{ type: String, ref: 'Group' }],
+    prerequisites: [{ type: String, ref: 'Course' }]
+});
+
+module.exports = mongoose.model('Course', courseSchema);
+// =========================================
+// File: ./src/models/Admin.js
+// =========================================
+const mongoose = require('mongoose');
+
+const adminSchema = new mongoose.Schema({
+    _id:{type:String,required:true},
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true, select: false },
+    profileImg: { type: String, required: true }
+});
+
+module.exports = mongoose.model('Admin', adminSchema);
+// =========================================
+// File: ./src/models/Teacher.js
+// =========================================
+const mongoose = require('mongoose');
+
+const teacherSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true,select: false },
+    department: { type: String, required: true },
+    profileImg: { type: String },
+    courses: [
+        {
+            course: { type: String, ref: 'Course' },
+            group: { type: String, ref: 'Group' }
+        }
+    ]
+});
+
+module.exports = mongoose.model('Teacher', teacherSchema);
+// =========================================
+// File: ./src/app.js
+// =========================================
+const express = require("express");
+const cors = require("cors");
+const teacherRoutes = require("./routes/teacher.routes");
+const studentRoutes = require("./routes/student.routes");
+const authRoutes = require("./routes/auth.routes");
+const adminRoutes = require("./routes/admin.routes");
+
+const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  }),
+);
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+app.use("/teacher", teacherRoutes);
+app.use("/student", studentRoutes);
+app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
+
+module.exports = app;
+
+// =========================================
+// File: ./src/services/teacher.services.js
+// =========================================
+
+// =========================================
+// File: ./src/services/student.services.js
+// =========================================
+
+// =========================================
+// File: ./src/services/auth.services.js
+// =========================================
+const generateToken = require('../utils/generateToken');
+const bcrypt = require('bcrypt');
+const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
+const Admin = require('../models/Admin');
+
+const login = async (id, password) => {
+    let user = await Student.findById(id).select('+password');
+    let role = 'student';
+
+    if (!user) {
+        user = await Teacher.findById(id).select('+password');
+        role = 'teacher';
+    }
+
+    if (!user) {
+        user = await Admin.findById(id).select('+password');
+        role = 'admin';
+    }
+
+    if (!user) throw new Error('User not found');
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new Error('Invalid Password');
+
+    user.password = undefined;
+
+    const token = generateToken(user._id, role);
+    return { user, token, role };
+};
+
+module.exports = { login };
+// =========================================
+// File: ./src/middlewares/auth.middleware.js
+// =========================================
+const jwt = require('jsonwebtoken');
+
+const checkRole = (allowedRoles) => {
+    return (req, res, next) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json({ message: 'No token provided' });
+
+        const token = authHeader.split(' ')[1];
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            if (!allowedRoles.includes(decoded.role)) {
+                return res.status(403).json({ message: 'Not allowed for this role' });
+            }
+
+            req.user = decoded;
+            next();
+        } catch (err) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+    };
+};
+
+module.exports = checkRole;
+// =========================================
+// File: ./src/middlewares/studentAuth.js
+// =========================================
+const jwt = require('jsonwebtoken');
+
+const studentAuth = (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader)
+        return res.status(401).json({ message: 'No token provided' });
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.role !== 'student')
+            return res.status(403).json({ message: 'Students only' });
+
+        req.user = decoded;
+        next();
+
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
+module.exports = studentAuth;
+
+// =========================================
+// File: ./src/middlewares/adminAuth.js
+// =========================================
+const jwt = require('jsonwebtoken');
+
+const adminAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: 'Token is missing' });
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ message: 'Only admin' });
+        }
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Expire token' });
+    }
+};
+
+module.exports = adminAuth;
+// =========================================
+// File: ./src/middlewares/teacherAuth.js
+// =========================================
+const jwt = require('jsonwebtoken');
+
+const teacherAuth = (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader)
+        return res.status(401).json({ message: 'No token provided' });
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (decoded.role !== 'teacher')
+            return res.status(403).json({ message: 'Teachers only' });
+
+        req.user = decoded;
+
+        next();
+
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
+module.exports = teacherAuth;
+// =========================================
+// File: ./src/Controllers/admin.controller.js
+// =========================================
+const Student = require('../models/Student');
+const Teacher = require('../models/Teacher');
+const Admin = require('../models/Admin');
+const bcrypt = require('bcrypt');
+
+const addStudent = async (req, res) => {
+    try {
+        const { _id, name, email, password, profileImg } = req.body;
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newStudent = new Student({
+            _id, name, email, password: hashedPassword, profileImg
+        });
+
+        await newStudent.save();
+        res.status(201).json({ message: 'added student successfully', student: newStudent });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const deleteStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const student = await Student.findByIdAndDelete(id);
+
+        if (!student) return res.status(404).json({ message: 'Student not found.' });
+
+        res.json({ message: 'Deleted student successfully', student });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getStudent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const student = await Student.findById(id).populate('registeredCourses.course');
+
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        res.json(student);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateStudent = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const updateData = { ...req.body };
+        delete updateData._id;
+
+        if (updateData.password && updateData.password.trim() !== "") {
+            updateData.password = await bcrypt.hash(updateData.password, 10);
+        } else {
+            delete updateData.password;
+        }
+
+        const student = await Student.findByIdAndUpdate(id, updateData, { new: true });
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        res.json({ message: 'updated successfully', student });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+const addTeacher = async (req, res) => {
+    try {
+        const { _id, name, email, password, department, profileImg } = req.body;
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newTeacher = new Teacher({
+            _id,
+            name,
+            email,
+            password: hashedPassword,
+            department,
+            profileImg
+        });
+
+        await newTeacher.save();
+        res.status(201).json({ message: 'added Teacher Successfully', teacher: newTeacher });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const deleteTeacher = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const teacher = await Teacher.findByIdAndDelete(id);
+
+        if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+        res.json({ message: 'Deleted Teacher Successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getTeacher = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const teacher = await Teacher.findById(id).populate('courses.course');
+
+        if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+        res.json(teacher);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateTeacher = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = { ...req.body };
+        delete updateData._id;
+
+        if (updateData.password && updateData.password.trim() !== "") {
+            updateData.password = await bcrypt.hash(updateData.password, 10);
+        } else {
+            delete updateData.password;
+        }
+
+        const teacher = await Teacher.findByIdAndUpdate(id, updateData, { new: true });
+        if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+
+        res.json({ message: 'Data updated Successfully', teacher });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+const addAdmin = async (req, res) => {
+    try {
+        const { _id, name, email, password, permissions } = req.body;
+        if (!password) {
+            return res.status(400).json({ message: 'كلمة المرور مطلوبة' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newAdmin = new Admin({
+            _id, name, email, password: hashedPassword, permissions
+        });
+
+        await newAdmin.save();
+        res.status(201).json({ message: 'Admin added successfully', admin: newAdmin });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Please enter old and new password' });
+        }
+
+        const admin = await Admin.findById(req.user.id).select('+password');
+
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, admin.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        admin.password = await bcrypt.hash(newPassword, 10);
+        await admin.save();
+
+        res.json({ message: 'The password updated successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateProfileImg = async (req, res) => {
+    try {
+        const { profileImg } = req.body;
+
+        const admin = await Admin.findByIdAndUpdate(
+            req.user.id,
+            { profileImg },
+            { new: true, runValidators: true }
+        );
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        res.json({ message: 'The data was successfully updated', admin: admin });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getAdmin = async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.user.id);
+        if (!admin) return res.status(404).json({ message: 'Admin not found' });
+        res.json(admin);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+
+    };
+module.exports = {
+    addStudent, deleteStudent, getStudent, updateStudent,
+    addTeacher, deleteTeacher, getTeacher, updateTeacher,
+    addAdmin, updatePassword, getAdmin , updateProfileImg
+};
+
+
+// =========================================
+// File: ./src/Controllers/teacher.controller.js
+// =========================================
+const Teacher = require('../models/Teacher');
+const bcrypt = require('bcrypt');
+
+
+const updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Please enter a new and old password' });
+        }
+
+        const teacher = await Teacher.findById(req.user.id).select('+password');
+
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, teacher.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        teacher.password = hashed;
+        await teacher.save();
+
+        res.json({ message: 'Password updated successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+const getProfile = async (req, res) => {
+
+    try {
+
+        const teacher = await Teacher.findById(req.user.id);
+
+        if (!teacher)
+            return res.status(404).json({ message: 'Teacher not found' });
+
+        res.json(teacher);
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+const updateProfileImg = async (req, res) => {
+    try {
+        const { profileImg } = req.body;
+
+        if (!profileImg) {
+            return res.status(400).json({ message: 'Please send a profile picture' });
+        }
+
+        const updatedTeacher = await Teacher.findByIdAndUpdate(
+            req.user.id,
+            { profileImg },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        res.json({ message: 'The data was successfully updated', Teacher: updatedTeacher });
+
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ message: 'Invalid data', details: err.message });
+        }
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { getProfile, updateProfileImg, updatePassword };
+// =========================================
+// File: ./src/Controllers/student.controller.js
+// =========================================
+const Student = require('../models/Student');
+const bcrypt = require('bcrypt');
+
+const getProfile = async (req, res) => {
+    try {
+        const student = await Student.findById(req.user.id);
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+        res.json(student);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateProfileImg = async (req, res) => {
+    try {
+        const { profileImg } = req.body;
+
+        const updatedStudent = await Student.findByIdAndUpdate(
+            req.user.id,
+            { profileImg },
+            { new: true, runValidators: true }
+        );
+        if (!updatedStudent) return res.status(404).json({ message: 'Student not found' });
+
+        res.json({ message: 'The data was successfully updated', student: updatedStudent });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Please enter old and new password' });
+        }
+
+        const student = await Student.findById(req.user.id).select('+password');
+
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, student.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        student.password = await bcrypt.hash(newPassword, 10);
+        await student.save();
+
+        res.json({ message: 'The password updated successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { getProfile, updateProfileImg, updatePassword };
+
+
+// =========================================
+// File: ./src/Controllers/auth.controller.js
+// =========================================
+const authService = require('../services/auth.services.js');
+
+const login = async (req, res) => {
+    try {
+        const { id, password } = req.body;
+        const data = await authService.login(id, password);
+        res.json(data);
+    } catch (err) {
+        res.status(401).json({ message: err.message });
+    }
+};
+
+module.exports = { login };
+// =========================================
+// File: ./src/routes/admin.routes.js
+// =========================================
+const express = require('express');
+const router = express.Router();
+const adminAuth = require('../middlewares/adminAuth');
+const adminController = require('../Controllers/admin.controller');
+
+router.post('/add-student', adminAuth, adminController.addStudent);
+router.get('/student/:id', adminAuth, adminController.getStudent);
+router.put('/update-student/:id', adminAuth, adminController.updateStudent);
+router.delete('/delete-student/:id', adminAuth, adminController.deleteStudent);
+
+router.post('/add-teacher', adminAuth, adminController.addTeacher);
+router.get('/teacher/:id', adminAuth, adminController.getTeacher);
+router.put('/update-teacher/:id', adminAuth, adminController.updateTeacher);
+router.delete('/delete-teacher/:id', adminAuth, adminController.deleteTeacher);
+
+router.post('/add-admin', adminAuth, adminController.addAdmin);
+router.put('/updateProfileImg', adminAuth, adminController.updateProfileImg);
+router.put('/updatePassword', adminAuth, adminController.updatePassword);
+router.get('/getAdmin', adminAuth, adminController.getAdmin);
+
+module.exports = router;
+// =========================================
+// File: ./src/routes/teacher.routes.js
+// =========================================
+const express = require('express');
+const router = express.Router();
+const teacherAuth = require('../middlewares/teacherAuth');
+const controller = require('../Controllers/teacher.controller');
+
+router.get('/profile', teacherAuth, controller.getProfile);
+router.put('/update-profile-img', teacherAuth, controller.updateProfileImg);
+router.put('/update-password', teacherAuth, controller.updatePassword);
+
+module.exports = router;
+// =========================================
+// File: ./src/routes/auth.routes.js
+// =========================================
+const express = require('express');
+const router = express.Router();
+const authController = require('../Controllers/auth.controller');
+
+router.post('/login', authController.login);
+
+module.exports = router;
+// =========================================
+// File: ./src/routes/student.routes.js
+// =========================================
+const express = require('express');
+const router = express.Router();
+const studentAuth = require('../middlewares/studentAuth');
+const controller = require('../Controllers/student.controller');
+
+router.get('/Profile', studentAuth, controller.getProfile);
+router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
+router.put('/updatePassword', studentAuth, controller.updatePassword);
+
+module.exports = router;
+// =========================================
+// File: ./src/config/db.js
+// =========================================
+const mongoose = require('mongoose');
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URL)
+        console.log("MongoDB Connected");
+    }
+    catch (err) {
+        console.error("MongoDB Connection Error: ", err.message);
+    }
+}
+module.exports = connectDB;
+// =========================================
+// File: ./src/utils/generateToken.js
+// =========================================
+const jwt = require('jsonwebtoken');
+
+const generateToken = (id, role) => {
+
+    return jwt.sign(
+        { id, role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+};
+
+module.exports = generateToken;
+// =========================================
+// File: ./src/utils/hashPassword.js
+// =========================================
+
+// =========================================
+// File: ./seed.js
+// =========================================
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const Student = require('./src/models/Student');
+const Teacher = require('./src/models/Teacher');
+
+const seedDatabase = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URL);
+        console.log('⏳ متصل بقاعدة البيانات.. جاري مسح بيانات الطلاب والمدرسين القديمة...');
+
+        // 2. مسح الداتا القديمة عشان ميحصلش تعارض في الـ IDs أو الـ Emails
+        await Student.deleteMany();
+        await Teacher.deleteMany();
+
+        console.log('⏳ جاري إضافة المدرسين والطلاب الجداد...');
+
+        const hashedPassword = await bcrypt.hash('123456', 10);
+
+        const teachersData = [
+            {
+                _id: 'T-1',
+                name: 'Hassan Ayad',
+                email: 'Hassan@cu.edu.eg',
+                password: hashedPassword,
+                department: 'Computer Science',
+                profileImg: 'default-teacher.jpg'
+            },
+            {
+                _id: 'T-2',
+                name: 'Hattem Moharram',
+                email: 'Hatem@cu.edu.eg',
+                password: hashedPassword,
+                department: 'Computer Science',
+                profileImg: 'default-teacher.jpg'
+            },
+            {
+                _id: 'T-3',
+                name: 'Reem Ahmed',
+                email: 'Reem@cu.edu.eg',
+                password: hashedPassword,
+                department: 'Computer Science',
+                profileImg: 'default-teacher.jpg'
+            },
+            {
+                _id: 'T-4',
+                name: 'Nasser Sweilam',
+                email: 'Nasser@cu.edu.eg',
+                password: hashedPassword,
+                department: 'Computer Science',
+                profileImg: 'default-teacher.jpg'
+            }
+        ];
+
+        const studentsData = [
+            {
+                _id: '2327443',
+                name: 'Youssef Ashraf Mahmoud',
+                email: '202327443@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            },
+            {
+                _id: '2327315',
+                name: 'Abdelrahman Mohamed Ebrahim',
+                email: '202327315@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            },
+            {
+                _id: '2327271',
+                name: 'Abdelrahman Mohamed Eliwa',
+                email: '202327271@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            },
+            {
+                _id: '2327473',
+                name: 'Mahmoud Mosad Kamel',
+                email: '202327473@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            },
+            {
+                _id: '2327058',
+                name: 'Youssef Ahmed Hassan',
+                email: '202327058@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            },
+            {
+                _id: '2227375',
+                name: 'Ahmed Hesham Mohamed',
+                email: '202227375@std.sci.cu.edu.eg',
+                password: hashedPassword,
+                profileImg: 'default-student.jpg',
+                department: 'Computer Science',
+                grade: 'المستوي الثالث'
+            }
+        ];
+
+        await Teacher.insertMany(teachersData);
+        await Student.insertMany(studentsData);
+
+        console.log('✅ تم تسجيل الطلاب والمدرسين بنجاح!');
+        process.exit();
+
+    } catch (error) {
+        console.error('❌ حصلت مشكلة وإحنا بنسجل البيانات:', error);
+        process.exit(1);
+    }
+};
+
+seedDatabase();
+// =========================================
+// File: ./index.js
+// =========================================
+
+// =========================================
+// File: ./server.js
+// =========================================
+require('dotenv').config();
+const express = require('express');
+const app = require('./src/app')
+const connectDB = require('./src/config/db');
+const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+    try {
+        await connectDB()
+        app.listen(PORT, () => {
+            console.log(`Listening on port ${PORT}`);
+        })
+    }
+    catch(err) {
+        console.error(err);
+    }
+
+}
+startServer();
+//=====================================================

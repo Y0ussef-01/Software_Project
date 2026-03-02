@@ -20,14 +20,13 @@ const updateProfileImg = async (req, res) => {
             { profileImg },
             { new: true, runValidators: true }
         );
+        if (!updatedStudent) return res.status(404).json({ message: 'Student not found' });
 
         res.json({ message: 'The data was successfully updated', student: updatedStudent });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
-
-
 
 const updatePassword = async (req, res) => {
     try {
@@ -48,9 +47,7 @@ const updatePassword = async (req, res) => {
             return res.status(400).json({ message: 'Invalid password' });
         }
 
-        const hashed = await bcrypt.hash(newPassword, 10);
-
-        student.password = hashed;
+        student.password = await bcrypt.hash(newPassword, 10);
         await student.save();
 
         res.json({ message: 'The password updated successfully' });

@@ -14,8 +14,8 @@ router.put('/update-teacher/:id', adminAuth, adminController.updateTeacher);
 router.delete('/delete-teacher/:id', adminAuth, adminController.deleteTeacher);
 
 router.post('/add-admin', adminAuth, adminController.addAdmin);
-router.put('/update-profile', adminAuth, adminController.updateAdminProfile);
-router.put('/update-profile/:id', adminAuth, adminController.updateAdminProfile);
+router.put('/updateProfileImg', adminAuth, adminController.updateProfileImg);
+router.put('/updatePassword', adminAuth, adminController.updatePassword);
 router.get('/getAdmin', adminAuth, adminController.getAdmin);
 
 module.exports = router;

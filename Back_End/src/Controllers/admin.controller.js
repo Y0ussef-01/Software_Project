@@ -141,6 +141,7 @@ const updateTeacher = async (req, res) => {
     }
 };
 
+
 const addAdmin = async (req, res) => {
     try {
         const { _id, name, email, password, permissions } = req.body;
@@ -160,22 +161,49 @@ const addAdmin = async (req, res) => {
     }
 };
 
-const updateAdminProfile = async (req, res) => {
+const updatePassword = async (req, res) => {
     try {
-        const id = req.params.id || req.user.id;
-        const updateData = { ...req.body };
-        delete updateData._id;
+        const { oldPassword, newPassword } = req.body;
 
-        if (updateData.password && updateData.password.trim() !== "") {
-            updateData.password = await bcrypt.hash(updateData.password, 10);
-        } else {
-            delete updateData.password;
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Please enter old and new password' });
         }
 
-        const updatedAdmin = await Admin.findByIdAndUpdate(id, updateData, { new: true });
-        if (!updatedAdmin) return res.status(404).json({ message: 'Admin not found' });
+        const admin = await Admin.findById(req.user.id).select('+password');
 
-        res.json({ message: 'Admin data updated successfully', admin: updatedAdmin });
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, admin.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid password' });
+        }
+
+        admin.password = await bcrypt.hash(newPassword, 10);
+        await admin.save();
+
+        res.json({ message: 'The password updated successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const updateProfileImg = async (req, res) => {
+    try {
+        const { profileImg } = req.body;
+
+        const admin = await Admin.findByIdAndUpdate(
+            req.user.id,
+            { profileImg },
+            { new: true, runValidators: true }
+        );
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        res.json({ message: 'The data was successfully updated', admin: admin });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -194,6 +222,6 @@ const getAdmin = async (req, res) => {
 module.exports = {
     addStudent, deleteStudent, getStudent, updateStudent,
     addTeacher, deleteTeacher, getTeacher, updateTeacher,
-    addAdmin, updateAdminProfile, getAdmin
+    addAdmin, updatePassword, getAdmin , updateProfileImg
 };
 
