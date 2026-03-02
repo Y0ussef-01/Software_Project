@@ -1,10 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";  
+import { Link } from "react-router-dom";
 import { Box, Grid, Typography, Paper } from "@mui/material";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
-import ComputerIcon from "@mui/icons-material/Computer";
+import SchoolIcon from "@mui/icons-material/School";
 
 export default function FeaturesComp() {
   const features = [
@@ -13,7 +13,7 @@ export default function FeaturesComp() {
       title: "Registration",
       icon: <AppRegistrationIcon fontSize="inherit" />,
       active: true,
-      path: "/registration", 
+      path: "/registration",
     },
     {
       id: 2,
@@ -25,12 +25,12 @@ export default function FeaturesComp() {
       id: 3,
       title: "Grades",
       icon: <WorkspacePremiumIcon fontSize="inherit" />,
-      path: "/grades", 
+      path: "/grades",
     },
     {
       id: 5,
       title: "Profile",
-      icon: <ComputerIcon fontSize="inherit" />,
+      icon: <SchoolIcon fontSize="inherit" />,
       path: "/profile",
     },
   ];
@@ -66,7 +66,7 @@ export default function FeaturesComp() {
                 backgroundColor: feature.active ? "#152b48" : "#fff",
                 color: feature.active ? "#fff" : "#152b48",
                 cursor: "pointer",
-                textDecoration: "none", 
+                textDecoration: "none",
                 transition: "all 0.3s ease",
                 boxShadow: feature.active
                   ? "0px 8px 20px rgba(21, 43, 72, 0.2)"
