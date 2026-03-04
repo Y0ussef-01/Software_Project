@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -15,6 +15,8 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import DeleteIcon from "@mui/icons-material/Delete";   
 
 export default function StudentDetailsCard({
   student,
@@ -22,33 +24,88 @@ export default function StudentDetailsCard({
   onUpdateSubmit,
 }) {
   const theme = useTheme();
-
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(student);
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  useEffect(() => {
+    setEditData(student);
+    setImagePreview(
+      student.profileImg && student.profileImg !== "default.jpg"
+        ? student.profileImg
+        : "",
+    );
+  }, [student]);
 
   const handleInputChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  // دالة الحفظ
-  const handleSave = () => {
-    onUpdateSubmit(editData);
-    setIsEditing(false);
+  const handleImageClick = () => {
+    if (isEditing) fileInputRef.current.click();
   };
 
-  // دالة الإلغاء
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setEditData({ ...editData, profileImg: base64String });    
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = (e) => {
+    e.stopPropagation();         
+    setImagePreview("");   
+    setEditData({ ...editData, profileImg: "default.jpg" }); 
+  };
+
+  const handleSave = async () => {
+    const isSuccess = await onUpdateSubmit(editData);
+    if (isSuccess) setIsEditing(false);
+  };
+
   const handleCancel = () => {
     setEditData(student);
+    setImagePreview(
+      student.profileImg && student.profileImg !== "default.jpg"
+        ? student.profileImg
+        : "",
+    );
     setIsEditing(false);
   };
 
   const fields = [
     { key: "_id", label: "Student ID", value: editData._id, editable: false },
-    { key: "name", label: "Full Name", value: editData.name, editable: true },
+    { key: "name", label: "Full Name", value: editData.name, editable: false },
     {
       key: "email",
       label: "Email Address",
       value: editData.email,
+      editable: false,
+    },
+    {
+      key: "department",
+      label: "Department",
+      value: editData.department || "",
+      editable: true,
+    },
+    {
+      key: "grade",
+      label: "Level",
+      value: editData.grade || "",
+      editable: true,
+    },
+    { key: "GPA", label: "GPA", value: editData.GPA || "", editable: true },
+    {
+      key: "maxHours",
+      label: "Max Hours",
+      value: editData.maxHours || "",
       editable: true,
     },
     ...(isEditing
@@ -73,12 +130,12 @@ export default function StudentDetailsCard({
         p: { xs: 3, sm: 4, md: 5, lg: 6 },
         borderRadius: { xs: "24px", xl: "32px" },
         backgroundColor: theme.palette.background.paper,
+        transition: "all 0.3s ease",
         boxShadow:
           theme.palette.mode === "dark"
             ? "0px 10px 40px rgba(0, 0, 0, 0.4)"
             : "0px 10px 40px rgba(21, 43, 72, 0.08)",
         overflow: "hidden",
-        transition: "all 0.3s ease",
       }}
     >
       <Box
@@ -89,23 +146,6 @@ export default function StudentDetailsCard({
           bottom: 0,
           width: { xs: "8px", lg: "10px" },
           backgroundColor: theme.palette.primary.main,
-        }}
-      />
-
-      <Box
-        sx={{
-          position: "absolute",
-          top: "-20%",
-          right: "-5%",
-          width: { xs: "250px", md: "350px", xl: "450px" },
-          height: { xs: "250px", md: "350px", xl: "450px" },
-          borderRadius: "50%",
-          background:
-            theme.palette.mode === "dark"
-              ? "radial-gradient(circle, rgba(144,202,249,0.05) 0%, rgba(0,0,0,0) 70%)"
-              : "radial-gradient(circle, rgba(25,118,210,0.05) 0%, rgba(255,255,255,0) 70%)",
-          zIndex: 0,
-          pointerEvents: "none",
         }}
       />
 
@@ -121,22 +161,83 @@ export default function StudentDetailsCard({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <Avatar
-              src={
-                student.profileImg !== "default.jpg" ? student.profileImg : ""
-              }
-              sx={{
-                width: 90,
-                height: 90,
-                fontSize: "2.5rem",
-                bgcolor: theme.palette.primary.main,
-                color: "#fff",
-                border: `4px solid ${theme.palette.background.paper}`,
-                boxShadow: "0px 8px 20px rgba(0,0,0,0.1)",
-              }}
-            >
-              {editData.name.charAt(0).toUpperCase()}
-            </Avatar>
+            <Box sx={{ position: "relative", display: "inline-block" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  display: "inline-block",
+                  cursor: isEditing ? "pointer" : "default",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  "&:hover .overlay": { opacity: isEditing ? 1 : 0 },
+                }}
+                onClick={handleImageClick}
+              >
+                <Avatar
+                  src={imagePreview}
+                  sx={{
+                    width: 90,
+                    height: 90,
+                    fontSize: "2.5rem",
+                    bgcolor: theme.palette.primary.main,
+                    color: "#fff",
+                    border: `4px solid ${theme.palette.background.paper}`,
+                    boxShadow: "0px 8px 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {editData.name ? editData.name.charAt(0).toUpperCase() : ""}
+                </Avatar>
+                {isEditing && (
+                  <Box
+                    className="overlay"
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(21, 43, 72, 0.4)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      opacity: 0,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  >
+                    <PhotoCameraIcon sx={{ color: "#fff", fontSize: 35 }} />
+                  </Box>
+                )}
+              </Box>
+
+              {isEditing && imagePreview && (
+                <Tooltip title="Remove Image">
+                  <IconButton
+                    onClick={handleRemoveImage}
+                    sx={{
+                      position: "absolute",
+                      bottom: -5,
+                      right: -5,
+                      bgcolor: "error.main",
+                      color: "white",
+                      size: "small",
+                      "&:hover": { bgcolor: "error.dark" },
+                      width: 28,
+                      height: 28,
+                    }}
+                  >
+                    <DeleteIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+            </Box>
             <Box>
               <Typography
                 variant="h5"
@@ -236,27 +337,20 @@ export default function StudentDetailsCard({
                 sx={{
                   p: { xs: 2, lg: 3 },
                   minHeight: "100px",
-                  backgroundColor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(255,255,255,0.02)"
-                      : "#f8fafc",
                   borderRadius: "16px",
                   border: `1px solid ${theme.palette.divider}`,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   transition: "all 0.3s ease",
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(255,255,255,0.02)"
+                      : "#f8fafc",
                   "&:hover": {
                     borderColor: theme.palette.primary.main,
                     transform: "translateY(-3px)",
-                    backgroundColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.05)"
-                        : "#fff",
-                    boxShadow:
-                      theme.palette.mode === "dark"
-                        ? "0px 8px 20px rgba(0,0,0,0.4)"
-                        : "0px 8px 20px rgba(21,43,72,0.06)",
+                    boxShadow: "0px 8px 20px rgba(21,43,72,0.06)",
                   },
                 }}
               >
@@ -265,7 +359,6 @@ export default function StudentDetailsCard({
                   sx={{
                     color: theme.palette.text.secondary,
                     fontWeight: 800,
-                    letterSpacing: "0.5px",
                     mb: 1,
                     textTransform: "uppercase",
                     fontSize: "0.75rem",
@@ -273,7 +366,6 @@ export default function StudentDetailsCard({
                 >
                   {item.label}
                 </Typography>
-
                 {isEditing && item.editable ? (
                   <TextField
                     name={item.key}
@@ -283,14 +375,7 @@ export default function StudentDetailsCard({
                     fullWidth
                     variant="standard"
                     type={item.key === "password" ? "password" : "text"}
-                    InputProps={{
-                      disableUnderline: false,
-                      sx: {
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        color: theme.palette.text.primary,
-                      },
-                    }}
+                    InputProps={{ sx: { fontWeight: 700, fontSize: "1rem" } }}
                   />
                 ) : (
                   <Typography
@@ -301,7 +386,7 @@ export default function StudentDetailsCard({
                       fontSize: "1.1rem",
                     }}
                   >
-                    {item.value}
+                    {item.value || "N/A"}
                   </Typography>
                 )}
               </Box>

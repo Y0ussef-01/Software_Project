@@ -1,57 +1,24 @@
-import React, { useState, useEffect } from "react";
-// ✨ التعديل 1: استدعاء Collapse لعمل حركة الظهور والاختفاء السلسة
+import React from "react";
 import { Box, Typography, Collapse } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import StudentSearchSection from "../../../components/AdminComp/StudentManagement/StudentSearchSection";
 import StudentDetailsCard from "../../../components/AdminComp/StudentManagement/StudentDetailsCard";
 
+import useStudentManagement from "../../../hooks/Admin/StudentManagement/useStudentManagement";
+
 export default function StudentManagementPage() {
   const navigate = useNavigate();
 
-  const [searchId, setSearchId] = useState("");
-  const [showCard, setShowCard] = useState(false);
-  const [studentData, setStudentData] = useState(null);
-
-  // مراقبة حقل البحث
-  useEffect(() => {
-    if (searchId === "") {
-      setShowCard(false); // 1. إعطاء أمر الاختفاء أولاً لتبدأ الحركة
-
-      // 2. تأخير مسح البيانات حتى يكتمل الأنيميشن (نصف ثانية)
-      // لو مسحنا البيانات فوراً، الكارت هيفضى وهو بيختفي وهيبقى شكله سيء
-      const timer = setTimeout(() => {
-        setStudentData(null);
-      }, 500);
-
-      return () => clearTimeout(timer); // تنظيف التايمر
-    }
-  }, [searchId]);
-
-  const handleSimulateSearch = () => {
-    if (!searchId) return;
-
-    const mockApiResponse = {
-      _id: searchId,
-      name: "Ahmed",
-      email: "ahmed@sci.cu.edu.eg",
-      profileImg: "default.jpg",
-    };
-
-    setStudentData(mockApiResponse);
-    setShowCard(true); // إظهار الكارت
-  };
-
-  const handleSimulateDelete = () => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      setShowCard(false);
-      setSearchId("");
-    }
-  };
-
-  const handleSimulateUpdate = (updatedData) => {
-    setStudentData(updatedData);
-  };
+  const {
+    searchId,
+    setSearchId,
+    showCard,
+    studentData,
+    handleSearch,
+    handleUpdateSubmit,
+    handleDeleteClick,
+  } = useStudentManagement();
 
   return (
     <Box
@@ -85,28 +52,25 @@ export default function StudentManagementPage() {
       <StudentSearchSection
         searchId={searchId}
         setSearchId={setSearchId}
-        onSearch={handleSimulateSearch}
-        onAddClick={() => navigate("/adminPanel/add-student")}
+        onSearch={handleSearch}
       />
 
-      {/* ✨ التعديل 2: تغليف الكارت بمكون Collapse بدلاً من الـ CSS التقليدي */}
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <Collapse
           in={showCard}
           unmountOnExit
-          timeout={500} // مدة الحركة (نصف ثانية)
+          timeout={500}
           sx={{
             width: "100%",
             maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" },
           }}
         >
-          {/* محتوى الكارت */}
           <Box sx={{ pt: 1, pb: 2 }}>
             {studentData && (
               <StudentDetailsCard
                 student={studentData}
-                onDeleteClick={handleSimulateDelete}
-                onUpdateSubmit={handleSimulateUpdate}
+                onDeleteClick={handleDeleteClick}
+                onUpdateSubmit={handleUpdateSubmit}
               />
             )}
           </Box>

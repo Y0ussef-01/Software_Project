@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Paper,
@@ -9,43 +9,27 @@ import {
   Grid,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useNavigate } from "react-router-dom";
+
+import useAddStudent from "../../../hooks/Admin/StudentManagement/useAddStudent.js";
 
 export default function AddStudentComp() {
   const theme = useTheme();
-  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    _id: "",
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "_id" && !/^\d*$/.test(value)) {
-      return;
-    }
-
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Data to be sent to API:", {
-      ...formData,
-      profileImg: "default.jpg",
-    });
-    alert("This is just a UI Demo. Check console for payload!");
-  };
+  const {
+    formData,
+    showPassword,
+    isLoading,
+    handleChange,
+    togglePasswordVisibility,
+    handleSubmit,
+    navigate,
+  } = useAddStudent();
 
   return (
     <Paper
@@ -252,7 +236,7 @@ export default function AddStudentComp() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={togglePasswordVisibility}
                         edge="end"
                         sx={{ color: theme.palette.text.secondary }}
                       >
@@ -288,6 +272,7 @@ export default function AddStudentComp() {
                 type="submit"
                 variant="contained"
                 fullWidth
+                disabled={isLoading}
                 sx={{
                   mt: 2,
                   py: 1.8,
@@ -301,7 +286,11 @@ export default function AddStudentComp() {
                       : "0 8px 20px rgba(25, 118, 210, 0.25)",
                 }}
               >
-                Create Student Account
+                {isLoading ? (
+                  <CircularProgress size={26} color="inherit" />
+                ) : (
+                  "Create Student Account"
+                )}
               </Button>
             </Grid>
           </Grid>

@@ -1,8 +1,7 @@
 import React from "react";
-import { Box, Container } from "@mui/material";
+import { Box } from "@mui/material";
 import Header from "../../components/HeaderComp/Header.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
-import TeacherResetPasswordComp from "../../components/RestTeacherPassword/RestTeacherPassword.jsx";
 import ProfileTeacherComp from "../../components/ProfileTeacherComp/ProfileTeacherComp.jsx";
 
 export default function TeacherResetPasswordPage() {
@@ -21,13 +20,20 @@ export default function TeacherResetPasswordPage() {
         sx={{
           flexGrow: 1,
           display: "flex",
+          justifyContent: "center",
           alignItems: "center",
-          py: { xs: 4, md: 6 },
+          py: { xs: 4, md: 6, lg: 8 },
+          px: { xs: 2, sm: 3, md: 4 },
         }}
       >
-        <Container maxWidth="md">
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" },
+          }}
+        >
           <ProfileTeacherComp />
-        </Container>
+        </Box>
       </Box>
 
       <Footer />

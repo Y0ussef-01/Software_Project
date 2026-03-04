@@ -8,6 +8,17 @@ export const useResetPassword = () => {
   const { logout } = useAuth();
 
   const resetPassword = async (oldPassword, newPassword) => {
+    const strongPasswordRegex =
+      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+
+    if (!strongPasswordRegex.test(newPassword)) {
+      toast.warning(
+        "Password must be at least 8 characters long and include letters, numbers, and symbols.",
+        { autoClose: 4000 },       
+      );
+      return false;     
+    }
+
     setIsLoading(true);
 
     try {

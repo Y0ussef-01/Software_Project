@@ -5,12 +5,12 @@ import {
   Button,
   useTheme,
   InputAdornment,
-  IconButton, // ✨ إضافة IconButton
+  IconButton,    
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-import CloseIcon from "@mui/icons-material/Close"; // ✨ استدعاء أيقونة المسح
+import CloseIcon from "@mui/icons-material/Close";     
 import { useNavigate } from "react-router-dom";
 
 export default function StudentSearchSection({
@@ -28,7 +28,6 @@ export default function StudentSearchSection({
     }
   };
 
-  // ✨ دالة لتفريغ الحقل
   const handleClear = () => {
     setSearchId("");
   };
@@ -70,7 +69,6 @@ export default function StudentSearchSection({
               <SearchIcon sx={{ color: theme.palette.text.secondary }} />
             </InputAdornment>
           ),
-          // ✨ إضافة زر المسح (يظهر فقط إذا كان هناك نص في الحقل)
           endAdornment: searchId ? (
             <InputAdornment position="end">
               <IconButton
@@ -94,7 +92,6 @@ export default function StudentSearchSection({
               theme.palette.mode === "dark"
                 ? "rgba(255,255,255,0.02)"
                 : "#f8fafc",
-            // ✨ تعديل بسيط للـ padding عشان الأيقونة الجديدة تظهر بشكل مريح
             paddingRight: "14px",
           },
         }}

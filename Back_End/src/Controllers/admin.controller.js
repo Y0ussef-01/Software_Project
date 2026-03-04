@@ -5,8 +5,8 @@ const bcrypt = require("bcrypt");
 
 const addStudent = async (req, res) => {
   try {
-    const { _id, name, password} = req.body;
-    const Email= `20${_id}@std.sci.cu.edu.eg`
+    const { _id, name, password } = req.body;
+    const Email = `20${_id}@std.sci.cu.edu.eg`;
     if (!password) {
       return res.status(400).json({ message: "Password is required" });
     }
@@ -15,7 +15,7 @@ const addStudent = async (req, res) => {
     const newStudent = new Student({
       _id,
       name,
-      email:Email,
+      email: Email,
       password: hashedPassword,
     });
 
@@ -45,9 +45,7 @@ const deleteStudent = async (req, res) => {
 const getStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const student = await Student.findById(id).populate(
-      "registeredCourses.course",
-    );
+    const student = await Student.findById(id);
 
     if (!student) return res.status(404).json({ message: "Student not found" });
 
@@ -60,7 +58,14 @@ const getStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const allowedUpdates = ['password', 'profileImg', 'department', 'grade', 'GPA', 'maxHours'];
+    const allowedUpdates = [
+      "password",
+      "profileImg",
+      "department",
+      "grade",
+      "GPA",
+      "maxHours",
+    ];
     const updateData = {};
 
     Object.keys(req.body).forEach((key) => {
@@ -75,7 +80,9 @@ const updateStudent = async (req, res) => {
       delete updateData.password;
     }
 
-    const student = await Student.findByIdAndUpdate(id, updateData, { new: true });
+    const student = await Student.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     res.json({ message: "updated successfully", student });
@@ -97,7 +104,7 @@ const addTeacher = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      department
+      department,
     });
 
     await newTeacher.save();
@@ -125,7 +132,7 @@ const deleteTeacher = async (req, res) => {
 const getTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher = await Teacher.findById(id).populate("courses.course");
+    const teacher = await Teacher.findById(id);
 
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
@@ -138,7 +145,7 @@ const getTeacher = async (req, res) => {
 const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const allowedUpdates = ['password', 'profileImg'];
+    const allowedUpdates = ["password", "profileImg"];
     const updateData = {};
 
     Object.keys(req.body).forEach((key) => {
@@ -153,7 +160,9 @@ const updateTeacher = async (req, res) => {
       delete updateData.password;
     }
 
-    const teacher = await Teacher.findByIdAndUpdate(id, updateData, { new: true });
+    const teacher = await Teacher.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
     res.json({ message: "Data updated Successfully", teacher });
@@ -174,7 +183,7 @@ const addAdmin = async (req, res) => {
       _id,
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     await newAdmin.save();

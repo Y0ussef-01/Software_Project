@@ -1,6 +1,5 @@
 import React from "react";
 import { Box } from "@mui/material";
-// استدعاء مكون التصميم
 import AddStudentComp from "../../../components/AdminComp/StudentManagement/AddStudentComp";
 
 export default function AddStudentPage() {
