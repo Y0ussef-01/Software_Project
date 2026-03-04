@@ -19,6 +19,9 @@ import { CustomThemeProvider } from "./context/Admin/ThemeContext";
 import AdminProfilePage from "./pages/AdminPage/AdminProfilePage/AdminProfilePage";
 import { AdminProfileProvider } from "./context/Admin/AdminProfileContext";
 import RestAdminPasswordPage from "./pages/AdminPage/RestAdminPage/RestAdminPasswordPage";
+import StudentManagementPage from "./pages/AdminPage/StudentManagement/StudentManagementPage";
+import AddStudentPage from "./pages/AdminPage/StudentManagement/AddStudentPage";
+import DashboardPage from "./pages/AdminPage/Dashboard/DashboardPage";
 
 function App() {
   return (
@@ -67,7 +70,10 @@ function App() {
                 </CustomThemeProvider>
               }
             >
+              <Route index element={<DashboardPage />} />
               <Route path="profile" element={<AdminProfilePage />} />
+              <Route path="students" element={<StudentManagementPage />} />
+              <Route path="add-student" element={<AddStudentPage />} />
               <Route
                 path="reset-password"
                 element={<RestAdminPasswordPage />}
