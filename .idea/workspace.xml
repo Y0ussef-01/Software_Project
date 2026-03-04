@@ -6,9 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/full_project.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/full_project.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/models/Student.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/models/Student.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/models/Teacher.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/models/Teacher.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +65,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/youssef/WebstormProjects/Software_Project&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/youssef/Desktop/Matirial/Soft/Project/Finished_Backend_Project&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -149,6 +151,11 @@
       <workItem from="1772375803624" duration="1352000" />
       <workItem from="1772393789466" duration="1761000" />
       <workItem from="1772449748125" duration="1686000" />
+      <workItem from="1772500716996" duration="741000" />
+      <workItem from="1772533353328" duration="752000" />
+      <workItem from="1772546881061" duration="52000" />
+      <workItem from="1772572732375" duration="2710000" />
+      <workItem from="1772644643505" duration="3638000" />
     </task>
     <servers />
   </component>

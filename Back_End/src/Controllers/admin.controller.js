@@ -5,18 +5,18 @@ const bcrypt = require("bcrypt");
 
 const addStudent = async (req, res) => {
   try {
-    const { _id, name, email, password, profileImg } = req.body;
+    const { _id, name, password} = req.body;
+    const Email= `20${_id}@std.sci.cu.edu.eg`
     if (!password) {
-      return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      return res.status(400).json({ message: "Password is required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newStudent = new Student({
       _id,
       name,
-      email,
+      email:Email,
       password: hashedPassword,
-      profileImg,
     });
 
     await newStudent.save();
@@ -60,18 +60,22 @@ const getStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
-    delete updateData._id;
+    const allowedUpdates = ['password', 'profileImg', 'department', 'grade', 'GPA', 'maxHours'];
+    const updateData = {};
 
-    if (updateData.password && updateData.password.trim() !== "") {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    Object.keys(req.body).forEach((key) => {
+      if (allowedUpdates.includes(key)) {
+        updateData[key] = req.body[key];
+      }
+    });
+
+    if (updateData.password && String(updateData.password).trim() !== "") {
+      updateData.password = await bcrypt.hash(String(updateData.password), 10);
     } else {
       delete updateData.password;
     }
 
-    const student = await Student.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const student = await Student.findByIdAndUpdate(id, updateData, { new: true });
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     res.json({ message: "updated successfully", student });
@@ -82,9 +86,9 @@ const updateStudent = async (req, res) => {
 
 const addTeacher = async (req, res) => {
   try {
-    const { _id, name, email, password, department, profileImg } = req.body;
+    const { _id, name, email, password, department } = req.body;
     if (!password) {
-      return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      return res.status(400).json({ message: "Password is required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -93,8 +97,7 @@ const addTeacher = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      department,
-      profileImg,
+      department
     });
 
     await newTeacher.save();
@@ -135,18 +138,22 @@ const getTeacher = async (req, res) => {
 const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
-    delete updateData._id;
+    const allowedUpdates = ['password', 'profileImg'];
+    const updateData = {};
 
-    if (updateData.password && updateData.password.trim() !== "") {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    Object.keys(req.body).forEach((key) => {
+      if (allowedUpdates.includes(key)) {
+        updateData[key] = req.body[key];
+      }
+    });
+
+    if (updateData.password && String(updateData.password).trim() !== "") {
+      updateData.password = await bcrypt.hash(String(updateData.password), 10);
     } else {
       delete updateData.password;
     }
 
-    const teacher = await Teacher.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const teacher = await Teacher.findByIdAndUpdate(id, updateData, { new: true });
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
     res.json({ message: "Data updated Successfully", teacher });
@@ -157,9 +164,9 @@ const updateTeacher = async (req, res) => {
 
 const addAdmin = async (req, res) => {
   try {
-    const { _id, name, email, password, permissions } = req.body;
+    const { _id, name, email, password } = req.body;
     if (!password) {
-      return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      return res.status(400).json({ message: "Password is required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -167,8 +174,7 @@ const addAdmin = async (req, res) => {
       _id,
       name,
       email,
-      password: hashedPassword,
-      permissions,
+      password: hashedPassword
     });
 
     await newAdmin.save();
