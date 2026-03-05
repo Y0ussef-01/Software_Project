@@ -8,14 +8,14 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
-  Button,    
+  Button,
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";    
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
-import { useNavigate } from "react-router-dom";  
+import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
 
 export default function ProfileTeacherComp() {
@@ -29,7 +29,7 @@ export default function ProfileTeacherComp() {
     handleRemoveImage,
   } = useTeacherProfile();
 
-  const navigate = useNavigate();   
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -69,8 +69,8 @@ export default function ProfileTeacherComp() {
       elevation={0}
       sx={{
         position: "relative",
-        p: { xs: 4, md: 5 },
-        borderRadius: "20px",
+        p: { xs: 4, md: 5, lg: 6 },
+        borderRadius: { xs: "24px", xl: "32px" },
         backgroundColor: "#fff",
         width: "100%",
         boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
@@ -83,7 +83,7 @@ export default function ProfileTeacherComp() {
           top: 0,
           left: 0,
           bottom: 0,
-          width: "8px",
+          width: { xs: "8px", lg: "10px" },
           background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
         }}
       />
@@ -92,8 +92,8 @@ export default function ProfileTeacherComp() {
           position: "absolute",
           top: "-15%",
           left: "-5%",
-          width: "250px",
-          height: "250px",
+          width: { xs: "250px", md: "350px", xl: "450px" },
+          height: { xs: "250px", md: "350px", xl: "450px" },
           borderRadius: "50%",
           background:
             "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)",
@@ -148,9 +148,11 @@ export default function ProfileTeacherComp() {
                 borderRadius: "10px",
                 textTransform: "none",
                 fontWeight: 600,
+                borderWidth: "2px",
                 "&:hover": {
                   backgroundColor: "rgba(21, 43, 72, 0.04)",
                   borderColor: "#152b48",
+                  borderWidth: "2px",
                 },
               }}
             >
@@ -253,7 +255,7 @@ export default function ProfileTeacherComp() {
             </Box>
 
             <Typography
-              variant="h6"
+              variant="h5"
               sx={{
                 fontWeight: "900",
                 mt: 3,
@@ -265,8 +267,13 @@ export default function ProfileTeacherComp() {
               Dr. {teacherData.name}
             </Typography>
             <Typography
-              variant="body2"
-              sx={{ color: "#64748b", textAlign: "center", mt: 0.5 }}
+              variant="subtitle1"
+              sx={{
+                color: "#64748b",
+                textAlign: "center",
+                mt: 0.5,
+                fontWeight: 600,
+              }}
             >
               {teacherData.department}
             </Typography>
@@ -274,22 +281,22 @@ export default function ProfileTeacherComp() {
         </Box>
 
         <Box>
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, md: 3, lg: 4 }}>
             {details.map((item, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={index}>
+              <Grid item xs={12} sm={6} md={3} key={index}>
                 <Box
                   sx={{
-                    p: 2.5,
+                    p: { xs: 2.5, lg: 3 },
                     height: "100%",
                     backgroundColor: "#fcfcfd",
-                    borderRadius: "12px",
+                    borderRadius: "16px",
                     border: "1px solid #eef2f6",
                     transition: "all 0.3s ease",
                     "&:hover": {
                       borderColor: "#152b48",
                       backgroundColor: "#fff",
-                      boxShadow: "0px 4px 15px rgba(21,43,72,0.06)",
-                      transform: "translateY(-3px)",
+                      boxShadow: "0px 8px 24px rgba(21,43,72,0.08)",
+                      transform: "translateY(-4px)",
                     },
                   }}
                 >
@@ -297,16 +304,23 @@ export default function ProfileTeacherComp() {
                     variant="caption"
                     sx={{
                       color: "#64748b",
-                      fontWeight: 700,
+                      fontWeight: 800,
                       textTransform: "uppercase",
                       letterSpacing: "0.5px",
+                      mb: 1,
+                      display: "block",
                     }}
                   >
                     {item.label}
                   </Typography>
                   <Typography
                     variant="body1"
-                    sx={{ fontWeight: 700, color: "#0f172a", mt: 0.5 }}
+                    sx={{
+                      fontWeight: 800,
+                      color: "#0f172a",
+                      fontSize: "1.1rem",
+                      wordBreak: "break-word",
+                    }}
                   >
                     {item.value}
                   </Typography>

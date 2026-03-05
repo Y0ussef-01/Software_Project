@@ -4,9 +4,9 @@ const teacherSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true,select: false },
+    password: { type: String, required: true,select: false },//
     department: { type: String, required: true },
-    profileImg: { type: String },
+    profileImg: { type: String , default: "default.jpg"},//
     courses: [
         {
             course: { type: String, ref: 'Course' },
