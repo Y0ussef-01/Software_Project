@@ -23,7 +23,7 @@ export default function useTeacherManagement() {
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error(" The token was not found. Please log in again.");
+      toast.error("The token was not found. Please log in again.");
       return null;
     }
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -33,7 +33,7 @@ export default function useTeacherManagement() {
     const cleanSearchId = String(searchId).trim();
 
     if (!cleanSearchId) {
-      toast.warning(" Please enter the teacher ID");
+      toast.warning("Please enter the teacher ID");
       setLastError("Teacher ID is empty");
       return;
     }
@@ -64,41 +64,44 @@ export default function useTeacherManagement() {
       if (response.data && response.data._id) {
         console.log("✅ Data is valid, updating...");
 
-
         setTeacherData(response.data);
 
         setTimeout(() => {
           setShowCard(true);
-          console.log(" The card has been shown");
+          console.log("The card has been shown");
         }, 50);
 
         toast.success("✅ Found the teacher successfully");
       } else {
-        console.warn(" The data is incorrect or empty");
-        toast.error(" Failed to retrieve teacher data correctly");
+        console.warn("The data is incorrect or empty");
+        toast.error("Failed to retrieve teacher data correctly");
         setShowCard(false);
         setTeacherData(null);
       }
     } catch (error) {
-      console.error(" Error in search:", error);
+      console.error("Error in search:", error);
       console.error("Status:", error.response?.status);
 
       let errorMsg = "Failed to fetch teacher data";
 
       if (error.response?.status === 404) {
-        errorMsg = ` Teacher not found with ID: ${cleanSearchId}`;
-        setLastError(`Teacher with ID "${cleanSearchId}" does not exist in the Database`);
+        errorMsg = `Teacher not found with ID: ${cleanSearchId}`;
+        setLastError(
+          `Teacher with ID "${cleanSearchId}" does not exist in the Database`
+        );
       } else if (error.response?.status === 401) {
-        errorMsg = " The login session has ended";
+        errorMsg = "The login session has ended";
         setLastError("The token is invalid or expired.");
       } else if (error.response?.status === 403) {
         errorMsg = "You do not have permission";
         setLastError("The current user is not an admin");
       } else if (error.response?.status === 500) {
-        errorMsg = " Error from the server";
-        setLastError(`Error from the server: ${error.response?.data?.message}`);
+        errorMsg = "Error from the server";
+        setLastError(
+          `Error from the server: ${error.response?.data?.message}`
+        );
       } else if (error.message === "Network Error") {
-        errorMsg = " Server is offline";
+        errorMsg = "Server is offline";
         setLastError("Make sure Backend is enabled on localhost:5000");
       }
 
@@ -110,6 +113,7 @@ export default function useTeacherManagement() {
     }
   };
 
+  // ✅ FIXED: handleUpdateSubmit - حفظ الصورة في الـ Backend
   const handleUpdateSubmit = async (updatedData) => {
     setIsLoading(true);
     setLastError(null);
@@ -121,6 +125,7 @@ export default function useTeacherManagement() {
     }
 
     try {
+      // التحقق من كلمة المرور
       if (updatedData.password && String(updatedData.password).trim() !== "") {
         const strongPasswordRegex =
           /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
@@ -135,24 +140,28 @@ export default function useTeacherManagement() {
         }
       }
 
+      // ✅ FIXED: أرسل الصورة والباسوورد
       const allowedFields = ["password", "profileImg"];
       const payload = {};
 
       Object.keys(updatedData).forEach((key) => {
         if (allowedFields.includes(key)) {
           if (key === "password") {
+            // أرسل الباسوورد فقط لو مش فارغ
             if (String(updatedData.password).trim() !== "") {
               payload.password = String(updatedData.password).trim();
             }
-          } else {
-            payload[key] = updatedData[key];
+          } else if (key === "profileImg") {
+            // ✅ أرسل الصورة (base64 أو URL)
+            payload.profileImg = updatedData[key];
           }
         }
       });
 
       const teacherStringId = String(teacherData._id).trim();
 
-      console.log("Teacher update:", teacherStringId);
+      console.log("📝 Updating teacher:", teacherStringId);
+      console.log("📤 Payload being sent:", payload);
 
       const response = await axios.put(
         `http://localhost:5000/admin/update-teacher/${teacherStringId}`,
@@ -160,21 +169,23 @@ export default function useTeacherManagement() {
         headers
       );
 
-      console.log(" Teacher updated:", response.data);
+      console.log("✅ Teacher updated:", response.data);
 
+      // تحديث البيانات المحلية
       setTeacherData(response.data.teacher || { ...teacherData, ...payload });
-      toast.success(" Teacher updated successfully");
+      toast.success("✅ Teacher updated successfully");
       return true;
     } catch (error) {
-      console.error(" Error updating teacher:", error);
+      console.error("❌ Error updating teacher:", error);
+      console.error("Error response:", error.response?.data);
 
       let errorMsg = "Failed to update teacher";
       if (error.response?.status === 400) {
         errorMsg = error.response?.data?.message || "Invalid data";
       } else if (error.response?.status === 404) {
-        errorMsg = " Teacher not found";
+        errorMsg = "Teacher not found";
       } else if (error.response?.status === 500) {
-        errorMsg = " Error from the server";
+        errorMsg = "Error from the server";
       }
 
       setLastError(errorMsg);
@@ -188,7 +199,7 @@ export default function useTeacherManagement() {
   const handleDeleteClick = async () => {
     if (
       !window.confirm(
-        " Are you sure you want to permanently delete this feature?"
+        "Are you sure you want to permanently delete this teacher?"
       )
     )
       return;
@@ -205,25 +216,25 @@ export default function useTeacherManagement() {
     try {
       const teacherStringId = String(teacherData._id).trim();
 
-      console.log(" Delete the teacher:", teacherStringId);
+      console.log("🗑️ Delete the teacher:", teacherStringId);
 
       await axios.delete(
         `http://localhost:5000/admin/delete-teacher/${teacherStringId}`,
         headers
       );
 
-      toast.success(" Teacher deleted successfully");
+      toast.success("✅ Teacher deleted successfully");
       setShowCard(false);
       setSearchId("");
       setTeacherData(null);
     } catch (error) {
-      console.error(" Error deleting teacher:", error);
+      console.error("❌ Error deleting teacher:", error);
 
       let errorMsg = "Failed to delete teacher";
       if (error.response?.status === 404) {
-        errorMsg = " Teacher not found";
+        errorMsg = "Teacher not found";
       } else if (error.response?.status === 500) {
-        errorMsg = " Error from the server";
+        errorMsg = "Error from the server";
       }
 
       setLastError(errorMsg);

@@ -18,7 +18,6 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-
 export default function TeacherDetailsCard({
   teacher,
   onDeleteClick,
@@ -30,7 +29,6 @@ export default function TeacherDetailsCard({
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  
   useEffect(() => {
     setEditData(teacher);
     setImagePreview(
@@ -40,17 +38,14 @@ export default function TeacherDetailsCard({
     );
   }, [teacher]);
 
-  
   const handleInputChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  
   const handleImageClick = () => {
     if (isEditing) fileInputRef.current.click();
   };
 
-  
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -64,20 +59,17 @@ export default function TeacherDetailsCard({
     }
   };
 
-  
   const handleRemoveImage = (e) => {
     e.stopPropagation();
     setImagePreview("");
     setEditData({ ...editData, profileImg: "default-teacher.jpg" });
   };
 
-  
   const handleSave = async () => {
     const isSuccess = await onUpdateSubmit(editData);
     if (isSuccess) setIsEditing(false);
   };
 
-  
   const handleCancel = () => {
     setEditData(teacher);
     setImagePreview(
@@ -88,7 +80,7 @@ export default function TeacherDetailsCard({
     setIsEditing(false);
   };
 
-  
+  // ✅ FIXED: Department بدل من editable: true لـ editable: false
   const fields = [
     {
       key: "_id",
@@ -112,7 +104,7 @@ export default function TeacherDetailsCard({
       key: "department",
       label: "Department",
       value: editData.department || "",
-      editable: true,
+      editable: false, // ✅ تغير لـ false - بدون تعديل
     },
     ...(isEditing
       ? [
@@ -120,7 +112,7 @@ export default function TeacherDetailsCard({
             key: "password",
             label: "New password (optional)",
             value: editData.password || "",
-            editable: true,
+            editable: true, // ✅ الباسوورد فقط للتعديل
           },
         ]
       : []),
@@ -144,7 +136,6 @@ export default function TeacherDetailsCard({
         overflow: "hidden",
       }}
     >
-      
       <Box
         sx={{
           position: "absolute",
@@ -157,7 +148,6 @@ export default function TeacherDetailsCard({
       />
 
       <Box sx={{ position: "relative", zIndex: 1 }}>
-        
         <Box
           sx={{
             display: "flex",
@@ -168,9 +158,7 @@ export default function TeacherDetailsCard({
             gap: 3,
           }}
         >
-          
           <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-            
             <Box sx={{ position: "relative", display: "inline-block" }}>
               <Box
                 sx={{
@@ -219,7 +207,6 @@ export default function TeacherDetailsCard({
                 )}
               </Box>
 
-              
               {isEditing && imagePreview && (
                 <Tooltip title="Remove Image">
                   <IconButton
@@ -250,7 +237,6 @@ export default function TeacherDetailsCard({
               />
             </Box>
 
-            
             <Box>
               <Typography
                 variant="h5"
@@ -274,11 +260,9 @@ export default function TeacherDetailsCard({
             </Box>
           </Box>
 
-        
           <Box sx={{ display: "flex", gap: 1.5 }}>
             {isEditing ? (
               <>
-                
                 <Button
                   variant="contained"
                   color="primary"
@@ -293,7 +277,6 @@ export default function TeacherDetailsCard({
                   Save update
                 </Button>
 
-                
                 <Tooltip title="cancellation">
                   <IconButton
                     onClick={handleCancel}
@@ -310,7 +293,6 @@ export default function TeacherDetailsCard({
               </>
             ) : (
               <>
-                
                 <Button
                   variant="outlined"
                   startIcon={<EditOutlinedIcon />}
@@ -326,7 +308,6 @@ export default function TeacherDetailsCard({
                   Edit
                 </Button>
 
-                
                 <Button
                   variant="outlined"
                   color="error"
@@ -347,7 +328,6 @@ export default function TeacherDetailsCard({
           </Box>
         </Box>
 
-        
         <Grid container spacing={{ xs: 1.5, sm: 2, lg: 3 }}>
           {fields.map((item, index) => (
             <Grid
@@ -378,7 +358,6 @@ export default function TeacherDetailsCard({
                   },
                 }}
               >
-                
                 <Typography
                   variant="caption"
                   sx={{
@@ -392,7 +371,6 @@ export default function TeacherDetailsCard({
                   {item.label}
                 </Typography>
 
-                
                 {isEditing && item.editable ? (
                   <TextField
                     name={item.key}
