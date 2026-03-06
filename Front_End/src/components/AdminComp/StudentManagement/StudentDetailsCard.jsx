@@ -209,7 +209,7 @@ export default function StudentDetailsCard({
                 )}
               </Box>
 
-              {/* ✨ التعديل هنا: زر إزالة الصورة مطابق للصورة المرجعية */}
+              
               {isEditing && imagePreview && (
                 <Tooltip title="Remove Image">
                   <IconButton
@@ -218,11 +218,11 @@ export default function StudentDetailsCard({
                       position: "absolute",
                       bottom: 0,
                       right: 0,
-                      bgcolor: theme.palette.background.paper, // خلفية بيضاء/حسب الثيم
-                      color: "error.main", // أيقونة حمراء
+                      bgcolor: theme.palette.background.paper, 
+                      color: "error.main", 
                       width: 30,
                       height: 30,
-                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)", // الظل (Shadow)
+                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)", 
                       "&:hover": {
                         bgcolor: "error.main",
                         color: "white",

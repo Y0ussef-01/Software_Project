@@ -206,28 +206,27 @@ export default function TeacherDetailsCard({
                 )}
               </Box>
 
-              {isEditing && imagePreview && (
-                <Tooltip title="Remove Image">
-                  <IconButton
-                    onClick={handleRemoveImage}
-                    sx={{
-                      position: "absolute",
-                      bottom: -8,
-                      right: -8,
-                      bgcolor: "transparent",
-                      color: "#E86B96",
-                      size: "small",
-                      "&:hover": { 
-                        color: "#D64E7F",
-                      },
-                      width: 48,
-                      height: 48,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+             
+                          {isEditing && imagePreview && (
+                            <Tooltip title="Remove Image">
+                              <IconButton
+                                onClick={handleRemoveImage}
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 0,
+                                  right: 0,
+                                  bgcolor: theme.palette.background.paper, 
+                                  color: "error.main", 
+                                  width: 30,
+                                  height: 30,
+                                  boxShadow: "0px 2px 8px rgba(0,0,0,0.2)", 
+                                  "&:hover": {
+                                    bgcolor: "error.main",
+                                    color: "white",
+                                  },
+                                }}
                   >
-                    <DeleteOutlineIcon sx={{ fontSize: 42 }} />
+                    <DeleteOutlineIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </Tooltip>
               )}
