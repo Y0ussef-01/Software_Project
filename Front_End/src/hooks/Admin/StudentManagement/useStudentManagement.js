@@ -71,6 +71,13 @@ export default function useStudentManagement() {
         }
       }
 
+      const gpaValue = parseFloat(updatedData.GPA);
+      if (!isNaN(gpaValue) && (gpaValue < 0 || gpaValue > 5)) {
+        toast.error("GPA must be between 0 and 5.0", { position: "top-right" });
+        setIsLoading(false);
+        return false;
+      }
+
       const allowedFields = [
         "password",
         "profileImg",
@@ -101,11 +108,15 @@ export default function useStudentManagement() {
       );
 
       setStudentData(response.data.student || { ...studentData, ...payload });
-      toast.success(response.data.message || "Student updated successfully");
+      toast.success(response.data.message || "Student updated successfully", {
+        position: "top-right",
+      });
       return true;
     } catch (error) {
       console.error("Update Error:", error);
-      toast.error(error.response?.data?.message || "Failed to update student");
+      toast.error(error.response?.data?.message || "Failed to update student", {
+        position: "top-right",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -126,7 +137,7 @@ export default function useStudentManagement() {
         `http://localhost:5000/admin/delete-student/${studentStringId}`,
         getAuthHeaders(),
       );
-      toast.success("Student deleted successfully");
+      toast.success("Student deleted successfully", { position: "top-right" });
       setShowCard(false);
       setSearchId("");
     } catch (error) {
