@@ -16,7 +16,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";   
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function StudentDetailsCard({
   student,
@@ -53,16 +53,16 @@ export default function StudentDetailsCard({
       reader.onloadend = () => {
         const base64String = reader.result;
         setImagePreview(base64String);
-        setEditData({ ...editData, profileImg: base64String });    
+        setEditData({ ...editData, profileImg: base64String });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveImage = (e) => {
-    e.stopPropagation();         
-    setImagePreview("");   
-    setEditData({ ...editData, profileImg: "default.jpg" }); 
+    e.stopPropagation();
+    setImagePreview("");
+    setEditData({ ...editData, profileImg: "default.jpg" });
   };
 
   const handleSave = async () => {
@@ -209,23 +209,27 @@ export default function StudentDetailsCard({
                 )}
               </Box>
 
+              {/* ✨ التعديل هنا: زر إزالة الصورة مطابق للصورة المرجعية */}
               {isEditing && imagePreview && (
                 <Tooltip title="Remove Image">
                   <IconButton
                     onClick={handleRemoveImage}
                     sx={{
                       position: "absolute",
-                      bottom: -5,
-                      right: -5,
-                      bgcolor: "error.main",
-                      color: "white",
-                      size: "small",
-                      "&:hover": { bgcolor: "error.dark" },
-                      width: 28,
-                      height: 28,
+                      bottom: 0,
+                      right: 0,
+                      bgcolor: theme.palette.background.paper, // خلفية بيضاء/حسب الثيم
+                      color: "error.main", // أيقونة حمراء
+                      width: 30,
+                      height: 30,
+                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)", // الظل (Shadow)
+                      "&:hover": {
+                        bgcolor: "error.main",
+                        color: "white",
+                      },
                     }}
                   >
-                    <DeleteIcon sx={{ fontSize: 18 }} />
+                    <DeleteOutlineIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </Tooltip>
               )}
@@ -374,7 +378,24 @@ export default function StudentDetailsCard({
                     size="small"
                     fullWidth
                     variant="standard"
-                    type={item.key === "password" ? "password" : "text"}
+                    type={
+                      item.key === "password"
+                        ? "password"
+                        : item.key === "GPA"
+                          ? "number"
+                          : "text"
+                    }
+                    inputProps={
+                      item.key === "GPA" ? { min: 0, max: 5, step: 0.1 } : {}
+                    }
+                    error={
+                      item.key === "GPA" && (item.value > 5 || item.value < 0)
+                    }
+                    helperText={
+                      item.key === "GPA" && (item.value > 5 || item.value < 0)
+                        ? "Max 5.0"
+                        : ""
+                    }
                     InputProps={{ sx: { fontWeight: 700, fontSize: "1rem" } }}
                   />
                 ) : (

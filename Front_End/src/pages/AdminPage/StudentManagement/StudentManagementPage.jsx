@@ -37,16 +37,23 @@ export default function StudentManagementPage() {
           mb: 3,
         }}
       >
-        <Typography
-          variant="h4"
-          sx={{ fontWeight: 900, color: "text.primary" }}
-        >
-          Student Management
-        </Typography>
+        {/* ✨ التعديل هنا: استخدام الإيموجي 👨‍🎓 بالضبط كما في الصورة */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 900, color: "text.primary" }}
+          >
+            Student Management
+          </Typography>
+        </Box>
+
+        {/* الجملة الوصفية */}
         <Typography
           variant="subtitle1"
           sx={{ color: "text.secondary", fontWeight: 500 }}
-        ></Typography>
+        >
+          Search, Edit, and Manage Students
+        </Typography>
       </Box>
 
       <StudentSearchSection
