@@ -59,10 +59,10 @@ export default function useTeacherManagement() {
         headers
       );
 
-      console.log("✅ Found teacher data:", response.data);
+      console.log(" Found teacher data:", response.data);
 
       if (response.data && response.data._id) {
-        console.log("✅ Data is valid, updating...");
+        console.log(" Data is valid, updating...");
 
         setTeacherData(response.data);
 
@@ -113,7 +113,7 @@ export default function useTeacherManagement() {
     }
   };
 
-  // ✅ FIXED: handleUpdateSubmit - حفظ الصورة في الـ Backend
+  
   const handleUpdateSubmit = async (updatedData) => {
     setIsLoading(true);
     setLastError(null);
@@ -125,7 +125,7 @@ export default function useTeacherManagement() {
     }
 
     try {
-      // التحقق من كلمة المرور
+      
       if (updatedData.password && String(updatedData.password).trim() !== "") {
         const strongPasswordRegex =
           /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
@@ -140,19 +140,19 @@ export default function useTeacherManagement() {
         }
       }
 
-      // ✅ FIXED: أرسل الصورة والباسوورد
+      
       const allowedFields = ["password", "profileImg"];
       const payload = {};
 
       Object.keys(updatedData).forEach((key) => {
         if (allowedFields.includes(key)) {
           if (key === "password") {
-            // أرسل الباسوورد فقط لو مش فارغ
+            
             if (String(updatedData.password).trim() !== "") {
               payload.password = String(updatedData.password).trim();
             }
           } else if (key === "profileImg") {
-            // ✅ أرسل الصورة (base64 أو URL)
+            
             payload.profileImg = updatedData[key];
           }
         }
@@ -169,14 +169,14 @@ export default function useTeacherManagement() {
         headers
       );
 
-      console.log("✅ Teacher updated:", response.data);
+      console.log(" Teacher updated:", response.data);
 
-      // تحديث البيانات المحلية
+      
       setTeacherData(response.data.teacher || { ...teacherData, ...payload });
-      toast.success("✅ Teacher updated successfully");
+      toast.success(" Teacher updated successfully");
       return true;
     } catch (error) {
-      console.error("❌ Error updating teacher:", error);
+      console.error(" Error updating teacher:", error);
       console.error("Error response:", error.response?.data);
 
       let errorMsg = "Failed to update teacher";
@@ -223,12 +223,12 @@ export default function useTeacherManagement() {
         headers
       );
 
-      toast.success("✅ Teacher deleted successfully");
+      toast.success(" Teacher deleted successfully");
       setShowCard(false);
       setSearchId("");
       setTeacherData(null);
     } catch (error) {
-      console.error("❌ Error deleting teacher:", error);
+      console.error(" Error deleting teacher:", error);
 
       let errorMsg = "Failed to delete teacher";
       if (error.response?.status === 404) {

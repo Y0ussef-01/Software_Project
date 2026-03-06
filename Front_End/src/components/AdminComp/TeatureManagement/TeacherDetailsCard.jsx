@@ -16,7 +16,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function TeacherDetailsCard({
   teacher,
@@ -80,7 +79,7 @@ export default function TeacherDetailsCard({
     setIsEditing(false);
   };
 
-  // ✅ FIXED: Department بدل من editable: true لـ editable: false
+  
   const fields = [
     {
       key: "_id",
@@ -104,7 +103,7 @@ export default function TeacherDetailsCard({
       key: "department",
       label: "Department",
       value: editData.department || "",
-      editable: false, // ✅ تغير لـ false - بدون تعديل
+      editable: false, 
     },
     ...(isEditing
       ? [
@@ -112,7 +111,7 @@ export default function TeacherDetailsCard({
             key: "password",
             label: "New password (optional)",
             value: editData.password || "",
-            editable: true, // ✅ الباسوورد فقط للتعديل
+            editable: true, 
           },
         ]
       : []),
@@ -213,17 +212,22 @@ export default function TeacherDetailsCard({
                     onClick={handleRemoveImage}
                     sx={{
                       position: "absolute",
-                      bottom: -5,
-                      right: -5,
-                      bgcolor: "error.main",
-                      color: "white",
+                      bottom: -8,
+                      right: -8,
+                      bgcolor: "transparent",
+                      color: "#E86B96",
                       size: "small",
-                      "&:hover": { bgcolor: "error.dark" },
-                      width: 28,
-                      height: 28,
+                      "&:hover": { 
+                        color: "#D64E7F",
+                      },
+                      width: 48,
+                      height: 48,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <DeleteIcon sx={{ fontSize: 18 }} />
+                    <DeleteOutlineIcon sx={{ fontSize: 42 }} />
                   </IconButton>
                 </Tooltip>
               )}

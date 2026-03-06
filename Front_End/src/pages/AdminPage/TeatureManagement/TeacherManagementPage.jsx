@@ -48,13 +48,13 @@ export default function TeacherManagementPage() {
           variant="h4"
           sx={{ fontWeight: 900, color: "text.primary" }}
         >
-          🎓 Teacher Management
+           Teacher Management
         </Typography>
         <Typography
           variant="subtitle1"
           sx={{ color: "text.secondary", fontWeight: 500 }}
         >
-          Search, Edit, and Manage Teachers
+          
         </Typography>
       </Box>
 
