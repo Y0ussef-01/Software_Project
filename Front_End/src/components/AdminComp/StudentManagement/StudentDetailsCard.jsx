@@ -222,11 +222,8 @@ export default function StudentDetailsCard({
                       color: "error.main", 
                       width: 30,
                       height: 30,
-                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)", 
-                      "&:hover": {
-                        bgcolor: "error.main",
-                        color: "white",
-                      },
+                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)",
+                        "&:hover": { backgroundColor: "#ffe4e6" },
                     }}
                   >
                     <DeleteOutlineIcon sx={{ fontSize: 18 }} />

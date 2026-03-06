@@ -56,6 +56,12 @@ export default function TeacherManagementPage() {
         >
           
         </Typography>
+          <Typography
+              variant="subtitle1"
+              sx={{ color: "text.secondary", fontWeight: 500 }}
+          >
+              Search, Edit, and Manage Teacher
+          </Typography>
       </Box>
 
     

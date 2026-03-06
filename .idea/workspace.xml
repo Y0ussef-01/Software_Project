@@ -6,11 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/full_project.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/full_project.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/models/Student.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/models/Student.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/models/Teacher.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/models/Teacher.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/StudentDetailsCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/StudentDetailsCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/TeatureManagement/TeacherDetailsCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/TeatureManagement/TeacherDetailsCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/StudentManagement/StudentManagementPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/StudentManagement/StudentManagementPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/TeatureManagement/TeacherManagementPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/TeatureManagement/TeacherManagementPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,7 +156,15 @@
       <workItem from="1772533353328" duration="752000" />
       <workItem from="1772546881061" duration="52000" />
       <workItem from="1772572732375" duration="2710000" />
-      <workItem from="1772644643505" duration="3638000" />
+      <workItem from="1772644643505" duration="4309000" />
+      <workItem from="1772658237869" duration="1367000" />
+      <workItem from="1772714144779" duration="416000" />
+      <workItem from="1772730014413" duration="797000" />
+      <workItem from="1772735259778" duration="423000" />
+      <workItem from="1772739117097" duration="85000" />
+      <workItem from="1772739219482" duration="573000" />
+      <workItem from="1772744742530" duration="3496000" />
+      <workItem from="1772819950916" duration="4898000" />
     </task>
     <servers />
   </component>
