@@ -200,7 +200,44 @@ const dropCourse = async (req, res) => {
     }
 };
 
+// ضيف الفانكشن دي
+const getMyGrades = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const student = await Student.findById(studentId)
+            .select('registeredCourses')
+            .populate({
+                path: 'registeredCourses.course',
+                select: 'name'
+            });
 
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
 
-module.exports = { getProfile, updateProfileImg, updatePassword, registerCourse ,dropCourse};
+        const gradesDetails = student.registeredCourses.map(rc => {
+            return {
+                courseId: rc.course ? rc.course._id : null,
+                courseName: rc.course ? rc.course.name : "Undefined Course",
+                Degrees: rc.Degrees || []
+            };
+        });
 
+        res.status(200).json({
+            message: "Degrees of Student",
+            grades: gradesDetails
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    getProfile,
+    updateProfileImg,
+    updatePassword,
+    registerCourse,
+    dropCourse,
+    getMyGrades
+};

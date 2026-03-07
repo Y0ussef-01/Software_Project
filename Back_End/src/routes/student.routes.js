@@ -8,4 +8,6 @@ router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
 router.put('/updatePassword', studentAuth, controller.updatePassword);
 router.post('/register-course', studentAuth, controller.registerCourse);
 router.delete('/drop-course', studentAuth, controller.dropCourse);
+
+router.get('/my-grades', studentAuth, controller.getMyGrades);
 module.exports = router;

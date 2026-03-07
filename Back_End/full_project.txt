@@ -60,6 +60,12 @@ const StudentSchema = new mongoose.Schema({
     {
       course: { type: String, ref: "Course" },
       group: { type: String, ref: "Group" },
+      Degrees: [
+        {
+          title: { type: String },
+          score: { type: Number }
+        }
+      ]
     },
   ],
   passedCourses: [
@@ -379,7 +385,12 @@ const deleteStudent = async (req, res) => {
 const getStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const student = await Student.findById(id);
+    const student = await Student.findById(id).populate({
+          path: "registeredCourses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "registeredCourses.group",select: 'groupName Room type appointment',
+    });
 
     if (!student) return res.status(404).json({ message: "Student not found" });
 
@@ -466,7 +477,12 @@ const deleteTeacher = async (req, res) => {
 const getTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher = await Teacher.findById(id);
+    const teacher = await Teacher.findById(id).populate({
+          path: "courses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "courses.group",select: 'groupName Room type appointment',
+    });
 
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
@@ -743,8 +759,7 @@ const updatePassword = async (req, res) => {
             return res.status(400).json({ message: 'Invalid password' });
         }
 
-        const hashed = await bcrypt.hash(newPassword, 10);
-        teacher.password = hashed;
+        teacher.password = await bcrypt.hash(newPassword, 10);
         await teacher.save();
 
         res.json({ message: 'Password updated successfully' });
@@ -757,7 +772,12 @@ const getProfile = async (req, res) => {
 
     try {
 
-        const teacher = await Teacher.findById(req.user.id);
+        const teacher = await Teacher.findById(req.user.id).populate({
+                path: "courses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "courses.group",select: 'groupName Room type appointment',
+        });
 
         if (!teacher)
             return res.status(404).json({ message: 'Teacher not found' });
@@ -796,16 +816,88 @@ const updateProfileImg = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfileImg, updatePassword };
+const Student = require('../models/Student');
+const xlsx = require('xlsx');
+
+const uploadGradesExcel = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const file = req.file;
+
+        if (!file) return res.status(400).json({ message: 'Please upload a file' });
+        if (!courseId) return res.status(400).json({ message: 'Please upload a courseID' });
+
+        const teacher = await Teacher.findById(req.user.id);
+        const isTeachesCourse = teacher.courses.some(c => c.course === courseId);
+        if (!isTeachesCourse) {
+            return res.status(403).json({ message: 'You are not allowed to upload a course degrees' });
+        }
+
+        const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const gradesData = xlsx.utils.sheet_to_json(sheet);
+
+        if (gradesData.length === 0) {
+            return res.status(400).json({ message: 'File is empty' });
+        }
+
+        const bulkOperations = gradesData.map(row => {
+            const studentId = row['id'];
+
+            if (!studentId) return null;
+
+            const assessments = [];
+            for (const [key, value] of Object.entries(row)) {
+                if (key !== 'id' && value !== undefined && value !== null && value !== '') {
+                    assessments.push({
+                        title: key.trim(),
+                        score: Number(value)
+                    });
+                }
+            }
+
+            return {
+                updateOne: {
+                    filter: {
+                        _id: String(studentId),
+                        "registeredCourses.course": courseId
+                    },
+                    update: {
+                        $set: { "registeredCourses.$.Degrees": assessments }
+                    }
+                }
+            };
+        }).filter(op => op !== null);
+
+        if (bulkOperations.length === 0) {
+            return res.status(400).json({ message: 'Not Found Correct data in file' });
+        }
+
+        await Student.bulkWrite(bulkOperations);
+        res.status(200).json({ message: 'Updated Successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel };
+
 // =========================================
 // File: ./src/Controllers/student.controller.js
 // =========================================
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
-
+const Course = require('../models/Course');
+const Group = require('../models/Group');
 const getProfile = async (req, res) => {
     try {
-        const student = await Student.findById(req.user.id);
+        const student = await Student.findById(req.user.id).populate({
+                path: "registeredCourses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "registeredCourses.group",select: 'groupName Room type appointment',
+        });
         if (!student) return res.status(404).json({ message: 'Student not found' });
         res.json(student);
     } catch (err) {
@@ -996,10 +1088,47 @@ const dropCourse = async (req, res) => {
     }
 };
 
+// ضيف الفانكشن دي
+const getMyGrades = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const student = await Student.findById(studentId)
+            .select('registeredCourses')
+            .populate({
+                path: 'registeredCourses.course',
+                select: 'name'
+            });
 
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
 
-module.exports = { getProfile, updateProfileImg, updatePassword };
+        const gradesDetails = student.registeredCourses.map(rc => {
+            return {
+                courseId: rc.course ? rc.course._id : null,
+                courseName: rc.course ? rc.course.name : "Undefined Course",
+                Degrees: rc.Degrees || []
+            };
+        });
 
+        res.status(200).json({
+            message: "Degrees of Student",
+            grades: gradesDetails
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    getProfile,
+    updateProfileImg,
+    updatePassword,
+    registerCourse,
+    dropCourse,
+    getMyGrades
+};
 
 // =========================================
 // File: ./src/Controllers/auth.controller.js
@@ -1054,12 +1183,27 @@ module.exports = router;
 // =========================================
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const teacherAuth = require('../middlewares/teacherAuth');
 const controller = require('../Controllers/teacher.controller');
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.includes("excel") || file.mimetype.includes("spreadsheetml")) {
+        cb(null, true);
+    } else {
+        cb(new Error("allowed only excel sheets"), false);
+    }
+};
+const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: fileFilter
+});
+
 
 router.get('/profile', teacherAuth, controller.getProfile);
 router.put('/update-profile-img', teacherAuth, controller.updateProfileImg);
 router.put('/update-password', teacherAuth, controller.updatePassword);
+
+router.post('/upload-grades-excel', teacherAuth, upload.single('excelFile'), controller.uploadGradesExcel);
 
 module.exports = router;
 // =========================================
@@ -1083,7 +1227,10 @@ const controller = require('../Controllers/student.controller');
 router.get('/Profile', studentAuth, controller.getProfile);
 router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
 router.put('/updatePassword', studentAuth, controller.updatePassword);
+router.post('/register-course', studentAuth, controller.registerCourse);
+router.delete('/drop-course', studentAuth, controller.dropCourse);
 
+router.get('/my-grades', studentAuth, controller.getMyGrades);
 module.exports = router;
 // =========================================
 // File: ./src/config/db.js

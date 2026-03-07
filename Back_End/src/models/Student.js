@@ -15,6 +15,12 @@ const StudentSchema = new mongoose.Schema({
     {
       course: { type: String, ref: "Course" },
       group: { type: String, ref: "Group" },
+      Degrees: [
+        {
+          title: { type: String },
+          score: { type: Number }
+        }
+      ]
     },
   ],
   passedCourses: [
