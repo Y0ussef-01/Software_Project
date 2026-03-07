@@ -4,7 +4,12 @@ const Course = require('../models/Course');
 const Group = require('../models/Group');
 const getProfile = async (req, res) => {
     try {
-        const student = await Student.findById(req.user.id);
+        const student = await Student.findById(req.user.id).populate({
+                path: "registeredCourses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "registeredCourses.group",select: 'groupName Room type appointment',
+        });
         if (!student) return res.status(404).json({ message: 'Student not found' });
         res.json(student);
     } catch (err) {

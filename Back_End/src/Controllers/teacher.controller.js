@@ -35,7 +35,12 @@ const getProfile = async (req, res) => {
 
     try {
 
-        const teacher = await Teacher.findById(req.user.id);
+        const teacher = await Teacher.findById(req.user.id).populate({
+                path: "courses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "courses.group",select: 'groupName Room type appointment',
+        });
 
         if (!teacher)
             return res.status(404).json({ message: 'Teacher not found' });
