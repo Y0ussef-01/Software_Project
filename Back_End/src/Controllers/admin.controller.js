@@ -45,7 +45,12 @@ const deleteStudent = async (req, res) => {
 const getStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const student = await Student.findById(id);
+    const student = await Student.findById(id).populate({
+          path: "registeredCourses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "registeredCourses.group",select: 'groupName Room type appointment',
+    });
 
     if (!student) return res.status(404).json({ message: "Student not found" });
 
@@ -132,7 +137,12 @@ const deleteTeacher = async (req, res) => {
 const getTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher = await Teacher.findById(id);
+    const teacher = await Teacher.findById(id).populate({
+          path: "courses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "courses.group",select: 'groupName Room type appointment',
+    });
 
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 

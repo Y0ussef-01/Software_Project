@@ -6,5 +6,6 @@ const controller = require('../Controllers/student.controller');
 router.get('/Profile', studentAuth, controller.getProfile);
 router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
 router.put('/updatePassword', studentAuth, controller.updatePassword);
-
+router.post('/register-course', studentAuth, controller.registerCourse);
+router.delete('/drop-course', studentAuth, controller.dropCourse);
 module.exports = router;
