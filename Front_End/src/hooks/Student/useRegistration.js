@@ -3,23 +3,38 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 export default function useRegistration() {
-  const [studentProfile, setStudentProfile] = useState(null);
-  const [availableCourses, setAvailableCourses] = useState([]);
-
-  const [selectedCourseId, setSelectedCourseId] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  const encodeData = (data) =>
+    btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const decodeData = (encoded) => {
+    try {
+      return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    } catch (e) {
+      return null;
+    }
+  };
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  const fetchData = async (showPageLoader = true) => {
-    if (showPageLoader) setIsLoading(true);
+  const [studentProfile, setStudentProfile] = useState(() =>
+    decodeData(sessionStorage.getItem("user_data")),
+  );
 
+  const [availableCourses, setAvailableCourses] = useState(
+    () => decodeData(sessionStorage.getItem("reg_courses")) || [],
+  );
+
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [isLoading, setIsLoading] = useState(
+    !studentProfile || availableCourses.length === 0,
+  );
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
+  const fetchData = async (showPageLoader = true) => {
+    if (showPageLoader && !studentProfile) setIsLoading(true);
     try {
       const [profileRes, coursesRes] = await Promise.all([
         axios.get("http://localhost:5000/student/Profile", getAuthHeaders()),
@@ -29,23 +44,27 @@ export default function useRegistration() {
         ),
       ]);
 
-      setStudentProfile(profileRes.data?.student || profileRes.data || {});
-      setAvailableCourses(coursesRes.data?.courses || coursesRes.data || []);
+      const profileData = profileRes.data?.student || profileRes.data || {};
+      const coursesData = coursesRes.data?.courses || coursesRes.data || [];
+
+      setStudentProfile(profileData);
+      setAvailableCourses(coursesData);
+
+      sessionStorage.setItem("user_data", encodeData(profileData));
+      sessionStorage.setItem("reg_courses", encodeData(coursesData));
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to load registration data.");
+      if (!studentProfile) toast.error("Failed to load registration data.");
     } finally {
-      if (showPageLoader) setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(true);
+    fetchData(!studentProfile);
   }, []);
 
   const maxHours = studentProfile?.maxHours || 19;
   const registeredCourses = studentProfile?.registeredCourses || [];
-
   const uniqueCoursesMap = {};
   registeredCourses.forEach((row) => {
     const courseObj = row.course || row;
@@ -53,64 +72,58 @@ export default function useRegistration() {
       typeof row.course === "string"
         ? row.course
         : courseObj.courseId || courseObj._id || row.courseId;
-
-    const hours = courseObj.hours || row.hours || 3;
-
-    if (baseCourseCode && !uniqueCoursesMap[baseCourseCode]) {
-      uniqueCoursesMap[baseCourseCode] = hours;
-    }
+    if (baseCourseCode && !uniqueCoursesMap[baseCourseCode])
+      uniqueCoursesMap[baseCourseCode] = courseObj.hours || row.hours || 3;
   });
 
   const registeredHours = Object.values(uniqueCoursesMap).reduce(
     (total, hours) => total + hours,
     0,
   );
-
   const remainingHours = maxHours - registeredHours;
-
   const selectedCourseDetails = availableCourses.find(
     (c) => c._id === selectedCourseId || c.courseId === selectedCourseId,
   );
 
   const handleRegister = async () => {
     if (!selectedCourseId || !selectedGroup) return;
-
     if (
       selectedCourseDetails &&
       registeredHours + (selectedCourseDetails.hours || 3) > maxHours
     ) {
-      toast.error("Exceeded maximum allowed hours!", { position: "top-right" });
+      toast.error("Exceeded maximum allowed hours!");
       return;
     }
 
     setIsActionLoading(true);
     try {
-      const payload = {
-        courseId: selectedCourseId,
-        groupName: selectedGroup,
-      };
-
+      const payload = { courseId: selectedCourseId, groupName: selectedGroup };
       const response = await axios.post(
         "http://localhost:5000/student/register-course",
         payload,
         getAuthHeaders(),
       );
 
+      const newEntry = {
+        course: selectedCourseDetails,
+        groupName: selectedGroup,
+      };
+      const updatedProfile = {
+        ...studentProfile,
+        registeredCourses: [...registeredCourses, newEntry],
+      };
+
+      setStudentProfile(updatedProfile);
+      sessionStorage.setItem("user_data", encodeData(updatedProfile));    
+
       setSelectedCourseId("");
       setSelectedGroup("");
-
-      toast.success(
-        response.data.message || "Course registered successfully!",
-        { position: "top-right", autoClose: 2500 },
-      );
-
-      await fetchData(false);
+      toast.success(response.data.message || "Registered successfully!", {
+        autoClose: 2000,
+      });
+      fetchData(false);
     } catch (error) {
-      console.error("Register Error:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to register course.",
-        { position: "top-right" },
-      );
+      toast.error(error.response?.data?.message || "Registration failed.");
     } finally {
       setIsActionLoading(false);
     }
@@ -118,7 +131,6 @@ export default function useRegistration() {
 
   const handleDropCourse = async (courseId) => {
     if (!courseId) return;
-
     setIsActionLoading(true);
     try {
       await axios.delete("http://localhost:5000/student/drop-course", {
@@ -126,17 +138,26 @@ export default function useRegistration() {
         data: { courseId },
       });
 
-      toast.success("Course dropped successfully!", {
-        position: "top-right",
-        autoClose: 2500,
+      const updatedCourses = registeredCourses.filter((row) => {
+        const cObj = row.course || row;
+        const code =
+          typeof row.course === "string"
+            ? row.course
+            : cObj.courseId || cObj._id || row.courseId;
+        return code !== courseId;
       });
 
-      await fetchData(false);
+      const updatedProfile = {
+        ...studentProfile,
+        registeredCourses: updatedCourses,
+      };
+      setStudentProfile(updatedProfile);
+      sessionStorage.setItem("user_data", encodeData(updatedProfile));    
+
+      toast.success("Course dropped!", { autoClose: 2000 });
+      fetchData(false);
     } catch (error) {
-      console.error("Drop Error:", error);
-      toast.error(error.response?.data?.message || "Failed to drop course.", {
-        position: "top-right",
-      });
+      toast.error("Failed to drop course.");
     } finally {
       setIsActionLoading(false);
     }
