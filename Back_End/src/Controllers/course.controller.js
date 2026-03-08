@@ -1,6 +1,20 @@
 const Course = require('../models/Course');
 const Group = require('../models/Group');
-const {isTimeConflict} =require('./student.controller')
+const timeToMinutes = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+};
+
+const isTimeConflict = (app1, app2) => {
+    if (app1.day !== app2.day) return false;
+
+    const start1 = timeToMinutes(app1.startTime);
+    const end1 = timeToMinutes(app1.endTime);
+    const start2 = timeToMinutes(app2.startTime);
+    const end2 = timeToMinutes(app2.endTime);
+
+    return start1 < end2 && end1 > start2;
+};
 
 const addCourse = async (req, res) => {
     try {

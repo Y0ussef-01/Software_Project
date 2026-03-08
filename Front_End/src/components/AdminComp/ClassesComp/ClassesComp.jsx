@@ -30,7 +30,7 @@ export default function ClassesComp() {
         groupName: "",
         Room: "",
         type: "Lecture",
-        capacity: 50,
+        capacity: 100,
         day: "Sunday",
         startTime: "08:00",
         endTime: "10:00"
@@ -64,7 +64,7 @@ export default function ClassesComp() {
     const closeGroupModal = () => {
         setIsGroupModalOpen(false);
         setSelectedCourse(null);
-        setGroupFormData({ groupName: "", Room: "", type: "Lecture", capacity: 50, day: "Sunday", startTime: "08:00", endTime: "10:00" });
+        setGroupFormData({ groupName: "", Room: "", type: "Lecture", capacity: 100, day: "Sunday", startTime: "08:00", endTime: "10:00" });
     };
 
     const handleSubmitGroup = async (e) => {
@@ -209,7 +209,7 @@ export default function ClassesComp() {
                                 <MenuItem value="Lab">Lab</MenuItem>
                                 <MenuItem value="Tutorial">Tutorial</MenuItem>
                             </TextField>
-                            <TextField label="Room / Hall" name="Room" value={groupFormData.Room} onChange={handleGroupChange} required size="small" sx={{ flex: 1, minWidth: "120px" }} />
+                            <TextField label="Room" name="Room" value={groupFormData.Room} onChange={handleGroupChange} required size="small" sx={{ flex: 1, minWidth: "120px" }} />
                             <TextField label="Capacity" name="capacity" type="number" value={groupFormData.capacity} onChange={handleGroupChange} required size="small" inputProps={{ min: 1 }} sx={{ width: "100px" }} />
                         </Box>
                         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>

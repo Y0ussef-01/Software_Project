@@ -6,9 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/full_project.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/full_project.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/seed.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/seed2.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,6 +50,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;Node.js.app.js.executor&quot;: &quot;Run&quot;,
     &quot;Node.js.seed.js.executor&quot;: &quot;Run&quot;,
@@ -165,7 +166,11 @@
       <workItem from="1772876366203" duration="1861000" />
       <workItem from="1772887417465" duration="6724000" />
       <workItem from="1772900964478" duration="6584000" />
-      <workItem from="1772917250733" duration="3251000" />
+      <workItem from="1772917250733" duration="3733000" />
+      <workItem from="1772966768302" duration="672000" />
+      <workItem from="1772989668796" duration="1126000" />
+      <workItem from="1772991197848" duration="831000" />
+      <workItem from="1773004746790" duration="7632000" />
     </task>
     <servers />
   </component>
