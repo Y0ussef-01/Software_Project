@@ -13,13 +13,13 @@ export default function FeaturesComp() {
       title: "Registration",
       icon: <AppRegistrationIcon fontSize="inherit" />,
       active: true,
-      path: "/registration",
+      path: "/register-course",
     },
     {
       id: 2,
-      title: "Schedule",
+      title: "appointments",
       icon: <CalendarMonthIcon fontSize="inherit" />,
-      path: "/schedule",
+      path: "/appointments",
     },
     {
       id: 3,

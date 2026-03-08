@@ -24,7 +24,8 @@ import AddStudentPage from "./pages/AdminPage/StudentManagement/AddStudentPage";
 import DashboardPage from "./pages/AdminPage/Dashboard/DashboardPage";
 import AddTeaturePage from "./pages/AdminPage/TeatureManagement/AddTeacherPage";
 import TeatureManagementPage from "./pages/AdminPage/TeatureManagement/TeacherManagementPage";
-
+import RegistrationPage from "./pages/RegistrationPage/RegistrationPage";
+import AppointmentsPage from "./pages/AppointmentsPage/AppointmentsPage";
 
 function App() {
   return (
@@ -46,6 +47,8 @@ function App() {
             <Route path="/home" element={<HomeStuentPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/profile" element={<ProfileStudnetPage />} />
+            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route path="/register-course" element={<RegistrationPage />} />
             <Route
               path="/reset-password"
               element={<ResetStudentPasswordPage />}
