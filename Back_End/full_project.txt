@@ -562,6 +562,116 @@ const getAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const Course = require("../models/Course");
+const Group = require("../models/Group");
+
+const assignStudentCourse = async (req, res) => {
+  try {
+    const { studentId, courseId, groupName } = req.body;
+    const student = await Student.findById(studentId);
+    const course = await Course.findById(courseId);
+
+    if (!student || !course) {
+      return res.status(404).json({ message: "Student or Course not found" });
+    }
+
+    const alreadyRegistered = student.registeredCourses.some(rc => rc.course === courseId);
+    if (alreadyRegistered) {
+      return res.status(400).json({ message: "Student already registered in this course" });
+    }
+
+    const groupsToRegister = await Group.find({ course: courseId, groupName: groupName });
+    if (groupsToRegister.length === 0) {
+      return res.status(404).json({ message: "Group not found for this course" });
+    }
+
+    student.hours += course.hours;
+
+    for (let group of groupsToRegister) {
+      student.registeredCourses.push({ course: courseId, group: group._id });
+      if (!group.enrolledStudents.includes(studentId)) {
+        group.enrolledStudents.push(studentId);
+        await group.save();
+      }
+    }
+
+    await student.save();
+    res.status(200).json({ message: "Course assigned to student successfully by Admin" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const dropStudentCourse = async (req, res) => {
+  try {
+    const { studentId, courseId } = req.body;
+    const student = await Student.findById(studentId);
+    const course = await Course.findById(courseId);
+
+    if (!student || !course) {
+      return res.status(404).json({ message: "Student or Course not found" });
+    }
+
+    const groupsToDrop = student.registeredCourses.filter(rc => rc.course === courseId).map(rc => rc.group);
+
+    for (let groupId of groupsToDrop) {
+      await Group.findByIdAndUpdate(groupId, {
+        $pull: { enrolledStudents: studentId }
+      });
+    }
+
+    student.registeredCourses = student.registeredCourses.filter(rc => rc.course !== courseId);
+    student.hours -= course.hours;
+
+    await student.save();
+    res.status(200).json({ message: "Course dropped from student successfully by Admin" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const assignTeacherCourse = async (req, res) => {
+  try {
+    const { teacherId, courseId, groupName } = req.body;
+    const teacher = await Teacher.findById(teacherId);
+
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+    const groupsToAssign = await Group.find({ course: courseId, groupName: groupName });
+    if (groupsToAssign.length === 0) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    for (let group of groupsToAssign) {
+      const alreadyAssigned = teacher.courses.some(c => c.group === group._id);
+      if (!alreadyAssigned) {
+        teacher.courses.push({ course: courseId, group: group._id });
+      }
+    }
+
+    await teacher.save();
+    res.status(200).json({ message: "Course and Group assigned to teacher successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const removeTeacherCourse = async (req, res) => {
+  try {
+    const { teacherId, courseId, groupName } = req.body;
+    const teacher = await Teacher.findById(teacherId);
+
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+    const groupsToRemove = await Group.find({ course: courseId, groupName: groupName });
+    const groupIdsToRemove = groupsToRemove.map(g => g._id);
+
+    teacher.courses = teacher.courses.filter(c => !groupIdsToRemove.includes(c.group));
+
+    await teacher.save();
+    res.status(200).json({ message: "Course removed from teacher successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   addStudent,
@@ -576,13 +686,19 @@ module.exports = {
   updatePassword,
   getAdmin,
   updateProfileImg,
+  assignStudentCourse,
+  dropStudentCourse,
+  assignTeacherCourse,
+  removeTeacherCourse,
 };
+
 
 // =========================================
 // File: ./src/Controllers/course.controller.js
 // =========================================
 const Course = require('../models/Course');
 const Group = require('../models/Group');
+const {isTimeConflict} =require('./student.controller')
 
 const addCourse = async (req, res) => {
     try {
@@ -622,6 +738,19 @@ const addGroup = async (req, res) => {
 
         const existingGroup = await Group.findById(groupId);
         if (existingGroup) return res.status(400).json({ message: 'The Group has already been added' });
+
+        const relatedGroups = await Group.find({
+            course: courseId,
+            groupName: groupName
+        });
+
+        for (let oldGroup of relatedGroups) {
+            if (isTimeConflict(appointment, oldGroup.appointment)) {
+                return res.status(400).json({
+                    message: `Time conflict detected! The new ${type} overlaps with the existing ${oldGroup.type} for group ${groupName} on ${appointment.day}.`
+                });
+            }
+        }
 
         const newGroup = new Group({
             _id: groupId,
@@ -690,8 +819,6 @@ module.exports = {
     getAllCourses,
     getCourseById
 };
-
-
 // =========================================
 // File: ./src/Controllers/teacher.controller.js
 // =========================================
@@ -1047,7 +1174,6 @@ const dropCourse = async (req, res) => {
     }
 };
 
-// ضيف الفانكشن دي
 const getMyGrades = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -1086,7 +1212,9 @@ module.exports = {
     updatePassword,
     registerCourse,
     dropCourse,
-    getMyGrades
+    getMyGrades,
+    isTimeConflict,
+    timeToMinutes,
 };
 
 // =========================================
@@ -1136,6 +1264,11 @@ router.delete('/delete-group/:id', adminAuth, courseController.deleteGroup);
 router.get('/courses', adminAuth, courseController.getAllCourses);
 router.get('/course/:id', adminAuth, courseController.getCourseById);
 
+router.post('/assign-student-course', adminAuth, adminController.assignStudentCourse);
+router.delete('/drop-student-course', adminAuth, adminController.dropStudentCourse);
+
+router.post('/assign-teacher-course', adminAuth, adminController.assignTeacherCourse);
+router.delete('/remove-teacher-course', adminAuth, adminController.removeTeacherCourse);
 module.exports = router;
 // =========================================
 // File: ./src/routes/teacher.routes.js

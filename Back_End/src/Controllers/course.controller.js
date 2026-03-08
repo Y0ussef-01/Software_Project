@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const Group = require('../models/Group');
+const {isTimeConflict} =require('./student.controller')
 
 const addCourse = async (req, res) => {
     try {
@@ -39,6 +40,19 @@ const addGroup = async (req, res) => {
 
         const existingGroup = await Group.findById(groupId);
         if (existingGroup) return res.status(400).json({ message: 'The Group has already been added' });
+
+        const relatedGroups = await Group.find({
+            course: courseId,
+            groupName: groupName
+        });
+
+        for (let oldGroup of relatedGroups) {
+            if (isTimeConflict(appointment, oldGroup.appointment)) {
+                return res.status(400).json({
+                    message: `Time conflict detected! The new ${type} overlaps with the existing ${oldGroup.type} for group ${groupName} on ${appointment.day}.`
+                });
+            }
+        }
 
         const newGroup = new Group({
             _id: groupId,
@@ -107,4 +121,3 @@ module.exports = {
     getAllCourses,
     getCourseById
 };
-
