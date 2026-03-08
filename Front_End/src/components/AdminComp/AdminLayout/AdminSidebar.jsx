@@ -17,6 +17,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
+import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
 
@@ -36,6 +37,11 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       title: "Teachers",
       icon: <PeopleOutlinedIcon />,
       path: "/adminPanel/teachers",
+    },
+    {
+      title: "Courses",
+      icon: <ClassOutlinedIcon />,
+      path: "/adminPanel/classes",
     },
     {
       title: "Enrollments",
