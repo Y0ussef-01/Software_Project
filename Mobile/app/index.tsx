@@ -43,17 +43,15 @@ export default function Index() {
       setLoading(true);
       const res = await login({ id: useID, password });
 
-      // ❌ لو Admin مش مسموح
       if (res.role === 'admin') {
         setErrors({ general: '🚫 Access Denied! Admins are not allowed to use this app.' });
         return;
       }
 
-      // حفظ الـ Token والـ Role
       await saveToken(res.token);
       await saveRole(res.role);
 
-      // روح على الـ Home الصح حسب الـ Role
+     
       if (res.role === 'student') {
         router.replace('/home' as any);
       } else if (res.role === 'teacher') {
@@ -168,7 +166,7 @@ export default function Index() {
                   </Text>
                 )}
 
-                {/* ❌ رسالة الـ Admin */}
+                
                 {errors.general && (
                   <View style={styles.accessDeniedBox}>
                     <Text style={styles.accessDeniedText}>{errors.general}</Text>

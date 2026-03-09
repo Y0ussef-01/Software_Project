@@ -1,5 +1,20 @@
 const Course = require('../models/Course');
 const Group = require('../models/Group');
+const timeToMinutes = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+};
+
+const isTimeConflict = (app1, app2) => {
+    if (app1.day !== app2.day) return false;
+
+    const start1 = timeToMinutes(app1.startTime);
+    const end1 = timeToMinutes(app1.endTime);
+    const start2 = timeToMinutes(app2.startTime);
+    const end2 = timeToMinutes(app2.endTime);
+
+    return start1 < end2 && end1 > start2;
+};
 
 const addCourse = async (req, res) => {
     try {
@@ -39,6 +54,19 @@ const addGroup = async (req, res) => {
 
         const existingGroup = await Group.findById(groupId);
         if (existingGroup) return res.status(400).json({ message: 'The Group has already been added' });
+
+        const relatedGroups = await Group.find({
+            course: courseId,
+            groupName: groupName
+        });
+
+        for (let oldGroup of relatedGroups) {
+            if (isTimeConflict(appointment, oldGroup.appointment)) {
+                return res.status(400).json({
+                    message: `Time conflict detected! The new ${type} overlaps with the existing ${oldGroup.type} for group ${groupName} on ${appointment.day}.`
+                });
+            }
+        }
 
         const newGroup = new Group({
             _id: groupId,
@@ -107,4 +135,3 @@ module.exports = {
     getAllCourses,
     getCourseById
 };
-

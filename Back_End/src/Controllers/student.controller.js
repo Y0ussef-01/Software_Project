@@ -200,7 +200,6 @@ const dropCourse = async (req, res) => {
     }
 };
 
-// ضيف الفانكشن دي
 const getMyGrades = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -239,5 +238,7 @@ module.exports = {
     updatePassword,
     registerCourse,
     dropCourse,
-    getMyGrades
+    getMyGrades,
+    isTimeConflict,
+    timeToMinutes,
 };

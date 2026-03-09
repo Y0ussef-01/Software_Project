@@ -26,4 +26,9 @@ router.delete('/delete-group/:id', adminAuth, courseController.deleteGroup);
 router.get('/courses', adminAuth, courseController.getAllCourses);
 router.get('/course/:id', adminAuth, courseController.getCourseById);
 
+router.post('/assign-student-course', adminAuth, adminController.assignStudentCourse);
+router.delete('/drop-student-course', adminAuth, adminController.dropStudentCourse);
+
+router.post('/assign-teacher-course', adminAuth, adminController.assignTeacherCourse);
+router.delete('/remove-teacher-course', adminAuth, adminController.removeTeacherCourse);
 module.exports = router;
