@@ -32,12 +32,24 @@ const deleteCourse = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const course = await Course.findByIdAndDelete(id);
+        const course = await Course.findById(id);
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
-        await Group.deleteMany({ _id: { $in: course.groups } });
+        const Student = require('../models/Student'); // تأكد إنك عامل require للموديل صح
 
-        res.json({ message: 'The Course and its Group has been deleted successfully' });
+        await Student.updateMany(
+            { "registeredCourses.course": id },
+            {
+                $pull: { registeredCourses: { course: id } },
+                $inc: { hours: -course.hours } // بنخصم الساعات
+            }
+        );
+
+        await Group.deleteMany({ course: id });
+
+        await Course.findByIdAndDelete(id);
+
+        res.json({ message: 'The Course, its Groups, and student registrations have been deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

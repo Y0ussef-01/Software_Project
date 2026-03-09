@@ -27,6 +27,9 @@ import TeatureManagementPage from "./pages/AdminPage/TeatureManagement/TeacherMa
 import RegistrationPage from "./pages/RegistrationPage/RegistrationPage";
 import AppointmentsPage from "./pages/AppointmentsPage/AppointmentsPage";
 import Classes from "./pages/AdminPage/Classes/Classes.jsx";
+import EnrollmentManagementPage from "./pages/AdminPage/EnrollmentManagement/EnrollmentManagementPage";
+import TeacherAssignmentPage from "./pages/AdminPage/EnrollmentManagement/TeacherAssignmentPage";
+
 
 function App() {
   return (
@@ -84,6 +87,8 @@ function App() {
               <Route path="teachers" element={<TeatureManagementPage />} />
               <Route path="add-teacher" element={<AddTeaturePage />} />
               <Route path="classes" element={<Classes />} />
+              <Route path="enrollments" element={<EnrollmentManagementPage />} />
+              <Route path="teacher-assignments" element={<TeacherAssignmentPage />} />
               <Route
                 path="reset-password"
                 element={<RestAdminPasswordPage />}
