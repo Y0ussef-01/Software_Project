@@ -114,7 +114,7 @@ export default function useRegistration() {
       };
 
       setStudentProfile(updatedProfile);
-      sessionStorage.setItem("user_data", encodeData(updatedProfile));    
+      sessionStorage.setItem("user_data", encodeData(updatedProfile));
 
       setSelectedCourseId("");
       setSelectedGroup("");
@@ -152,12 +152,56 @@ export default function useRegistration() {
         registeredCourses: updatedCourses,
       };
       setStudentProfile(updatedProfile);
-      sessionStorage.setItem("user_data", encodeData(updatedProfile));    
+      sessionStorage.setItem("user_data", encodeData(updatedProfile));
 
       toast.success("Course dropped!", { autoClose: 2000 });
       fetchData(false);
     } catch (error) {
       toast.error("Failed to drop course.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleSwitchGroup = async (courseId, newGroupName) => {
+    if (!courseId || !newGroupName) return;
+    setIsActionLoading(true);
+    try {
+      const payload = { courseId, newGroupName };
+      const response = await axios.put(
+        "http://localhost:5000/student/switch-group",
+        payload,
+        getAuthHeaders(),
+      );
+
+      const updatedCourses =
+        response.data.registeredCourses ||
+        registeredCourses.map((row) => {
+          const baseCourseCode =
+            typeof row.course === "string"
+              ? row.course
+              : row.course?.courseId || row.courseId;
+          if (baseCourseCode === courseId) {
+            return { ...row, groupName: newGroupName };
+          }
+          return row;
+        });
+
+      const updatedProfile = {
+        ...studentProfile,
+        registeredCourses: updatedCourses,
+      };
+
+      setStudentProfile(updatedProfile);
+      sessionStorage.setItem("user_data", encodeData(updatedProfile));
+
+      toast.success(
+        response.data.message || `Switched successfully to ${newGroupName}`,
+        { autoClose: 2000 },
+      );
+      fetchData(false);       
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to switch group.");
     } finally {
       setIsActionLoading(false);
     }
@@ -178,5 +222,6 @@ export default function useRegistration() {
     registeredCourses,
     handleRegister,
     handleDropCourse,
+    handleSwitchGroup,    
   };
 }
