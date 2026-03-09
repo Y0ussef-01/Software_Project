@@ -22,6 +22,11 @@ import RestAdminPasswordPage from "./pages/AdminPage/RestAdminPage/RestAdminPass
 import StudentManagementPage from "./pages/AdminPage/StudentManagement/StudentManagementPage";
 import AddStudentPage from "./pages/AdminPage/StudentManagement/AddStudentPage";
 import DashboardPage from "./pages/AdminPage/Dashboard/DashboardPage";
+import AddTeaturePage from "./pages/AdminPage/TeatureManagement/AddTeacherPage";
+import TeatureManagementPage from "./pages/AdminPage/TeatureManagement/TeacherManagementPage";
+import RegistrationPage from "./pages/RegistrationPage/RegistrationPage";
+import AppointmentsPage from "./pages/AppointmentsPage/AppointmentsPage";
+import Classes from "./pages/AdminPage/Classes/Classes.jsx";
 
 function App() {
   return (
@@ -43,6 +48,8 @@ function App() {
             <Route path="/home" element={<HomeStuentPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/profile" element={<ProfileStudnetPage />} />
+            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route path="/register-course" element={<RegistrationPage />} />
             <Route
               path="/reset-password"
               element={<ResetStudentPasswordPage />}
@@ -74,6 +81,9 @@ function App() {
               <Route path="profile" element={<AdminProfilePage />} />
               <Route path="students" element={<StudentManagementPage />} />
               <Route path="add-student" element={<AddStudentPage />} />
+              <Route path="teachers" element={<TeatureManagementPage />} />
+              <Route path="add-teacher" element={<AddTeaturePage />} />
+              <Route path="classes" element={<Classes />} />
               <Route
                 path="reset-password"
                 element={<RestAdminPasswordPage />}

@@ -62,8 +62,8 @@ export default function ProfileComp() {
     { label: "Department", value: studentData.department },
     { label: "Level", value: studentData.grade },
     { label: "Cumulative GPA", value: studentData.GPA },
-    { label: "Completed Hours", value: studentData.hours },
-    { label: "Max Hours", value: studentData.maxHours },
+    { label: "Registration hours", value: studentData.hours },
+    { label: "Credit Hours", value: studentData.maxHours },
   ];
 
   const hasCustomImage =

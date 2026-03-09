@@ -26,7 +26,7 @@ export default function useAddStudent() {
       setFormData({
         ...formData,
         _id: value,
-        email: value ? `20${value}@std.sci.cu.edu.eg` : "",  
+        email: value ? `20${value}@std.sci.cu.edu.eg` : "",
       });
       return;
     }
@@ -47,28 +47,25 @@ export default function useAddStudent() {
       !formData.email ||
       !formData.password
     ) {
-      toast.warning("Please fill all required fields!");
+      toast.warning("Please fill all required fields!", {
+        position: "top-right",
+      });
       return;
     }
 
     if (formData._id.length !== 7) {
-      toast.warning("Student ID must be exactly 7 digits (e.g., 2327271)!");
-      return;
-    }
-
-    const expectedEmail = `20${formData._id}@std.sci.cu.edu.eg`;
-    if (formData.email !== expectedEmail) {
-      toast.warning(`Email must exactly match the format: ${expectedEmail}`);
+      toast.warning("Student ID must be exactly 7 digits!", {
+        position: "top-right",
+      });
       return;
     }
 
     const strongPasswordRegex =
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
     if (!strongPasswordRegex.test(formData.password)) {
-      toast.warning(
-        "Password must be at least 8 characters long and include letters, numbers, and symbols.",
-        { autoClose: 4000 },
-      );
+      toast.warning("Password must be stronger (Letters, Numbers & Symbols).", {
+        position: "top-right",
+      });
       return;
     }
 
@@ -88,12 +85,13 @@ export default function useAddStudent() {
       const response = await axios.post(
         "http://localhost:5000/admin/add-student",
         payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      toast.success(response.data.message || "Student added successfully!");
+      toast.success(response.data.message || "Student added successfully!", {
+        position: "top-right",
+      });
+
       setFormData({ _id: "", name: "", email: "", password: "" });
 
       setTimeout(() => {
@@ -101,9 +99,26 @@ export default function useAddStudent() {
       }, 2000);
     } catch (error) {
       console.error("Add Student Error:", error);
-      const errorMsg =
-        error.response?.data?.message || "Failed to add student.";
-      toast.error(errorMsg);
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message?.toLowerCase() || "";
+
+      if (
+        errorMessage.includes("exists") ||
+        errorMessage.includes("duplicate") ||
+        error.response?.status === 409
+      ) {
+        toast.error(
+          `Error: Student with ID ${formData._id} is already exist!`,
+          {
+            position: "top-right",
+            autoClose: 5000,
+          },
+        );
+      } else {
+        toast.error(errorData?.message || "Failed to add student.", {
+          position: "top-right",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

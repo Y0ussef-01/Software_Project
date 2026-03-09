@@ -1,59 +1,30 @@
-./seed2.js
-require('dotenv').config();
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const Student = require('./src/models/Student');
-const Teacher = require('./src/models/Teacher');
-const Admin = require('./src/models/Admin');
 
-const seedDatabase = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URL);
-        console.log('⏳ جاري تهيئة قاعدة البيانات...');
-
-        await Admin.deleteMany();
-
-        const hashedPassword = await bcrypt.hash('123456', 10);
-
-        const adminData = [
-            {
-                _id: 'A-1',
-                name: 'Walid Abdullah',
-                email: 'Walid@sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: "admin1.jpg"
-            }
-        ];
-
-
-        await Admin.insertMany(adminData);
-        console.log('✅ تم إضافة أول أدمن (ID: admin01) والطلاب والمدرسين بنجاح!');
-        process.exit();
-
-    } catch (error) {
-        console.error('❌ إيرور في الـ Seed:', error);
-        process.exit(1);
-    }
-};
-
-seedDatabase();./src/models/Student.js
+// =========================================
+// File: ./src/models/Student.js
+// =========================================
 const mongoose = require("mongoose");
 
 const StudentSchema = new mongoose.Schema({
   _id: { type: String, required: true },
   name: { type: String, required: true, trim: true },
   email: { type: String, unique: true, trim: true },
-  password: { type: String, required: true, select: false },//
+  password: { type: String, required: true, select: false },
   hours: { type: Number, default: 0 },
-  profileImg: { type: String, required: true, default: "default.jpg" },//
-  department: { type: String, default: "عام" },//
-  grade: { type: String, default: "المستوي الاول" },//
-  GPA: { type: Number, default: 0 },//
-  maxHours: { type: Number, default: 19 },//
+  profileImg: { type: String, required: true, default: "default.jpg" },
+  department: { type: String, default: "عام" },
+  grade: { type: String, default: "المستوي الاول" },
+  GPA: { type: Number, default: 0 },
+  maxHours: { type: Number, default: 19 },
   registeredCourses: [
     {
       course: { type: String, ref: "Course" },
       group: { type: String, ref: "Group" },
+      Degrees: [
+        {
+          title: { type: String },
+          score: { type: Number }
+        }
+      ]
     },
   ],
   passedCourses: [
@@ -65,24 +36,31 @@ const StudentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Student", StudentSchema);
-./src/models/Group.js
+
+// =========================================
+// File: ./src/models/Group.js
+// =========================================
 const mongoose = require('mongoose');
 
 const groupSchema = new mongoose.Schema({
+    _id:{ type: String, required: true },
+    course: { type: String, ref: 'Course', required: true },
     groupName: { type: String, required: true },
-    _id:{ type: String, required: true }, //course name-groupName-type(نظري , عملي , تدريب)
     Room: { type: String, required: true },
-    type: { type: String, enum: ['نظري','عملي','تدريب'], required: true },
+    type: { type: String, enum: ['Lecture','Lab','Tutorial'], required: true },
     enrolledStudents: [{ type: String, ref: "Student" }],
     capacity: { type: Number, required: true },
-    appointment: [{
+    appointment: {
         day: { type: String, required: true },
         startTime: { type: String, required: true },
         endTime: { type: String, required: true }
-    }]
+    }
 });
 
-module.exports = mongoose.model('Group', groupSchema);./src/models/Course.js
+module.exports = mongoose.model('Group', groupSchema);
+// =========================================
+// File: ./src/models/Course.js
+// =========================================
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
@@ -93,7 +71,10 @@ const courseSchema = new mongoose.Schema({
     prerequisites: [{ type: String, ref: 'Course' }]
 });
 
-module.exports = mongoose.model('Course', courseSchema);./src/models/Admin.js
+module.exports = mongoose.model('Course', courseSchema);
+// =========================================
+// File: ./src/models/Admin.js
+// =========================================
 const mongoose = require("mongoose");
 
 const adminSchema = new mongoose.Schema({
@@ -105,7 +86,10 @@ const adminSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Admin", adminSchema);
-./src/models/Teacher.js
+
+// =========================================
+// File: ./src/models/Teacher.js
+// =========================================
 const mongoose = require('mongoose');
 
 const teacherSchema = new mongoose.Schema({
@@ -123,7 +107,10 @@ const teacherSchema = new mongoose.Schema({
     ]
 });
 
-module.exports = mongoose.model('Teacher', teacherSchema);./src/app.js
+module.exports = mongoose.model('Teacher', teacherSchema);
+// =========================================
+// File: ./src/app.js
+// =========================================
 const express = require("express");
 const cors = require("cors");
 const teacherRoutes = require("./routes/teacher.routes");
@@ -150,9 +137,18 @@ app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 
 module.exports = app;
-./src/services/teacher.services.js
-./src/services/student.services.js
-./src/services/auth.services.js
+
+// =========================================
+// File: ./src/services/teacher.services.js
+// =========================================
+
+// =========================================
+// File: ./src/services/student.services.js
+// =========================================
+
+// =========================================
+// File: ./src/services/auth.services.js
+// =========================================
 const generateToken = require('../utils/generateToken');
 const bcrypt = require('bcrypt');
 const Student = require('../models/Student');
@@ -184,7 +180,10 @@ const login = async (id, password) => {
     return { user, token, role };
 };
 
-module.exports = { login };./src/middlewares/auth.middleware.js
+module.exports = { login };
+// =========================================
+// File: ./src/middlewares/auth.middleware.js
+// =========================================
 const jwt = require('jsonwebtoken');
 
 const checkRole = (allowedRoles) => {
@@ -209,7 +208,10 @@ const checkRole = (allowedRoles) => {
     };
 };
 
-module.exports = checkRole;./src/middlewares/studentAuth.js
+module.exports = checkRole;
+// =========================================
+// File: ./src/middlewares/studentAuth.js
+// =========================================
 const jwt = require('jsonwebtoken');
 
 const studentAuth = (req, res, next) => {
@@ -237,7 +239,10 @@ const studentAuth = (req, res, next) => {
 };
 
 module.exports = studentAuth;
-./src/middlewares/adminAuth.js
+
+// =========================================
+// File: ./src/middlewares/adminAuth.js
+// =========================================
 const jwt = require('jsonwebtoken');
 
 const adminAuth = (req, res, next) => {
@@ -257,7 +262,10 @@ const adminAuth = (req, res, next) => {
     }
 };
 
-module.exports = adminAuth;./src/middlewares/teacherAuth.js
+module.exports = adminAuth;
+// =========================================
+// File: ./src/middlewares/teacherAuth.js
+// =========================================
 const jwt = require('jsonwebtoken');
 
 const teacherAuth = (req, res, next) => {
@@ -285,7 +293,10 @@ const teacherAuth = (req, res, next) => {
     }
 };
 
-module.exports = teacherAuth;./src/Controllers/admin.controller.js
+module.exports = teacherAuth;
+// =========================================
+// File: ./src/Controllers/admin.controller.js
+// =========================================
 const Student = require("../models/Student");
 const Teacher = require("../models/Teacher");
 const Admin = require("../models/Admin");
@@ -293,8 +304,8 @@ const bcrypt = require("bcrypt");
 
 const addStudent = async (req, res) => {
   try {
-    const { _id, name, password} = req.body;
-    const Email= `20${_id}@std.sci.cu.edu.eg`
+    const { _id, name, password } = req.body;
+    const Email = `20${_id}@std.sci.cu.edu.eg`;
     if (!password) {
       return res.status(400).json({ message: "Password is required" });
     }
@@ -303,7 +314,7 @@ const addStudent = async (req, res) => {
     const newStudent = new Student({
       _id,
       name,
-      email:Email,
+      email: Email,
       password: hashedPassword,
     });
 
@@ -333,9 +344,12 @@ const deleteStudent = async (req, res) => {
 const getStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const student = await Student.findById(id).populate(
-      "registeredCourses.course",
-    );
+    const student = await Student.findById(id).populate({
+          path: "registeredCourses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "registeredCourses.group",select: 'groupName Room type appointment',
+    });
 
     if (!student) return res.status(404).json({ message: "Student not found" });
 
@@ -348,10 +362,24 @@ const getStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
-    delete updateData._id;
-    if (updateData.password && updateData.password.trim() !== "") {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    const allowedUpdates = [
+      "password",
+      "profileImg",
+      "department",
+      "grade",
+      "GPA",
+      "maxHours",
+    ];
+    const updateData = {};
+
+    Object.keys(req.body).forEach((key) => {
+      if (allowedUpdates.includes(key)) {
+        updateData[key] = req.body[key];
+      }
+    });
+
+    if (updateData.password && String(updateData.password).trim() !== "") {
+      updateData.password = await bcrypt.hash(String(updateData.password), 10);
     } else {
       delete updateData.password;
     }
@@ -380,7 +408,7 @@ const addTeacher = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      department
+      department,
     });
 
     await newTeacher.save();
@@ -408,7 +436,12 @@ const deleteTeacher = async (req, res) => {
 const getTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher = await Teacher.findById(id).populate("courses.course");
+    const teacher = await Teacher.findById(id).populate({
+          path: "courses.course",select: 'name hours '
+        }
+    ).populate({
+      path: "courses.group",select: 'groupName Room type appointment',
+    });
 
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
@@ -421,11 +454,17 @@ const getTeacher = async (req, res) => {
 const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body };
-    delete updateData._id;
+    const allowedUpdates = ["password", "profileImg"];
+    const updateData = {};
 
-    if (updateData.password && updateData.password.trim() !== "") {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    Object.keys(req.body).forEach((key) => {
+      if (allowedUpdates.includes(key)) {
+        updateData[key] = req.body[key];
+      }
+    });
+
+    if (updateData.password && String(updateData.password).trim() !== "") {
+      updateData.password = await bcrypt.hash(String(updateData.password), 10);
     } else {
       delete updateData.password;
     }
@@ -443,9 +482,9 @@ const updateTeacher = async (req, res) => {
 
 const addAdmin = async (req, res) => {
   try {
-    const { _id, name, email, password, permissions } = req.body;
+    const { _id, name, email, password } = req.body;
     if (!password) {
-      return res.status(400).json({ message: "كلمة المرور مطلوبة" });
+      return res.status(400).json({ message: "Password is required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -454,7 +493,6 @@ const addAdmin = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      permissions,
     });
 
     await newAdmin.save();
@@ -524,6 +562,116 @@ const getAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const Course = require("../models/Course");
+const Group = require("../models/Group");
+
+const assignStudentCourse = async (req, res) => {
+  try {
+    const { studentId, courseId, groupName } = req.body;
+    const student = await Student.findById(studentId);
+    const course = await Course.findById(courseId);
+
+    if (!student || !course) {
+      return res.status(404).json({ message: "Student or Course not found" });
+    }
+
+    const alreadyRegistered = student.registeredCourses.some(rc => rc.course === courseId);
+    if (alreadyRegistered) {
+      return res.status(400).json({ message: "Student already registered in this course" });
+    }
+
+    const groupsToRegister = await Group.find({ course: courseId, groupName: groupName });
+    if (groupsToRegister.length === 0) {
+      return res.status(404).json({ message: "Group not found for this course" });
+    }
+
+    student.hours += course.hours;
+
+    for (let group of groupsToRegister) {
+      student.registeredCourses.push({ course: courseId, group: group._id });
+      if (!group.enrolledStudents.includes(studentId)) {
+        group.enrolledStudents.push(studentId);
+        await group.save();
+      }
+    }
+
+    await student.save();
+    res.status(200).json({ message: "Course assigned to student successfully by Admin" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const dropStudentCourse = async (req, res) => {
+  try {
+    const { studentId, courseId } = req.body;
+    const student = await Student.findById(studentId);
+    const course = await Course.findById(courseId);
+
+    if (!student || !course) {
+      return res.status(404).json({ message: "Student or Course not found" });
+    }
+
+    const groupsToDrop = student.registeredCourses.filter(rc => rc.course === courseId).map(rc => rc.group);
+
+    for (let groupId of groupsToDrop) {
+      await Group.findByIdAndUpdate(groupId, {
+        $pull: { enrolledStudents: studentId }
+      });
+    }
+
+    student.registeredCourses = student.registeredCourses.filter(rc => rc.course !== courseId);
+    student.hours -= course.hours;
+
+    await student.save();
+    res.status(200).json({ message: "Course dropped from student successfully by Admin" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const assignTeacherCourse = async (req, res) => {
+  try {
+    const { teacherId, courseId, groupName } = req.body;
+    const teacher = await Teacher.findById(teacherId);
+
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+    const groupsToAssign = await Group.find({ course: courseId, groupName: groupName });
+    if (groupsToAssign.length === 0) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    for (let group of groupsToAssign) {
+      const alreadyAssigned = teacher.courses.some(c => c.group === group._id);
+      if (!alreadyAssigned) {
+        teacher.courses.push({ course: courseId, group: group._id });
+      }
+    }
+
+    await teacher.save();
+    res.status(200).json({ message: "Course and Group assigned to teacher successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const removeTeacherCourse = async (req, res) => {
+  try {
+    const { teacherId, courseId, groupName } = req.body;
+    const teacher = await Teacher.findById(teacherId);
+
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+    const groupsToRemove = await Group.find({ course: courseId, groupName: groupName });
+    const groupIdsToRemove = groupsToRemove.map(g => g._id);
+
+    teacher.courses = teacher.courses.filter(c => !groupIdsToRemove.includes(c.group));
+
+    await teacher.save();
+    res.status(200).json({ message: "Course removed from teacher successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   addStudent,
@@ -538,8 +686,142 @@ module.exports = {
   updatePassword,
   getAdmin,
   updateProfileImg,
+  assignStudentCourse,
+  dropStudentCourse,
+  assignTeacherCourse,
+  removeTeacherCourse,
 };
-./src/Controllers/teacher.controller.js
+
+
+// =========================================
+// File: ./src/Controllers/course.controller.js
+// =========================================
+const Course = require('../models/Course');
+const Group = require('../models/Group');
+const {isTimeConflict} =require('./student.controller')
+
+const addCourse = async (req, res) => {
+    try {
+        const { _id, name, hours, prerequisites } = req.body;
+        const newCourse = new Course({ _id, name, hours, prerequisites });
+        await newCourse.save();
+
+        res.status(201).json({ message: 'The Course has been Successfully Added', course: newCourse });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const deleteCourse = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const course = await Course.findByIdAndDelete(id);
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        await Group.deleteMany({ _id: { $in: course.groups } });
+
+        res.json({ message: 'The Course and its Group has been deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const addGroup = async (req, res) => {
+    try {
+        const { courseId, groupName, Room, type, capacity, appointment } = req.body;
+
+        const course = await Course.findById(courseId);
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        const groupId = `${courseId}-${groupName}-${type}`;
+
+        const existingGroup = await Group.findById(groupId);
+        if (existingGroup) return res.status(400).json({ message: 'The Group has already been added' });
+
+        const relatedGroups = await Group.find({
+            course: courseId,
+            groupName: groupName
+        });
+
+        for (let oldGroup of relatedGroups) {
+            if (isTimeConflict(appointment, oldGroup.appointment)) {
+                return res.status(400).json({
+                    message: `Time conflict detected! The new ${type} overlaps with the existing ${oldGroup.type} for group ${groupName} on ${appointment.day}.`
+                });
+            }
+        }
+
+        const newGroup = new Group({
+            _id: groupId,
+            course: courseId,
+            groupName,
+            Room,
+            type,
+            capacity,
+            appointment
+        });
+        await newGroup.save();
+
+        course.groups.push(groupId);
+        await course.save();
+
+        res.status(201).json({ message: 'The Group was added and successfully linked to the Course', group: newGroup });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const deleteGroup = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const group = await Group.findByIdAndDelete(id);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+
+        await Course.findByIdAndUpdate(group.course, {
+            $pull: { groups: id }
+        });
+
+        res.json({ message: 'The Group has been deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getAllCourses = async (req, res) => {
+    try {
+        const courses = await Course.find().populate('groups');
+        res.json(courses);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getCourseById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const course = await Course.findById(id).populate('groups');
+
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        res.json(course);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    addCourse,
+    deleteCourse,
+    addGroup,
+    deleteGroup,
+    getAllCourses,
+    getCourseById
+};
+// =========================================
+// File: ./src/Controllers/teacher.controller.js
+// =========================================
 const Teacher = require('../models/Teacher');
 const bcrypt = require('bcrypt');
 
@@ -563,8 +845,7 @@ const updatePassword = async (req, res) => {
             return res.status(400).json({ message: 'Invalid password' });
         }
 
-        const hashed = await bcrypt.hash(newPassword, 10);
-        teacher.password = hashed;
+        teacher.password = await bcrypt.hash(newPassword, 10);
         await teacher.save();
 
         res.json({ message: 'Password updated successfully' });
@@ -577,7 +858,12 @@ const getProfile = async (req, res) => {
 
     try {
 
-        const teacher = await Teacher.findById(req.user.id);
+        const teacher = await Teacher.findById(req.user.id).populate({
+                path: "courses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "courses.group",select: 'groupName Room type appointment',
+        });
 
         if (!teacher)
             return res.status(404).json({ message: 'Teacher not found' });
@@ -616,13 +902,88 @@ const updateProfileImg = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfileImg, updatePassword };./src/Controllers/student.controller.js
+const Student = require('../models/Student');
+const xlsx = require('xlsx');
+
+const uploadGradesExcel = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const file = req.file;
+
+        if (!file) return res.status(400).json({ message: 'Please upload a file' });
+        if (!courseId) return res.status(400).json({ message: 'Please upload a courseID' });
+
+        const teacher = await Teacher.findById(req.user.id);
+        const isTeachesCourse = teacher.courses.some(c => c.course === courseId);
+        if (!isTeachesCourse) {
+            return res.status(403).json({ message: 'You are not allowed to upload a course degrees' });
+        }
+
+        const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const gradesData = xlsx.utils.sheet_to_json(sheet);
+
+        if (gradesData.length === 0) {
+            return res.status(400).json({ message: 'File is empty' });
+        }
+
+        const bulkOperations = gradesData.map(row => {
+            const studentId = row['id'];
+
+            if (!studentId) return null;
+
+            const assessments = [];
+            for (const [key, value] of Object.entries(row)) {
+                if (key !== 'id' && value !== undefined && value !== null && value !== '') {
+                    assessments.push({
+                        title: key.trim(),
+                        score: Number(value)
+                    });
+                }
+            }
+
+            return {
+                updateOne: {
+                    filter: {
+                        _id: String(studentId),
+                        "registeredCourses.course": courseId
+                    },
+                    update: {
+                        $set: { "registeredCourses.$.Degrees": assessments }
+                    }
+                }
+            };
+        }).filter(op => op !== null);
+
+        if (bulkOperations.length === 0) {
+            return res.status(400).json({ message: 'Not Found Correct data in file' });
+        }
+
+        await Student.bulkWrite(bulkOperations);
+        res.status(200).json({ message: 'Updated Successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel };
+
+// =========================================
+// File: ./src/Controllers/student.controller.js
+// =========================================
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
-
+const Course = require('../models/Course');
+const Group = require('../models/Group');
 const getProfile = async (req, res) => {
     try {
-        const student = await Student.findById(req.user.id);
+        const student = await Student.findById(req.user.id).populate({
+                path: "registeredCourses.course",select: 'name hours '
+            }
+        ).populate({
+            path: "registeredCourses.group",select: 'groupName Room type appointment',
+        });
         if (!student) return res.status(404).json({ message: 'Student not found' });
         res.json(student);
     } catch (err) {
@@ -676,9 +1037,189 @@ const updatePassword = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfileImg, updatePassword };
+const timeToMinutes = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+};
 
-./src/Controllers/auth.controller.js
+const isTimeConflict = (app1, app2) => {
+    if (app1.day !== app2.day) return false;
+
+    const start1 = timeToMinutes(app1.startTime);
+    const end1 = timeToMinutes(app1.endTime);
+    const start2 = timeToMinutes(app2.startTime);
+    const end2 = timeToMinutes(app2.endTime);
+
+    return start1 < end2 && end1 > start2;
+};
+
+const registerCourse = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { courseId, groupName } = req.body;
+
+        if (!courseId || !groupName) {
+            return res.status(400).json({ message: 'Please enter Course Id and GroupName' });
+        }
+
+        const student = await Student.findById(studentId);
+        const course = await Course.findById(courseId);
+
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        const alreadyPassed = student.passedCourses.some(pc => pc.course === courseId);
+        if (alreadyPassed) return res.status(400).json({ message: 'You already passed this course' });
+
+        const alreadyRegistered = student.registeredCourses.some(rc => rc.course === courseId);
+        if (alreadyRegistered) return res.status(400).json({ message: 'You already registered this course' });
+
+        if (course.prerequisites && course.prerequisites.length > 0) {
+            const passedCourseIds = student.passedCourses.map(pc => pc.course);
+            const hasAllPrereqs = course.prerequisites.every(prereq => passedCourseIds.includes(prereq));
+
+            if (!hasAllPrereqs) {
+                return res.status(400).json({ message: 'You have not passed all prerequisites' });
+            }
+        }
+
+        if (student.hours + course.hours > student.maxHours) {
+            return res.status(400).json({ message: `Cannot register. This course will exceed your maximum limit of ${student.maxHours} hours.` });
+        }
+
+        const groupsToRegister = await Group.find({
+            course: courseId,
+            groupName: groupName
+        });
+
+        if (groupsToRegister.length === 0) {
+            return res.status(404).json({ message: 'Group not found for this course' });
+        }
+
+        for (let group of groupsToRegister) {
+            if (group.enrolledStudents.length >= group.capacity) {
+                return res.status(400).json({ message: `Group ${group.groupName} is full for ${group.type}.` });
+            }
+        }
+
+        const existingGroupIds = student.registeredCourses.map(rc => rc.group);
+        const existingGroups = await Group.find({ _id: { $in: existingGroupIds } });
+
+        for (let newGroup of groupsToRegister) {
+            for (let oldGroup of existingGroups) {
+                if (isTimeConflict(newGroup.appointment, oldGroup.appointment)) {
+                    return res.status(400).json({
+                        message: `Time conflict detected! ${newGroup.groupName} (${newGroup.type}) overlaps with your registered group ${oldGroup.groupName} (${oldGroup.type}) on ${newGroup.appointment.day}.`
+                    });
+                }
+            }
+        }
+
+        student.hours += course.hours;
+
+        for (let group of groupsToRegister) {
+            student.registeredCourses.push({
+                course: courseId,
+                group: group._id
+            });
+            group.enrolledStudents.push(studentId);
+            await group.save();
+        }
+
+        await student.save();
+
+        res.status(200).json({ message: `Course registered successfully in group ${groupName}`, hours: student.hours });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const dropCourse = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { courseId } = req.body;
+
+        if (!courseId) {
+            return res.status(400).json({ message: 'Please provide a course ID to drop' });
+        }
+
+        const student = await Student.findById(studentId);
+        const course = await Course.findById(courseId);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        const isRegistered = student.registeredCourses.some(rc => rc.course === courseId);
+        if (!isRegistered) {
+            return res.status(400).json({ message: 'You are not registered in this course' });
+        }
+
+        const groupsToDrop = student.registeredCourses.filter(rc => rc.course === courseId).map(rc => rc.group);
+
+        for (let groupId of groupsToDrop) {
+            await Group.findByIdAndUpdate(groupId, {
+                $pull: { enrolledStudents: studentId }
+            });
+        }
+
+        student.registeredCourses = student.registeredCourses.filter(rc => rc.course !== courseId);
+        student.hours -= course.hours;
+
+        await student.save();
+
+        res.status(200).json({ message: 'Course dropped successfully', hours: student.hours });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getMyGrades = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const student = await Student.findById(studentId)
+            .select('registeredCourses')
+            .populate({
+                path: 'registeredCourses.course',
+                select: 'name'
+            });
+
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        const gradesDetails = student.registeredCourses.map(rc => {
+            return {
+                courseId: rc.course ? rc.course._id : null,
+                courseName: rc.course ? rc.course.name : "Undefined Course",
+                Degrees: rc.Degrees || []
+            };
+        });
+
+        res.status(200).json({
+            message: "Degrees of Student",
+            grades: gradesDetails
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    getProfile,
+    updateProfileImg,
+    updatePassword,
+    registerCourse,
+    dropCourse,
+    getMyGrades,
+    isTimeConflict,
+    timeToMinutes,
+};
+
+// =========================================
+// File: ./src/Controllers/auth.controller.js
+// =========================================
 const authService = require('../services/auth.services.js');
 
 const login = async (req, res) => {
@@ -691,12 +1232,15 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { login };./src/routes/admin.routes.js
+module.exports = { login };
+// =========================================
+// File: ./src/routes/admin.routes.js
+// =========================================
 const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middlewares/adminAuth');
 const adminController = require('../Controllers/admin.controller');
-
+const courseController = require('../Controllers/course.controller');
 router.post('/add-student', adminAuth, adminController.addStudent);
 router.get('/student/:id', adminAuth, adminController.getStudent);
 router.put('/update-student/:id', adminAuth, adminController.updateStudent);
@@ -712,34 +1256,78 @@ router.put('/updateProfileImg', adminAuth, adminController.updateProfileImg);
 router.put('/updatePassword', adminAuth, adminController.updatePassword);
 router.get('/getAdmin', adminAuth, adminController.getAdmin);
 
-module.exports = router;./src/routes/teacher.routes.js
+router.post('/add-course', adminAuth, courseController.addCourse);
+router.delete('/delete-course/:id', adminAuth, courseController.deleteCourse);
+
+router.post('/add-group', adminAuth, courseController.addGroup);
+router.delete('/delete-group/:id', adminAuth, courseController.deleteGroup);
+router.get('/courses', adminAuth, courseController.getAllCourses);
+router.get('/course/:id', adminAuth, courseController.getCourseById);
+
+router.post('/assign-student-course', adminAuth, adminController.assignStudentCourse);
+router.delete('/drop-student-course', adminAuth, adminController.dropStudentCourse);
+
+router.post('/assign-teacher-course', adminAuth, adminController.assignTeacherCourse);
+router.delete('/remove-teacher-course', adminAuth, adminController.removeTeacherCourse);
+module.exports = router;
+// =========================================
+// File: ./src/routes/teacher.routes.js
+// =========================================
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const teacherAuth = require('../middlewares/teacherAuth');
 const controller = require('../Controllers/teacher.controller');
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.includes("excel") || file.mimetype.includes("spreadsheetml")) {
+        cb(null, true);
+    } else {
+        cb(new Error("allowed only excel sheets"), false);
+    }
+};
+const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: fileFilter
+});
+
 
 router.get('/profile', teacherAuth, controller.getProfile);
 router.put('/update-profile-img', teacherAuth, controller.updateProfileImg);
 router.put('/update-password', teacherAuth, controller.updatePassword);
 
-module.exports = router;./src/routes/auth.routes.js
+router.post('/upload-grades-excel', teacherAuth, upload.single('excelFile'), controller.uploadGradesExcel);
+
+module.exports = router;
+// =========================================
+// File: ./src/routes/auth.routes.js
+// =========================================
 const express = require('express');
 const router = express.Router();
 const authController = require('../Controllers/auth.controller');
 
 router.post('/login', authController.login);
 
-module.exports = router;./src/routes/student.routes.js
+module.exports = router;
+// =========================================
+// File: ./src/routes/student.routes.js
+// =========================================
 const express = require('express');
 const router = express.Router();
 const studentAuth = require('../middlewares/studentAuth');
 const controller = require('../Controllers/student.controller');
+const {getAllCourses} = require("../Controllers/course.controller");
 
 router.get('/Profile', studentAuth, controller.getProfile);
 router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
 router.put('/updatePassword', studentAuth, controller.updatePassword);
-
-module.exports = router;./src/config/db.js
+router.post('/register-course', studentAuth, controller.registerCourse);
+router.delete('/drop-course', studentAuth, controller.dropCourse);
+router.get('/getAllCourses',studentAuth,getAllCourses);
+router.get('/grades', studentAuth, controller.getMyGrades);
+module.exports = router;
+// =========================================
+// File: ./src/config/db.js
+// =========================================
 const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
@@ -750,7 +1338,10 @@ const connectDB = async () => {
         console.error("MongoDB Connection Error: ", err.message);
     }
 }
-module.exports = connectDB;./src/utils/generateToken.js
+module.exports = connectDB;
+// =========================================
+// File: ./src/utils/generateToken.js
+// =========================================
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id, role) => {
@@ -762,133 +1353,18 @@ const generateToken = (id, role) => {
     );
 };
 
-module.exports = generateToken;./src/utils/hashPassword.js
-./seed.js
-require('dotenv').config();
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const Student = require('./src/models/Student');
-const Teacher = require('./src/models/Teacher');
+module.exports = generateToken;
+// =========================================
+// File: ./src/utils/hashPassword.js
+// =========================================
 
-const seedDatabase = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URL);
-        console.log('⏳ متصل بقاعدة البيانات.. جاري مسح بيانات الطلاب والمدرسين القديمة...');
+// =========================================
+// File: ./index.js
+// =========================================
 
-        // 2. مسح الداتا القديمة عشان ميحصلش تعارض في الـ IDs أو الـ Emails
-        await Student.deleteMany();
-        await Teacher.deleteMany();
-
-        console.log('⏳ جاري إضافة المدرسين والطلاب الجداد...');
-
-        const hashedPassword = await bcrypt.hash('123456', 10);
-
-        const teachersData = [
-            {
-                _id: 'T-1',
-                name: 'Hassan Ayad',
-                email: 'Hassan@cu.edu.eg',
-                password: hashedPassword,
-                department: 'Computer Science',
-                profileImg: 'default-teacher.jpg'
-            },
-            {
-                _id: 'T-2',
-                name: 'Hattem Moharram',
-                email: 'Hatem@cu.edu.eg',
-                password: hashedPassword,
-                department: 'Computer Science',
-                profileImg: 'default-teacher.jpg'
-            },
-            {
-                _id: 'T-3',
-                name: 'Reem Ahmed',
-                email: 'Reem@cu.edu.eg',
-                password: hashedPassword,
-                department: 'Computer Science',
-                profileImg: 'default-teacher.jpg'
-            },
-            {
-                _id: 'T-4',
-                name: 'Nasser Sweilam',
-                email: 'Nasser@cu.edu.eg',
-                password: hashedPassword,
-                department: 'Computer Science',
-                profileImg: 'default-teacher.jpg'
-            }
-        ];
-
-        const studentsData = [
-            {
-                _id: '2327443',
-                name: 'Youssef Ashraf Mahmoud',
-                email: '202327443@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            },
-            {
-                _id: '2327315',
-                name: 'Abdelrahman Mohamed Ebrahim',
-                email: '202327315@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            },
-            {
-                _id: '2327271',
-                name: 'Abdelrahman Mohamed Eliwa',
-                email: '202327271@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            },
-            {
-                _id: '2327473',
-                name: 'Mahmoud Mosad Kamel',
-                email: '202327473@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            },
-            {
-                _id: '2327058',
-                name: 'Youssef Ahmed Hassan',
-                email: '202327058@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            },
-            {
-                _id: '2227375',
-                name: 'Ahmed Hesham Mohamed',
-                email: '202227375@std.sci.cu.edu.eg',
-                password: hashedPassword,
-                profileImg: 'default-student.jpg',
-                department: 'Computer Science',
-                grade: 'المستوي الثالث'
-            }
-        ];
-
-        await Teacher.insertMany(teachersData);
-        await Student.insertMany(studentsData);
-
-        console.log('✅ تم تسجيل الطلاب والمدرسين بنجاح!');
-        process.exit();
-
-    } catch (error) {
-        console.error('❌ حصلت مشكلة وإحنا بنسجل البيانات:', error);
-        process.exit(1);
-    }
-};
-
-seedDatabase();./index.js
-./server.js
+// =========================================
+// File: ./server.js
+// =========================================
 require('dotenv').config();
 const express = require('express');
 const app = require('./src/app')

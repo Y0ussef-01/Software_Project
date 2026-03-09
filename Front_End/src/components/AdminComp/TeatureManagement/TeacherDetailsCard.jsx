@@ -16,27 +16,26 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";
 
-export default function StudentDetailsCard({
-  student,
+export default function TeacherDetailsCard({
+  teacher,
   onDeleteClick,
   onUpdateSubmit,
 }) {
   const theme = useTheme();
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(student);
+  const [editData, setEditData] = useState(teacher);
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState("");
 
   useEffect(() => {
-    setEditData(student);
+    setEditData(teacher);
     setImagePreview(
-      student.profileImg && student.profileImg !== "default.jpg"
-        ? student.profileImg
-        : "",
+      teacher.profileImg && teacher.profileImg !== "default-teacher.jpg"
+        ? teacher.profileImg
+        : ""
     );
-  }, [student]);
+  }, [teacher]);
 
   const handleInputChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -62,7 +61,7 @@ export default function StudentDetailsCard({
   const handleRemoveImage = (e) => {
     e.stopPropagation();
     setImagePreview("");
-    setEditData({ ...editData, profileImg: "default.jpg" });
+    setEditData({ ...editData, profileImg: "default-teacher.jpg" });
   };
 
   const handleSave = async () => {
@@ -71,21 +70,32 @@ export default function StudentDetailsCard({
   };
 
   const handleCancel = () => {
-    setEditData(student);
+    setEditData(teacher);
     setImagePreview(
-      student.profileImg && student.profileImg !== "default.jpg"
-        ? student.profileImg
-        : "",
+      teacher.profileImg && teacher.profileImg !== "default-teacher.jpg"
+        ? teacher.profileImg
+        : ""
     );
     setIsEditing(false);
   };
 
+  
   const fields = [
-    { key: "_id", label: "Student ID", value: editData._id, editable: false },
-    { key: "name", label: "Full Name", value: editData.name, editable: false },
+    {
+      key: "_id",
+      label: "Teacher ID",
+      value: editData._id,
+      editable: false,
+    },
+    {
+      key: "name",
+      label: "Full Name",
+      value: editData.name,
+      editable: false,
+    },
     {
       key: "email",
-      label: "Email Address",
+      label: "Email",
       value: editData.email,
       editable: false,
     },
@@ -93,28 +103,15 @@ export default function StudentDetailsCard({
       key: "department",
       label: "Department",
       value: editData.department || "",
-      editable: true,
-    },
-    {
-      key: "grade",
-      label: "Level",
-      value: editData.grade || "",
-      editable: true,
-    },
-    { key: "GPA", label: "GPA", value: editData.GPA || "", editable: true },
-    {
-      key: "maxHours",
-      label: "Max Hours",
-      value: editData.maxHours || "",
-      editable: true,
+      editable: false, 
     },
     ...(isEditing
       ? [
           {
             key: "password",
-            label: "New Password (Optional)",
+            label: "New password (optional)",
             value: editData.password || "",
-            editable: true,
+            editable: true, 
           },
         ]
       : []),
@@ -209,22 +206,23 @@ export default function StudentDetailsCard({
                 )}
               </Box>
 
-              
-              {isEditing && imagePreview && (
-                <Tooltip title="Remove Image">
-                  <IconButton
-                    onClick={handleRemoveImage}
-                    sx={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      bgcolor: theme.palette.background.paper, 
-                      color: "error.main", 
-                      width: 30,
-                      height: 30,
-                      boxShadow: "0px 2px 8px rgba(0,0,0,0.2)",
-                        "&:hover": { backgroundColor: "#ffe4e6" },
-                    }}
+             
+                          {isEditing && imagePreview && (
+                            <Tooltip title="Remove Image">
+                              <IconButton
+                                onClick={handleRemoveImage}
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 0,
+                                  right: 0,
+                                  bgcolor: theme.palette.background.paper, 
+                                  color: "error.main", 
+                                  width: 30,
+                                  height: 30,
+                                  boxShadow: "0px 2px 8px rgba(0,0,0,0.2)",
+                                    "&:hover": { backgroundColor: "#ffe4e6" },
+
+                                }}
                   >
                     <DeleteOutlineIcon sx={{ fontSize: 18 }} />
                   </IconButton>
@@ -239,6 +237,7 @@ export default function StudentDetailsCard({
                 style={{ display: "none" }}
               />
             </Box>
+
             <Box>
               <Typography
                 variant="h5"
@@ -252,9 +251,12 @@ export default function StudentDetailsCard({
               </Typography>
               <Typography
                 variant="subtitle2"
-                sx={{ color: theme.palette.text.secondary, fontWeight: 700 }}
+                sx={{
+                  color: theme.palette.text.secondary,
+                  fontWeight: 700,
+                }}
               >
-                Student Profile
+                Personal Profile
               </Typography>
             </Box>
           </Box>
@@ -273,9 +275,10 @@ export default function StudentDetailsCard({
                     fontWeight: "bold",
                   }}
                 >
-                  Save Update
+                  Save update
                 </Button>
-                <Tooltip title="Cancel">
+
+                <Tooltip title="cancellation">
                   <IconButton
                     onClick={handleCancel}
                     sx={{
@@ -305,6 +308,7 @@ export default function StudentDetailsCard({
                 >
                   Edit Info
                 </Button>
+
                 <Button
                   variant="outlined"
                   color="error"
@@ -367,6 +371,7 @@ export default function StudentDetailsCard({
                 >
                   {item.label}
                 </Typography>
+
                 {isEditing && item.editable ? (
                   <TextField
                     name={item.key}
@@ -375,25 +380,10 @@ export default function StudentDetailsCard({
                     size="small"
                     fullWidth
                     variant="standard"
-                    type={
-                      item.key === "password"
-                        ? "password"
-                        : item.key === "GPA"
-                          ? "number"
-                          : "text"
-                    }
-                    inputProps={
-                      item.key === "GPA" ? { min: 0, max: 5, step: 0.1 } : {}
-                    }
-                    error={
-                      item.key === "GPA" && (item.value > 5 || item.value < 0)
-                    }
-                    helperText={
-                      item.key === "GPA" && (item.value > 5 || item.value < 0)
-                        ? "Max 5.0"
-                        : ""
-                    }
-                    InputProps={{ sx: { fontWeight: 700, fontSize: "1rem" } }}
+                    type={item.key === "password" ? "password" : "text"}
+                    InputProps={{
+                      sx: { fontWeight: 700, fontSize: "1rem" },
+                    }}
                   />
                 ) : (
                   <Typography
@@ -404,7 +394,7 @@ export default function StudentDetailsCard({
                       fontSize: "1.1rem",
                     }}
                   >
-                    {item.value || "N/A"}
+                    {item.value || "Not specified"}
                   </Typography>
                 )}
               </Box>

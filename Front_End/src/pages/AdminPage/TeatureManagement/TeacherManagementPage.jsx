@@ -2,23 +2,29 @@ import React from "react";
 import { Box, Typography, Collapse } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import StudentSearchSection from "../../../components/AdminComp/StudentManagement/StudentSearchSection";
-import StudentDetailsCard from "../../../components/AdminComp/StudentManagement/StudentDetailsCard";
 
-import useStudentManagement from "../../../hooks/Admin/StudentManagement/useStudentManagement";
+import TeacherSearchSection from "../../../components/AdminComp/TeatureManagement/TeacherSearchSection";
+import TeacherDetailsCard from "../../../components/AdminComp/TeatureManagement/TeacherDetailsCard";
+import useTeacherManagement from "../../../hooks/Admin/TeatureManagement/useTeacherManagement";
 
-export default function StudentManagementPage() {
+
+
+export default function TeacherManagementPage() {
   const navigate = useNavigate();
+
 
   const {
     searchId,
     setSearchId,
     showCard,
-    studentData,
+    teacherData,
+    isLoading,
     handleSearch,
     handleUpdateSubmit,
     handleDeleteClick,
-  } = useStudentManagement();
+  } = useTeacherManagement();
+
+  console.log("📊 Page State:", { showCard, teacherData: teacherData?._id });
 
   return (
     <Box
@@ -30,6 +36,7 @@ export default function StudentManagementPage() {
         p: { xs: 2, md: 3, lg: 4 },
       }}
     >
+     
       <Box
         sx={{
           width: "100%",
@@ -37,32 +44,37 @@ export default function StudentManagementPage() {
           mb: 3,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 900, color: "text.primary" }}
-          >
-            Student Management
-          </Typography>
-        </Box>
-
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 900, color: "text.primary" }}
+        >
+           Teacher Management
+        </Typography>
         <Typography
           variant="subtitle1"
           sx={{ color: "text.secondary", fontWeight: 500 }}
         >
-          Search, Edit, and Manage Students
+          
         </Typography>
+          <Typography
+              variant="subtitle1"
+              sx={{ color: "text.secondary", fontWeight: 500 }}
+          >
+              Search, Edit, and Manage Teacher
+          </Typography>
       </Box>
 
-      <StudentSearchSection
+    
+      <TeacherSearchSection
         searchId={searchId}
         setSearchId={setSearchId}
         onSearch={handleSearch}
       />
 
+   
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <Collapse
-          in={showCard}
+          in={showCard && !!teacherData}
           unmountOnExit
           timeout={500}
           sx={{
@@ -71,9 +83,9 @@ export default function StudentManagementPage() {
           }}
         >
           <Box sx={{ pt: 1, pb: 2 }}>
-            {studentData && (
-              <StudentDetailsCard
-                student={studentData}
+            {teacherData && (
+              <TeacherDetailsCard
+                teacher={teacherData}
                 onDeleteClick={handleDeleteClick}
                 onUpdateSubmit={handleUpdateSubmit}
               />
