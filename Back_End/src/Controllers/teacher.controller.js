@@ -120,13 +120,11 @@ const uploadGradesExcel = async (req, res) => {
 
             return {
                 updateOne: {
-                    filter: {
-                        _id: String(studentId),
-                        "registeredCourses.course": courseId
-                    },
+                    filter: { _id: String(studentId) },
                     update: {
-                        $set: { "registeredCourses.$.Degrees": assessments }
-                    }
+                        $set: { "registeredCourses.$[elem].Degrees": assessments }
+                    },
+                    arrayFilters: [{ "elem.course": courseId }]
                 }
             };
         }).filter(op => op !== null);
