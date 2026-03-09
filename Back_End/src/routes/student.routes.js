@@ -11,4 +11,5 @@ router.post('/register-course', studentAuth, controller.registerCourse);
 router.delete('/drop-course', studentAuth, controller.dropCourse);
 router.get('/getAllCourses',studentAuth,getAllCourses);
 router.get('/grades', studentAuth, controller.getMyGrades);
+router.put('/switch-group', studentAuth, controller.switchGroup);
 module.exports = router;

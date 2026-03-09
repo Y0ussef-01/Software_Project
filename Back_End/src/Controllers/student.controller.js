@@ -232,6 +232,85 @@ const getMyGrades = async (req, res) => {
     }
 };
 
+const switchGroup = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { courseId, newGroupName } = req.body;
+
+        if (!courseId || !newGroupName) {
+            return res.status(400).json({ message: 'Please provide courseId and newGroupName' });
+        }
+
+        const student = await Student.findById(studentId);
+        const course = await Course.findById(courseId);
+
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        const currentRegistrations = student.registeredCourses.filter(rc => rc.course === courseId);
+        if (currentRegistrations.length === 0) {
+            return res.status(400).json({ message: 'You are not registered in this course to switch groups' });
+        }
+
+        const newGroups = await Group.find({ course: courseId, groupName: newGroupName });
+        if (newGroups.length === 0) {
+            return res.status(404).json({ message: 'New group not found' });
+        }
+
+        for (let group of newGroups) {
+            if (group.enrolledStudents.length >= group.capacity) {
+                return res.status(400).json({ message: `Group ${newGroupName} (${group.type}) is full.` });
+            }
+        }
+
+
+        const otherGroupIds = student.registeredCourses
+            .filter(rc => rc.course !== courseId)
+            .map(rc => rc.group);
+
+        const otherGroups = await Group.find({ _id: { $in: otherGroupIds } });
+
+        for (let newG of newGroups) {
+            for (let otherG of otherGroups) {
+                if (isTimeConflict(newG.appointment, otherG.appointment)) {
+                    return res.status(400).json({
+                        message: `Conflict! New ${newG.type} overlaps with ${otherG.course} on ${newG.appointment.day}.`
+                    });
+                }
+            }
+        }
+
+        const oldGroupIds = currentRegistrations.map(rc => rc.group);
+        await Group.updateMany(
+            { _id: { $in: oldGroupIds } },
+            { $pull: { enrolledStudents: studentId } }
+        );
+
+        for (let group of newGroups) {
+            group.enrolledStudents.push(studentId);
+            await group.save();
+        }
+
+        student.registeredCourses = student.registeredCourses.filter(rc => rc.course !== courseId);
+
+        newGroups.forEach(group => {
+            student.registeredCourses.push({
+                course: courseId,
+                group: group._id
+            });
+        });
+
+        await student.save();
+
+        res.status(200).json({
+            message: `Switched successfully to group ${newGroupName}`,
+            registeredCourses: student.registeredCourses
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     getProfile,
     updateProfileImg,
@@ -241,4 +320,5 @@ module.exports = {
     getMyGrades,
     isTimeConflict,
     timeToMinutes,
+    switchGroup
 };
