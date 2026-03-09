@@ -20,6 +20,7 @@ import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 
 export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate();
@@ -47,6 +48,11 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       title: "Enrollments",
       icon: <ReceiptOutlinedIcon />,
       path: "/adminPanel/enrollments",
+    },
+    { 
+    title: "Teacher Assignments", 
+      icon: <AssignmentOutlinedIcon />, 
+    path: "/adminPanel/teacher-assignments" 
     },
   ];
 
