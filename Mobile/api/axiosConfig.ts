@@ -2,9 +2,10 @@ import axios from 'axios';
 import { getToken } from './storage';
 import Constants from 'expo-constants';
 
+
 const { debuggerHost } = Constants.expoConfig?.hostUri
-    ? { debuggerHost: Constants.expoConfig.hostUri.split(':').shift() }
-    : { debuggerHost: 'localhost' };
+  ? { debuggerHost: Constants.expoConfig.hostUri.split(':').shift() }
+  : { debuggerHost: 'localhost' };
 
 const API = axios.create({
   baseURL: `http://${debuggerHost}:5000`,
