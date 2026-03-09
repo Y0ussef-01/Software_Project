@@ -6,9 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/full_project.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/full_project.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -170,7 +169,14 @@
       <workItem from="1772966768302" duration="672000" />
       <workItem from="1772989668796" duration="1126000" />
       <workItem from="1772991197848" duration="831000" />
-      <workItem from="1773004746790" duration="7632000" />
+      <workItem from="1773004746790" duration="7946000" />
+      <workItem from="1773044368576" duration="110000" />
+      <workItem from="1773050425180" duration="442000" />
+      <workItem from="1773056870239" duration="1641000" />
+      <workItem from="1773058590989" duration="212000" />
+      <workItem from="1773059220141" duration="1175000" />
+      <workItem from="1773065797692" duration="1774000" />
+      <workItem from="1773074339286" duration="1023000" />
     </task>
     <servers />
   </component>
