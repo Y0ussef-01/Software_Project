@@ -77,7 +77,7 @@ const TechProfile = () => {
             <ScrollView style={styles.mainContainer}>
                 <View style={styles.profileContainer}>
                     <View style={styles.imageContainer}>
-                        {/* ✅ لو الصورة حقيقية تظهر، غير كده صورة 11 */}
+                       
                         <Image
                             source={
                                 userData?.profileImg && userData.profileImg !== 'default-teacher.jpg'

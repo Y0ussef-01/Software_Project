@@ -168,6 +168,7 @@ const home = () => {
                             style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
                             onPressIn={() => setPressedItem('pencil-box-multiple')}
                             onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/studentgrades' as any)}
                         >
                             <MaterialCommunityIcons
                                 name="pencil-box-multiple"
