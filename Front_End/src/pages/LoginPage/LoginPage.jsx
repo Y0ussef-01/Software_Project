@@ -10,10 +10,9 @@ export default function LoginPage() {
     <Box
       sx={{
         backgroundColor: "#152b48",
-        height: "100vh",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
       }}
     >
       <Header />

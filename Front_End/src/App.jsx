@@ -29,7 +29,9 @@ import AppointmentsPage from "./pages/AppointmentsPage/AppointmentsPage";
 import Classes from "./pages/AdminPage/Classes/Classes.jsx";
 import EnrollmentManagementPage from "./pages/AdminPage/EnrollmentManagement/EnrollmentManagementPage";
 import TeacherAssignmentPage from "./pages/AdminPage/EnrollmentManagement/TeacherAssignmentPage";
-
+import TeacherSchedulePage from "./pages/TeacherSchedulePage/TeacherSchedulePage.jsx";
+import TeacherManageGradesPage from "./pages/TeacherManageGradesPage/TeacherManageGradesPage.jsx";
+import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
 
 function App() {
   return (
@@ -62,6 +64,12 @@ function App() {
           {/* 🛡️ منطقة الأستاذ (Teacher Zone) */}
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route path="/teacher" element={<HomeTeacherPage />} />
+            <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+            <Route
+              path="/teacher/manage-grades"
+              element={<TeacherManageGradesPage />}
+            />
+            <Route path="/teacher/schedule" element={<TeacherSchedulePage />} />
             <Route
               path="/teacher/reset-password"
               element={<RestTeacherPasswordPage />}
@@ -87,8 +95,14 @@ function App() {
               <Route path="teachers" element={<TeatureManagementPage />} />
               <Route path="add-teacher" element={<AddTeaturePage />} />
               <Route path="classes" element={<Classes />} />
-              <Route path="enrollments" element={<EnrollmentManagementPage />} />
-              <Route path="teacher-assignments" element={<TeacherAssignmentPage />} />
+              <Route
+                path="enrollments"
+                element={<EnrollmentManagementPage />}
+              />
+              <Route
+                path="teacher-assignments"
+                element={<TeacherAssignmentPage />}
+              />
               <Route
                 path="reset-password"
                 element={<RestAdminPasswordPage />}
