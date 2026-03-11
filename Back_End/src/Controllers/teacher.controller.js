@@ -111,43 +111,85 @@ const uploadGradesExcel = async (req, res) => {
     try {
         const { courseId } = req.body;
         const file = req.file;
-        if (!file) return res.status(400).json({ message: "Please upload a file" });
-        if (!courseId) return res.status(400).json({ message: "Please upload a courseID" });
+
+        if (!file) return res.status(400).json({ message: "File required" });
+        if (!courseId) return res.status(400).json({ message: "CourseId required" });
+
         const teacher = await Teacher.findById(req.user.id);
         const isTeachesCourse = teacher.courses.some(c => c.course === courseId);
-        if (!isTeachesCourse) {
-            return res.status(403).json({ message: "Not allowed to upload course degrees" });
-        }
+
+        if (!isTeachesCourse) return res.status(403).json({ message: "Forbidden" });
+
         const workbook = xlsx.read(file.buffer, { type: 'buffer' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const gradesData = xlsx.utils.sheet_to_json(sheet);
-        if (gradesData.length === 0) {
-            return res.status(400).json({ message: "File is empty" });
+        const gradesData = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (!gradesData || gradesData.length === 0) {
+            return res.status(400).json({ message: "Empty file" });
         }
-        const bulkOperations = gradesData.map(row => {
-            const studentId = row['id'];
-            if (!studentId) return null;
-            const assessments = [];
-            for (const [key, value] of Object.entries(row)) {
-                if (key !== 'id' && value !== undefined && value !== null && value !== '') {
-                    assessments.push({ title: key.trim(), score: Number(value) });
+
+        const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'رقم الجلوس', 'رقم الطالب'];
+        const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial', 'م', 'الاسم'];
+
+        const bulkOperations = [];
+
+        for (let row of gradesData) {
+            let studentId = null;
+            const rowKeys = Object.keys(row);
+
+            for (let key of rowKeys) {
+                if (idPossibleNames.includes(key.toLowerCase().trim())) {
+                    studentId = row[key];
+                    break;
                 }
             }
-            return {
-                updateOne: {
-                    filter: { _id: String(studentId), "registeredCourses.course": courseId },
-                    update: { $set: { "registeredCourses.$.Degrees": assessments } }
+
+            if (!studentId || String(studentId).trim() === "") continue;
+
+            const assessments = [];
+
+            for (let key of rowKeys) {
+                const cleanKey = key.toLowerCase().trim();
+
+                if (idPossibleNames.includes(cleanKey) || ignoreColumns.includes(cleanKey)) {
+                    continue;
                 }
-            };
-        }).filter(op => op !== null);
-        if (bulkOperations.length === 0) {
-            return res.status(400).json({ message: "No valid data found in file" });
+
+                const rawValue = row[key];
+                const score = parseFloat(rawValue);
+
+                if (!isNaN(score)) {
+                    assessments.push({
+                        title: key.trim(),
+                        score: score
+                    });
+                }
+            }
+
+            if (assessments.length > 0) {
+                bulkOperations.push({
+                    updateOne: {
+                        filter: {
+                            _id: String(studentId).trim(),
+                            "registeredCourses.course": courseId
+                        },
+                        update: {
+                            $set: { "registeredCourses.$.Degrees": assessments }
+                        }
+                    }
+                });
+            }
         }
+
+        if (bulkOperations.length === 0) {
+            return res.status(400).json({ message: "No valid grade data found" });
+        }
+
         await Student.bulkWrite(bulkOperations);
-        res.status(200).json({ message: "Updated Successfully" });
+        res.status(200).json({ message: "Grades uploaded successfully" });
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
-
 module.exports = { generateAttendanceToken, getProfile, updateProfileImg, updatePassword, uploadGradesExcel,getGroupAttendance };
