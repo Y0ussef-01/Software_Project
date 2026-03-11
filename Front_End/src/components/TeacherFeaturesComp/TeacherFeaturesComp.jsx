@@ -1,37 +1,34 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Box, Grid, Typography, Paper } from "@mui/material";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import SchoolIcon from "@mui/icons-material/School";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
-export default function FeaturesComp() {
+export default function TeacherFeaturesComp() {
+  const location = useLocation();
+
   const features = [
     {
       id: 1,
-      title: "Registration",
-      icon: <AppRegistrationIcon fontSize="inherit" />,
-      active: true,
-      path: "/register-course",
+      title: "Manage Grades",
+      icon: <WorkspacePremiumIcon fontSize="inherit" />,
+      active: location.pathname === "/teacher/manage-grades",
+      path: "/teacher/manage-grades",
     },
     {
       id: 2,
-      title: "Appointments",
+      title: "Schedule",
       icon: <CalendarMonthIcon fontSize="inherit" />,
-      path: "/appointments",
+      active: location.pathname === "/teacher/schedule",
+      path: "/teacher/schedule",
     },
     {
       id: 3,
-      title: "Grades",
-      icon: <WorkspacePremiumIcon fontSize="inherit" />,
-      path: "/grades",
-    },
-    {
-      id: 5,
       title: "Profile",
       icon: <SchoolIcon fontSize="inherit" />,
-      path: "/profile",
+      active: location.pathname === "/teacher/profile",
+      path: "/teacher/profile",
     },
   ];
 
@@ -39,7 +36,7 @@ export default function FeaturesComp() {
     <Box sx={{ mt: { xs: 4, md: 5 }, width: "100%" }}>
       <Grid container spacing={2} justifyContent="center">
         {features.map((feature) => (
-          <Grid item xs={12} sm={4} md={4} lg={2.5} key={feature.id}>
+          <Grid item xs={12} sm={4} md={4} lg={3} xl={2.5} key={feature.id}>
             <Paper
               component={Link}
               to={feature.path}
@@ -48,16 +45,16 @@ export default function FeaturesComp() {
                 width: {
                   xs: "100%",
                   sm: "160px",
-                  md: "180px",
-                  lg: "200px",
+                  md: "190px",
+                  lg: "220px",
                   xl: "240px",
                 },
                 height: {
                   xs: "80px",
                   sm: "150px",
-                  md: "160px",
-                  lg: "170px",
-                  xl: "180px",
+                  md: "170px",
+                  lg: "180px",
+                  xl: "190px",
                 },
                 display: "flex",
                 flexDirection: { xs: "row", sm: "column" },
@@ -90,7 +87,7 @@ export default function FeaturesComp() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: { xs: "2rem", sm: "2.5rem", lg: "2.8rem" },
+                  fontSize: { xs: "1.8rem", sm: "2.8rem", lg: "3.2rem" },
                 }}
               >
                 {feature.icon}
@@ -104,14 +101,13 @@ export default function FeaturesComp() {
                   fontSize: {
                     xs: "1.05rem",
                     sm: "0.9rem",
-                    md: "0.95rem",
-                    lg: "1rem",
+                    md: "1rem",
+                    lg: "1.1rem",
                   },
                   letterSpacing: "0.5px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  width: { xs: "auto", sm: "100%" },
                 }}
               >
                 {feature.title}

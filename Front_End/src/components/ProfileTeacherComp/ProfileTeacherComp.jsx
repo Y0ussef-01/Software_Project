@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Paper,
@@ -9,18 +9,16 @@ import {
   Tooltip,
   CircularProgress,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
+import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";   
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
-import TeacherGrades from '../TeacherGradesComp/TeacherGrades';
+
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ProfileTeacherComp() {
   const {
@@ -34,11 +32,17 @@ export default function ProfileTeacherComp() {
   } = useTeacherProfile();
 
   const navigate = useNavigate();
-  const [selectedCourseId, setSelectedCourseId] = useState("");
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "40vh",
+        }}
+      >
         <CircularProgress size={60} sx={{ color: "#152b48" }} />
       </Box>
     );
@@ -52,18 +56,8 @@ export default function ProfileTeacherComp() {
     );
   }
 
-  const details = [
-    { label: "Teacher ID", value: teacherData._id || "N/A" },
-    { label: "Email", value: teacherData.email || "N/A" },
-    { label: "Department", value: teacherData.department || "N/A" },
-    { label: "Total Courses", value: teacherData.courses?.length || 0 },
-  ];
-
-  const hasCustomImage = teacherData.profileImg && !teacherData.profileImg.includes("default");
-
   const uniqueCourses = [];
   const seenCourseIds = new Set();
-
   if (teacherData?.courses && Array.isArray(teacherData.courses)) {
     teacherData.courses.forEach((item) => {
       const c = item?.course;
@@ -74,20 +68,87 @@ export default function ProfileTeacherComp() {
     });
   }
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
+  const details = [
+    { label: "Teacher ID", value: teacherData._id || "N/A" },
+    { label: "Email", value: teacherData.email || "N/A" },
+    { label: "Department", value: teacherData.department || "N/A" },
+    { label: "Total Courses", value: uniqueCourses.length },
+  ];
 
-      <Paper elevation={0} sx={{ position: "relative", p: { xs: 4, md: 5, lg: 6 }, borderRadius: { xs: "24px", xl: "32px" }, backgroundColor: "#fff", width: "100%", boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)", overflow: "hidden" }}>
-        <Box sx={{ position: "absolute", top: 0, left: 0, bottom: 0, width: { xs: "8px", lg: "10px" }, background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)" }} />
-        <Box sx={{ position: "absolute", top: "-15%", left: "-5%", width: { xs: "250px", md: "350px", xl: "450px" }, height: { xs: "250px", md: "350px", xl: "450px" }, borderRadius: "50%", background: "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, pointerEvents: "none" }} />
+  const hasCustomImage =
+    teacherData.profileImg && !teacherData.profileImg.includes("default");
+
+  return (
+    <>
+      <Paper
+        elevation={0}
+        sx={{
+          position: "relative",
+          p: { xs: 4, md: 5 },     
+          borderRadius: "20px",     
+          backgroundColor: "#fff",
+          width: "100%",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: "8px",
+            background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "-15%",
+            left: "-5%",
+            width: "250px",
+            height: "250px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)",
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        />
 
         <Box sx={{ position: "relative", zIndex: 1 }}>
-          <Box sx={{ display: "flex", flexDirection: { xs: "column", lg: "row" }, justifyContent: "space-between", alignItems: { xs: "center", lg: "flex-start" }, mb: { xs: 5, lg: 6 } }}>
-
-            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: "center", alignSelf: { xs: "center", lg: "flex-start" }, gap: 3, mb: { xs: 4, lg: 0 } }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", lg: "row" },
+              justifyContent: "space-between",
+              alignItems: { xs: "center", lg: "flex-start" },
+              mb: { xs: 5, lg: 6 },
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: "center",
+                alignSelf: { xs: "center", lg: "flex-start" },
+                gap: 3,
+                mb: { xs: 4, lg: 0 },
+              }}
+            >
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <LocalLibraryIcon sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }} />
-                <Typography variant="h5" sx={{ fontWeight: "900", color: "#152b48", letterSpacing: "0.5px" }}>
+                <LocalLibraryIcon
+                  sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
+                />
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "900",
+                    color: "#152b48",
+                    letterSpacing: "0.5px",
+                  }}
+                >
                   Teacher Profile
                 </Typography>
               </Box>
@@ -96,51 +157,171 @@ export default function ProfileTeacherComp() {
                 variant="outlined"
                 startIcon={<VpnKeyOutlinedIcon />}
                 onClick={() => navigate("/teacher/reset-password")}
-                sx={{ color: "#152b48", borderColor: "#152b48", borderRadius: "10px", textTransform: "none", fontWeight: 600, borderWidth: "2px", "&:hover": { backgroundColor: "rgba(21, 43, 72, 0.04)", borderColor: "#152b48", borderWidth: "2px" } }}
+                sx={{
+                  color: "#152b48",
+                  borderColor: "#152b48",
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "rgba(21, 43, 72, 0.04)",
+                    borderColor: "#152b48",
+                  },
+                }}
               >
                 Reset Password
               </Button>
             </Box>
 
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
               <Box sx={{ position: "relative", display: "inline-block" }}>
-                <Box sx={{ position: "relative", display: "inline-block", cursor: isImageUpdating ? "default" : "pointer", borderRadius: "50%", overflow: "hidden", "&:hover .overlay": { opacity: isImageUpdating ? 0 : 1 } }} onClick={handleImageClick}>
-                  <Avatar src={teacherData.profileImg} alt={teacherData.name} sx={{ width: { xs: 130, lg: 150, xl: 170 }, height: { xs: 130, lg: 150, xl: 170 }, boxShadow: "0px 8px 24px rgba(21,43,72,0.15)", border: "5px solid #fff", opacity: isImageUpdating ? 0.5 : 1, transition: "opacity 0.3s ease" }} />
-                  {isImageUpdating && <CircularProgress size={40} sx={{ position: "absolute", top: "50%", left: "50%", marginTop: "-20px", marginLeft: "-20px", color: "#152b48" }} />}
+                <Box
+                  sx={{
+                    position: "relative",
+                    display: "inline-block",
+                    cursor: isImageUpdating ? "default" : "pointer",
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    "&:hover .overlay": { opacity: isImageUpdating ? 0 : 1 },
+                  }}
+                  onClick={handleImageClick}
+                >
+                  <Avatar
+                    src={teacherData.profileImg}
+                    alt={teacherData.name}
+                    sx={{
+                      width: { xs: 130, lg: 150, xl: 170 },
+                      height: { xs: 130, lg: 150, xl: 170 },
+                      boxShadow: "0px 8px 24px rgba(21,43,72,0.15)",
+                      border: "5px solid #fff",
+                      opacity: isImageUpdating ? 0.5 : 1,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                  {isImageUpdating && (
+                    <CircularProgress
+                      size={40}
+                      sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        marginTop: "-20px",
+                        marginLeft: "-20px",
+                        color: "#152b48",
+                      }}
+                    />
+                  )}
                   {!isImageUpdating && (
-                    <Box className="overlay" sx={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(21, 43, 72, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", opacity: 0, transition: "opacity 0.3s ease" }}>
+                    <Box
+                      className="overlay"
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(21, 43, 72, 0.6)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        opacity: 0,
+                        transition: "opacity 0.3s ease",
+                      }}
+                    >
                       <PhotoCameraIcon sx={{ color: "#fff", fontSize: 45 }} />
                     </Box>
                   )}
                 </Box>
                 {hasCustomImage && !isImageUpdating && (
                   <Tooltip title="Remove photo" placement="left">
-                    <IconButton onClick={handleRemoveImage} size="small" sx={{ position: "absolute", bottom: 5, right: 5, backgroundColor: "#fff", color: "#e11d48", boxShadow: "0px 4px 10px rgba(0,0,0,0.15)", "&:hover": { backgroundColor: "#ffe4e6" } }}>
+                    <IconButton
+                      onClick={handleRemoveImage}
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        bottom: 5,
+                        right: 5,
+                        backgroundColor: "#fff",
+                        color: "#e11d48",
+                        boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                        "&:hover": { backgroundColor: "#ffe4e6" },
+                      }}
+                    >
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 )}
-                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ display: "none" }} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                />
               </Box>
 
-              <Typography variant="h5" sx={{ fontWeight: "900", mt: 3, color: "#1e293b", textAlign: "center", lineHeight: 1.2 }}>
-                Dr. {teacherData.name || "Teacher"}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "900",
+                  mt: 3,
+                  color: "#1e293b",
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                }}
+              >
+                Dr. {teacherData.name}
               </Typography>
-              <Typography variant="subtitle1" sx={{ color: "#64748b", textAlign: "center", mt: 0.5, fontWeight: 600 }}>
-                {teacherData.department || "Department"}
+              <Typography
+                variant="body2"
+                sx={{ color: "#64748b", textAlign: "center", mt: 0.5 }}
+              >
+                {teacherData.department}
               </Typography>
             </Box>
           </Box>
 
           <Box>
-            <Grid container spacing={{ xs: 2, md: 3, lg: 4 }}>
+            <Grid container spacing={3}>
               {details.map((item, index) => (
-                <Grid item xs={12} sm={6} md={3} key={index}>
-                  <Box sx={{ p: { xs: 2.5, lg: 3 }, height: "100%", backgroundColor: "#fcfcfd", borderRadius: "16px", border: "1px solid #eef2f6", transition: "all 0.3s ease", "&:hover": { borderColor: "#152b48", backgroundColor: "#fff", boxShadow: "0px 8px 24px rgba(21,43,72,0.08)", transform: "translateY(-4px)" } }}>
-                    <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px", mb: 1, display: "block" }}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={index}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      height: "100%",
+                      backgroundColor: "#fcfcfd",
+                      borderRadius: "12px",
+                      border: "1px solid #eef2f6",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        borderColor: "#152b48",
+                        backgroundColor: "#fff",
+                        boxShadow: "0px 4px 15px rgba(21,43,72,0.06)",
+                        transform: "translateY(-3px)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#64748b",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
                       {item.label}
                     </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.1rem", wordBreak: "break-word" }}>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 700, color: "#0f172a", mt: 0.5 }}
+                    >
                       {item.value}
                     </Typography>
                   </Box>
@@ -150,46 +331,6 @@ export default function ProfileTeacherComp() {
           </Box>
         </Box>
       </Paper>
-      <Paper elevation={0} sx={{ p: { xs: 4, md: 5, lg: 6 }, borderRadius: { xs: "24px", xl: "32px" }, backgroundColor: "#fff", width: "100%", boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)" }}>
-        <Typography variant="h5" sx={{ fontWeight: "900", color: "#152b48", mb: 4 }}>
-          Manage Course Grades
-        </Typography>
-
-        {uniqueCourses.length > 0 ? (
-          <Box sx={{ mb: 4, maxWidth: "500px" }}>
-            <FormControl fullWidth>
-              <InputLabel id="course-select-label" sx={{ color: "#152b48" }}>Select a Course</InputLabel>
-              <Select
-                labelId="course-select-label"
-                value={selectedCourseId}
-                label="Select a Course"
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                sx={{ borderRadius: "10px" }}
-              >
-                {uniqueCourses.map((course) => (
-                  <MenuItem key={course._id} value={course._id}>
-                    {course.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        ) : (
-          <Typography color="error" sx={{ mb: 3 }}>
-            You are not assigned to any courses yet.
-          </Typography>
-        )}
-
-        {selectedCourseId !== "" && (
-          <TeacherGrades
-            courseId={selectedCourseId}
-            courseName={
-              uniqueCourses?.find(c => String(c._id) === String(selectedCourseId))?.name || "Selected Course"
-            }
-          />
-        )}
-      </Paper>
-
-    </Box>
+    </>
   );
 }
