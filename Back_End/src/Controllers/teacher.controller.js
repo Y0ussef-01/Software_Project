@@ -128,8 +128,8 @@ const uploadGradesExcel = async (req, res) => {
             return res.status(400).json({ message: "Empty file" });
         }
 
-        const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'رقم الجلوس', 'رقم الطالب'];
-        const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial', 'م', 'الاسم'];
+        const idPossibleNames = ['id', 'student_id', 'studentId', 'code', 'student id', 'الكود', 'رقم الطالب'];
+        const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial', 'الاسم'];
 
         const bulkOperations = [];
 
