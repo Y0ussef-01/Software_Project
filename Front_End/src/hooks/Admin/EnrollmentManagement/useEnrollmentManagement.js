@@ -12,10 +12,10 @@ export default function useEnrollmentManagement() {
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [addModalOpen, setAddModalOpen] = useState(false); // ✅
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [editFormData, setEditFormData] = useState({ courseId: "", groupId: "" });
-  const [addFormData, setAddFormData] = useState({ courseId: "", groupName: "" }); // ✅
+  const [addFormData, setAddFormData] = useState({ courseId: "", groupName: "" });
 
   useEffect(() => { fetchAllCourses(); }, []);
 
@@ -59,44 +59,114 @@ export default function useEnrollmentManagement() {
     return String(value);
   };
 
-  const processEnrollments = (student) => {
+  // ✅ الدالة دي بتدور على الـ group في allCourses بالـ groupId
+  const findGroupDataFromCourses = (courseId, groupId, courses) => {
+    if (!courseId || !groupId || !courses?.length) return null;
+    const course = courses.find((c) => String(c._id) === String(courseId));
+    if (!course || !Array.isArray(course.groups)) return null;
+    const group = course.groups.find((g) => String(g._id) === String(groupId));
+    return group || null;
+  };
+
+  const processEnrollments = (student, courses) => {
     if (!student) return [];
-    const courses =
-      student.courses || student.registeredCourses ||
-      student.enrollments || student.enrolled_courses || [];
+    const registeredCourses = student.registeredCourses || [];
+    if (!Array.isArray(registeredCourses) || registeredCourses.length === 0) return [];
 
-    if (!Array.isArray(courses) || courses.length === 0) return [];
-
-    return courses
-      .map((course, index) => {
+    return registeredCourses
+      .map((rc, index) => {
+        // course و group ممكن يكونوا objects (populated) أو strings (IDs)
         const courseId = String(
-          course.courseId || course.course?._id || course.course?.id || course._id || ""
+          rc.course?._id || rc.course?.id || rc.course || ""
         );
-        const courseName = extractValue(
-          course.name || course.courseName || course.course?.name || "Unknown"
-        );
-        const groupName = extractValue(
-          course.groupName || course.group?.name || course.group || ""
+        const groupId = String(
+          rc.group?._id || rc.group?.id || rc.group || ""
         );
 
         if (!courseId) return null;
 
+        // بيانات الكورس
+        const courseName = extractValue(
+          rc.course?.name || rc.courseName || getCourseName(courseId, courses) || "Unknown"
+        );
+
+        // بيانات الـ group — لو populated خدها مباشرة، لو لأ دور عليها في allCourses
+        let groupName = "";
+        let appointment = null;
+        let room = "";
+        let type = "";
+
+        if (rc.group && typeof rc.group === "object") {
+          // ✅ الـ group populated من الـ API (زي getProfile)
+          groupName = rc.group.groupName || rc.group.name || groupId;
+          appointment = rc.group.appointment || null;
+          room = rc.group.Room || rc.group.room || "";
+          type = rc.group.type || "";
+        } else {
+          // الـ group مجرد ID — دور عليه في allCourses
+          const groupData = findGroupDataFromCourses(courseId, groupId, courses);
+          if (groupData) {
+            groupName = groupData.groupName || groupData.name || groupId;
+            appointment = groupData.appointment || null;
+            room = groupData.Room || groupData.room || "";
+            type = groupData.type || "";
+          } else {
+            groupName = groupId;
+          }
+        }
+
+        // استخراج الـ courseCode من الـ groupName
+        const courseCode = extractCodeFromGroup(groupName);
+        const groupOnly = extractGroupOnly(groupName);
+        const groupCode = extractGroupCode(groupName);
+
+        // الـ hours من الكورس
+        const hours =
+          rc.course?.hours ||
+          courses?.find((c) => String(c._id) === courseId)?.hours ||
+          3;
+
         return {
           _id: `${student._id}-${courseId}-${index}`,
           courseId,
+          groupId,
           courseName,
-          courseCode: extractCodeFromGroup(groupName),
+          courseCode,
           groupName,
-          groupOnly: extractGroupOnly(groupName),
-          groupCode: extractGroupCode(groupName),
+          groupOnly,
+          groupCode,
           studentId: student._id,
-          appointment: course.appointment || null,
-          Room: course.Room || course.room || "",
-          type: course.type || "",
-          hours: course.hours || 3,
+          appointment,
+          Room: room,
+          type,
+          hours,
         };
       })
       .filter(Boolean);
+  };
+
+  const getCourseName = (courseId, courses) => {
+    const list = courses || allCourses;
+    if (!courseId || !list?.length) return "Unknown";
+    const course = list.find((c) => String(c._id) === String(courseId));
+    return course ? String(course.name || courseId) : courseId;
+  };
+
+  const getGroupsForCourse = (courseId) => {
+    if (!courseId) return [];
+    const course = allCourses.find((c) => c._id === courseId);
+    if (!course || !Array.isArray(course.groups)) return [];
+    return course.groups
+      .map((group) => ({
+        _id: String(group._id || group.groupName || group.name || ""),
+        name: String(group.groupName || group.name || ""),
+        groupName: String(group.groupName || group.name || ""),
+        type: String(group.type || ""),
+        capacity: Number(group.capacity) || 50,
+        appointment: group.appointment || null,
+        Room: group.Room || group.room || "",
+      }))
+      .filter((g) => g.groupName !== "");
   };
 
   const handleSearchStudent = async (id) => {
@@ -114,7 +184,8 @@ export default function useEnrollmentManagement() {
 
       if (response.data) {
         setStudentData(response.data);
-        const enrollments = processEnrollments(response.data);
+        // ✅ بنبعت allCourses عشان processEnrollments يقدر يدور على الـ groups
+        const enrollments = processEnrollments(response.data, allCourses);
         setStudentEnrollments(enrollments);
         setShowResults(true);
         enrollments.length > 0
@@ -132,29 +203,6 @@ export default function useEnrollmentManagement() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getCourseName = (courseId) => {
-    if (!courseId) return "Unknown";
-    const course = allCourses.find((c) => c._id === courseId);
-    return course ? String(course.name || courseId) : courseId;
-  };
-
-  const getGroupsForCourse = (courseId) => {
-    if (!courseId) return [];
-    const course = allCourses.find((c) => c._id === courseId);
-    if (!course || !Array.isArray(course.groups)) return [];
-    return course.groups
-      .map((group) => ({
-        _id: String(group._id || group.groupName || group.name || ""),
-        name: String(group.groupName || group.name || ""),
-        groupName: String(group.groupName || group.name || ""),
-        type: String(group.type || ""),
-        capacity: Number(group.capacity) || 50,
-        appointment: group.appointment || null, // ✅
-        Room: group.Room || group.room || "",   // ✅
-      }))
-      .filter((g) => g.groupName !== "");
   };
 
   // ── Edit ──────────────────────────────────────────
@@ -234,7 +282,7 @@ export default function useEnrollmentManagement() {
     }
   };
 
-  // ── Add ✅ ────────────────────────────────────────
+  // ── Add ────────────────────────────────────────────
   const handleOpenAddModal = () => {
     setAddFormData({ courseId: "", groupName: "" });
     setAddModalOpen(true);
@@ -282,15 +330,16 @@ export default function useEnrollmentManagement() {
     searchId, setSearchId,
     studentData, studentEnrollments,
     showResults, isLoading, allCourses,
-    editModalOpen, deleteModalOpen, addModalOpen, // ✅
+    editModalOpen, deleteModalOpen, addModalOpen,
     selectedEnrollment,
     editFormData, setEditFormData,
-    addFormData, setAddFormData,                  // ✅
+    addFormData, setAddFormData,
     handleSearchStudent,
-    getCourseName, getGroupsForCourse,
+    getCourseName: (courseId) => getCourseName(courseId, allCourses),
+    getGroupsForCourse,
     handleOpenEditModal, handleCloseEditModal, handleEditSubmit,
     handleOpenDeleteModal, handleCloseDeleteModal, handleDeleteSubmit,
-    handleOpenAddModal, handleCloseAddModal, handleAddSubmit, // ✅
+    handleOpenAddModal, handleCloseAddModal, handleAddSubmit,
     handleClearSearch, refreshStudentEnrollments,
   };
 }

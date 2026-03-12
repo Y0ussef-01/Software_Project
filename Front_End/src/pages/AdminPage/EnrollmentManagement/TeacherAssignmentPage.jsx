@@ -34,22 +34,23 @@ export default function TeacherAssignmentPage() {
     allCourses, getCourseName, getGroupsForCourse,
   } = useTeacherAssignment();
 
+  const uniqueCoursesCount = new Set(teacherCourses.map((c) => c.courseId)).size;
+
   return (
     <Box sx={{
       width: "100%", display: "flex", flexDirection: "column",
       alignItems: "center", p: { xs: 2, md: 3, lg: 4 },
     }}>
-      
+
       <Box sx={{ width: "100%", maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" }, mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 900, color: "text.primary" }}>
-           Teacher Course Assignments
+          Teacher Course Assignments
         </Typography>
         <Typography variant="subtitle1" sx={{ color: "text.secondary", fontWeight: 500 }}>
           Search for a teacher and manage their course assignments
         </Typography>
       </Box>
 
-      
       <TeacherSearchSection
         searchId={searchId}
         setSearchId={setSearchId}
@@ -57,7 +58,6 @@ export default function TeacherAssignmentPage() {
         isLoading={isLoading}
       />
 
-      
       {teacherData && showResults && (
         <Box sx={{ width: "100%", maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" }, mb: 3 }}>
           <Box sx={{
@@ -68,7 +68,6 @@ export default function TeacherAssignmentPage() {
               : "0px 10px 40px rgba(21,43,72,0.08)",
             overflow: "hidden",
           }}>
-            
             <Box sx={{
               position: "absolute", top: 0, left: 0, bottom: 0, width: "8px",
               background: theme.palette.mode === "dark"
@@ -76,7 +75,6 @@ export default function TeacherAssignmentPage() {
                 : "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
             }} />
 
-          
             <Box sx={{
               position: "absolute", top: "-15%", right: "-5%",
               width: { xs: "200px", md: "300px" }, height: { xs: "200px", md: "300px" },
@@ -93,7 +91,6 @@ export default function TeacherAssignmentPage() {
               alignItems: { xs: "flex-start", sm: "center" },
               justifyContent: "space-between", gap: 3,
             }}>
-              
               <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
                 <Avatar src={teacherData.profileImg} alt={teacherData.name} sx={{
                   width: { xs: 70, md: 90 }, height: { xs: 70, md: 90 },
@@ -118,7 +115,6 @@ export default function TeacherAssignmentPage() {
                 </Box>
               </Box>
 
-              
               <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
                 <Box sx={{
                   textAlign: "center", p: { xs: 1.5, md: 2 },
@@ -134,7 +130,7 @@ export default function TeacherAssignmentPage() {
                     Total Courses
                   </Typography>
                   <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 900, mt: 0.5 }}>
-                    {teacherCourses.length}
+                    {uniqueCoursesCount}
                   </Typography>
                 </Box>
 
@@ -155,7 +151,6 @@ export default function TeacherAssignmentPage() {
         </Box>
       )}
 
-      
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <Collapse in={showResults} unmountOnExit timeout={500}
           sx={{ width: "100%", maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" } }}>
