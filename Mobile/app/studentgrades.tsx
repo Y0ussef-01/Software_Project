@@ -14,46 +14,48 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import API from '../api/axiosConfig';
 
-interface Course {
+interface Degree {
+    title: string;
+    score: number;
     _id: string;
-    name: string;
 }
 
-const Quizzes = () => {
+interface Course {
+    courseId: string;
+    courseName: string;
+    Degrees: Degree[];
+}
+
+const StudentGrades = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchCourses = async () => {
+        const fetchGrades = async () => {
             try {
-                const res = await API.get('/teacher/profile');
+                const res = await API.get('/student/grades');
+                const rawGrades: Course[] = res.data?.grades || [];
 
-                const rawCourses: any[] = res.data?.courses || [];
-
-               
-                const seen = new Set<string>();
-                const unique: Course[] = [];
-
-                rawCourses.forEach((c: any) => {
-                    const id = c.course?._id;
-                    const name = c.course?.name;
-
-                    if (id && !seen.has(id)) {
-                        seen.add(id);
-                        unique.push({ _id: id, name: name || id });
+                
+                const seen = new Map<string, Course>();
+                rawGrades.forEach((c) => {
+                    if (seen.has(c.courseId)) {
+                       
+                        const existing = seen.get(c.courseId)!;
+                        existing.Degrees = [...existing.Degrees, ...c.Degrees];
+                    } else {
+                        seen.set(c.courseId, { ...c, Degrees: [...c.Degrees] });
                     }
                 });
 
-                setCourses(unique);
+                setCourses(Array.from(seen.values()));
             } catch (err) {
-                console.error('Error fetching teacher courses:', err);
                 setCourses([]);
             } finally {
                 setLoading(false);
             }
         };
-
-        fetchCourses();
+        fetchGrades();
     }, []);
 
     return (
@@ -69,7 +71,7 @@ const Quizzes = () => {
 
             <View style={styles.titleContainer}>
                 <MaterialCommunityIcons name="pencil-box-multiple" size={28} color="rgb(23, 42, 70)" />
-                <Text style={styles.titleText}>Upload Grades</Text>
+                <Text style={styles.titleText}>My Courses</Text>
             </View>
 
             {loading ? (
@@ -77,24 +79,28 @@ const Quizzes = () => {
             ) : courses.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <MaterialCommunityIcons name="book-off" size={50} color="gray" />
-                    <Text style={styles.emptyText}>No courses assigned</Text>
+                    <Text style={styles.emptyText}>No courses found</Text>
                 </View>
             ) : (
                 <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                     {courses.map((course) => (
                         <TouchableOpacity
-                            key={course._id}
+                            key={course.courseId}
                             style={styles.courseCard}
                             onPress={() =>
                                 router.push({
-                                    pathname: '/uploadgrades',
-                                    params: { courseId: course._id, courseName: course.name },
+                                    pathname: '/coursedetails',
+                                    params: {
+                                        courseId: course.courseId,
+                                        courseName: course.courseName,
+                                        degrees: JSON.stringify(course.Degrees),
+                                    },
                                 } as any)
                             }
                         >
                             <View style={styles.courseInfo}>
-                                <Text style={styles.courseId}>{course._id}</Text>
-                                <Text style={styles.courseName}>{course.name}</Text>
+                                <Text style={styles.courseId}>{course.courseId}</Text>
+                                <Text style={styles.courseName}>{course.courseName}</Text>
                             </View>
                             <MaterialCommunityIcons name="chevron-right" size={24} color="rgb(23, 42, 70)" />
                         </TouchableOpacity>
@@ -105,7 +111,7 @@ const Quizzes = () => {
     );
 };
 
-export default Quizzes;
+export default StudentGrades;
 
 const styles = StyleSheet.create({
     container: {

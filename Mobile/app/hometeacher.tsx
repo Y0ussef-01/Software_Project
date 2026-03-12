@@ -96,8 +96,8 @@ const hometeacher = () => {
 
             <View style={styles.HeaderStyle}>
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
-                    
-           
+
+
                     <TouchableOpacity onPress={toggleDrawer}>
                         <MaterialCommunityIcons name="menu" size={24} color="white" />
                     </TouchableOpacity>
@@ -114,106 +114,106 @@ const hometeacher = () => {
                 <View style={styles.gridContainer}>
                     <View style={styles.rowContainer}>
 
-                          <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('calendar-remove')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="calendar-remove"
-                                                        size={35}
-                                                        color={pressedItem === 'calendar-remove' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'calendar-remove' && styles.gridTextActive]}>
-                                                        Attendance
-                                                    </Text>
-                                                </TouchableOpacity>
-                        
-                                                <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'calendar-month' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('calendar-month')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="calendar-month"
-                                                        size={35}
-                                                        color={pressedItem === 'calendar-month' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'calendar-month' && styles.gridTextActive]}>
-                                                        Schedule
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                        
-                                            <View style={styles.rowContainer}>
-                                                <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'star-circle' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('star-circle')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="star-circle"
-                                                        size={35}
-                                                        color={pressedItem === 'star-circle' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'star-circle' && styles.gridTextActive]}>
-                                                        Evaluation
-                                                    </Text>
-                                                </TouchableOpacity>
-                        
-                                                <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('pencil-box-multiple')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                        onPress={() => router.push('/quizzes' as any)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="pencil-box-multiple"
-                                                        size={35}
-                                                        color={pressedItem === 'pencil-box-multiple' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'pencil-box-multiple' && styles.gridTextActive]}>
-                                                        Quizzes
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                        
-                                            <View style={styles.rowContainer}>
-                                                <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'bell' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('bell')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="bell"
-                                                        size={35}
-                                                        color={pressedItem === 'bell' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'bell' && styles.gridTextActive]}>
-                                                        Notifications
-                                                    </Text>
-                                                </TouchableOpacity>
-                        
-                                                <TouchableOpacity
-                                                    activeOpacity={1}
-                                                    style={[styles.gridItem, pressedItem === 'clipboard-text' && styles.gridItemActive]}
-                                                    onPressIn={() => setPressedItem('clipboard-text')}
-                                                    onPressOut={() => setPressedItem(null)}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name="clipboard-text"
-                                                        size={35}
-                                                        color={pressedItem === 'clipboard-text' ? '#fff' : '#02013f'}
-                                                    />
-                                                    <Text style={[styles.gridText, pressedItem === 'clipboard-text' && styles.gridTextActive]}>
-                                                        Final Grades
-                                                    </Text>
-                                                </TouchableOpacity>
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('calendar-remove')}
+                            onPressOut={() => setPressedItem(null)}
+                        >
+                            <MaterialCommunityIcons
+                                name="calendar-remove"
+                                size={35}
+                                color={pressedItem === 'calendar-remove' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'calendar-remove' && styles.gridTextActive]}>
+                                Attendance
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'calendar-month' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('calendar-month')}
+                            onPressOut={() => setPressedItem(null)}
+                        >
+                            <MaterialCommunityIcons
+                                name="calendar-month"
+                                size={35}
+                                color={pressedItem === 'calendar-month' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'calendar-month' && styles.gridTextActive]}>
+                                Schedule
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.rowContainer}>
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'star-circle' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('star-circle')}
+                            onPressOut={() => setPressedItem(null)}
+                        >
+                            <MaterialCommunityIcons
+                                name="star-circle"
+                                size={35}
+                                color={pressedItem === 'star-circle' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'star-circle' && styles.gridTextActive]}>
+                                Evaluation
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('pencil-box-multiple')}
+                            onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/quizzes' as any)}
+                        >
+                            <MaterialCommunityIcons
+                                name="pencil-box-multiple"
+                                size={35}
+                                color={pressedItem === 'pencil-box-multiple' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'pencil-box-multiple' && styles.gridTextActive]}>
+                                Quizzes
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.rowContainer}>
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'bell' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('bell')}
+                            onPressOut={() => setPressedItem(null)}
+                        >
+                            <MaterialCommunityIcons
+                                name="bell"
+                                size={35}
+                                color={pressedItem === 'bell' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'bell' && styles.gridTextActive]}>
+                                Notifications
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === 'clipboard-text' && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem('clipboard-text')}
+                            onPressOut={() => setPressedItem(null)}
+                        >
+                            <MaterialCommunityIcons
+                                name="clipboard-text"
+                                size={35}
+                                color={pressedItem === 'clipboard-text' ? '#fff' : '#02013f'}
+                            />
+                            <Text style={[styles.gridText, pressedItem === 'clipboard-text' && styles.gridTextActive]}>
+                                Final Grades
+                            </Text>
+                        </TouchableOpacity>
 
                     </View>
                 </View>

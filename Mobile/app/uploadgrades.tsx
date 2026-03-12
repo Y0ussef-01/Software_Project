@@ -13,8 +13,9 @@ import {
     View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
+import API from '../api/axiosConfig';
 
 interface UploadedFile {
     name: string;
@@ -41,18 +42,16 @@ const UploadGrades = () => {
         }
     };
 
-    
     const openFile = async (uri: string) => {
-    try {
-        await Sharing.shareAsync(uri, {
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Open with...',
-        });
-    } catch (err) {
-        Alert.alert('❌', 'Failed to open file');
-    }
-};
-
+        try {
+            await Sharing.shareAsync(uri, {
+                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                dialogTitle: 'Open with...',
+            });
+        } catch (err) {
+            Alert.alert('❌', 'Failed to open file');
+        }
+    };
 
     const removeUploadedFile = (index: number) => {
         Alert.alert(
@@ -80,14 +79,17 @@ const UploadGrades = () => {
         try {
             setLoading(true);
 
-            // ⚠️ TEMP: Simulate upload without backend
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const formData = new FormData();
+            formData.append('courseId', courseId as string);
+            formData.append('excelFile', {
+                uri: file.uri,
+                name: file.name,
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            } as any);
 
-            // TODO: Remove simulation and uncomment real API call below
-            // const formData = new FormData();
-            // formData.append('courseId', courseId as string);
-            // formData.append('excelFile', { uri: file.uri, name: file.name, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } as any);
-            // await API.post('/teacher/upload-grades-excel', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            await API.post('/teacher/upload-grades-excel', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
 
             const now = new Date();
             const uploadedAt = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
@@ -96,7 +98,7 @@ const UploadGrades = () => {
 
             Alert.alert('✅ Success', 'Grades uploaded successfully!');
         } catch (err: any) {
-            Alert.alert('❌ Error', 'Failed to upload grades');
+            Alert.alert('❌ Error', err.response?.data?.message || 'Failed to upload grades');
         } finally {
             setLoading(false);
         }
@@ -106,7 +108,6 @@ const UploadGrades = () => {
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
 
-         
             <View style={styles.HeaderStyle}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Entypo name="chevron-with-circle-left" size={24} color="white" />
@@ -116,16 +117,14 @@ const UploadGrades = () => {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
-              
                 <View style={styles.courseCard}>
-                    <MaterialCommunityIcons name="book-open-variant" size={28} color="rgb(23, 42, 70)" />
+                    <MaterialCommunityIcons name="book-open-variant" size={28} color="white" />
                     <View>
                         <Text style={styles.courseId}>{courseId}</Text>
                         <Text style={styles.courseName}>{courseName}</Text>
                     </View>
                 </View>
 
-             
                 <TouchableOpacity style={styles.uploadBox} onPress={pickFile}>
                     <MaterialCommunityIcons
                         name="file-excel"
@@ -166,10 +165,9 @@ const UploadGrades = () => {
                     )}
                 </TouchableOpacity>
 
-               
                 {uploadedFiles.length > 0 && (
                     <View style={styles.historyContainer}>
-                        <Text style={styles.historyTitle}>📁 Uploaded Files</Text>
+                        <Text style={styles.historyTitle}>Uploaded Grades</Text>
                         {uploadedFiles.map((f, index) => (
                             <TouchableOpacity
                                 key={index}
@@ -226,28 +224,24 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     courseCard: {
-        backgroundColor: '#fff',
+        backgroundColor: 'rgb(23, 42, 70)',
         borderRadius: 15,
-        padding: 15,
+        padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 15,
-        marginBottom: 15,
-        elevation: 3,
-        shadowColor: 'rgb(23, 42, 70)',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        marginBottom: 20,
+        elevation: 5,
     },
     courseId: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
+        color: 'white',
     },
     courseName: {
         fontSize: 13,
-        color: 'gray',
-        marginTop: 2,
+        color: 'rgba(255,255,255,0.7)',
+        marginTop: 3,
     },
     uploadBox: {
         backgroundColor: '#fff',

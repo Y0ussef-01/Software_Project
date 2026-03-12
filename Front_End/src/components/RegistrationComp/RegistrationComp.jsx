@@ -26,6 +26,8 @@ import {
   Tooltip,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import SyncIcon from "@mui/icons-material/Sync";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -51,10 +53,15 @@ export default function RegistrationComp() {
     registeredCourses,
     handleRegister,
     handleDropCourse,
+    handleSwitchGroup,
   } = useRegistration();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
+
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [courseToUpdate, setCourseToUpdate] = useState(null);
+  const [newSelectedGroup, setNewSelectedGroup] = useState("");
 
   const handleOpenDeleteDialog = (courseInfo) => {
     setCourseToDelete(courseInfo);
@@ -71,6 +78,25 @@ export default function RegistrationComp() {
       const idToDrop = courseToDelete.dropId;
       handleCloseDeleteDialog();
       await handleDropCourse(idToDrop);
+    }
+  };
+
+  const handleOpenUpdateDialog = (courseInfo) => {
+    setCourseToUpdate(courseInfo);
+    setNewSelectedGroup("");
+    setUpdateDialogOpen(true);
+  };
+
+  const handleCloseUpdateDialog = () => {
+    setUpdateDialogOpen(false);
+    setCourseToUpdate(null);
+    setNewSelectedGroup("");
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (courseToUpdate && newSelectedGroup) {
+      await handleSwitchGroup(courseToUpdate.courseId, newSelectedGroup);
+      handleCloseUpdateDialog();
     }
   };
 
@@ -111,8 +137,8 @@ export default function RegistrationComp() {
     ([name, capacity]) => ({ name, capacity }),
   );
 
-  const getGroupScheduleTooltip = (groupName) => {
-    const groupSchedules = rawGroups.filter(
+  const getGroupScheduleTooltip = (groupName, sourceGroups = rawGroups) => {
+    const groupSchedules = sourceGroups.filter(
       (g) => g.groupName === groupName || g.name === groupName,
     );
 
@@ -182,6 +208,27 @@ export default function RegistrationComp() {
       </Box>
     );
   };
+
+  let updateGroupOptions = [];
+  if (courseToUpdate) {
+    const uGroupMap = {};
+    courseToUpdate.availableGroupsData.forEach((g) => {
+      const name = g.groupName || g.name || (typeof g === "string" ? g : "");
+      if (name) {
+        if (uGroupMap[name] === undefined) {
+          const enrolledCount = Array.isArray(g.enrolledStudents)
+            ? g.enrolledStudents.length
+            : 0;
+          const totalCap = g.capacity || 100;
+          uGroupMap[name] = totalCap - enrolledCount;
+        }
+      }
+    });
+    updateGroupOptions = Object.entries(uGroupMap).map(([name, capacity]) => ({
+      name,
+      capacity,
+    }));
+  }
 
   return (
     <Box
@@ -521,7 +568,7 @@ export default function RegistrationComp() {
                     align="right"
                     sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}
                   >
-                    Action
+                    Actions
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -699,29 +746,66 @@ export default function RegistrationComp() {
                       </TableCell>
 
                       <TableCell align="right" sx={{ pr: 3 }}>
-                        <IconButton
-                          onClick={() =>
-                            handleOpenDeleteDialog({
-                              dropId,
-                              courseName: displayName,
-                            })
-                          }
-                          disabled={isActionLoading}
+                        <Box
                           sx={{
-                            bgcolor: "#ffffff",
-                            color: "#e11d48",
-                            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                            width: 40,
-                            height: 40,
-                            transition: "all 0.2s ease-in-out",
-                            "&:hover": {
-                              bgcolor: "#ffe4e6",
-                              transform: "scale(1.05)",
-                            },
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 1,
                           }}
                         >
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
+                          <IconButton
+                            onClick={() =>
+                              handleOpenUpdateDialog({
+                                courseId: baseCourseCode,
+                                courseName: displayName,
+                                currentGroup: displayGroup,
+                                availableGroupsData:
+                                  matchedCourse?.groups ||
+                                  courseObj?.groups ||
+                                  [],
+                              })
+                            }
+                            disabled={isActionLoading}
+                            sx={{
+                              bgcolor: "#ffffff",
+                              color: "#0284c7",
+                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                              width: 40,
+                              height: 40,
+                              transition: "all 0.2s ease-in-out",
+                              "&:hover": {
+                                bgcolor: "#e0f2fe",
+                                transform: "scale(1.05)",
+                              },
+                            }}
+                          >
+                            <EditOutlinedIcon fontSize="small" />
+                          </IconButton>
+
+                          <IconButton
+                            onClick={() =>
+                              handleOpenDeleteDialog({
+                                dropId,
+                                courseName: displayName,
+                              })
+                            }
+                            disabled={isActionLoading}
+                            sx={{
+                              bgcolor: "#ffffff",
+                              color: "#e11d48",
+                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                              width: 40,
+                              height: 40,
+                              transition: "all 0.2s ease-in-out",
+                              "&:hover": {
+                                bgcolor: "#ffe4e6",
+                                transform: "scale(1.05)",
+                              },
+                            }}
+                          >
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   );
@@ -790,6 +874,172 @@ export default function RegistrationComp() {
             }}
           >
             {isActionLoading ? "Dropping..." : "Yes, Drop Course"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={updateDialogOpen}
+        onClose={handleCloseUpdateDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            p: 1,
+            minWidth: { xs: "300px", sm: "450px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            color: "#152b48",
+            fontWeight: "900",
+            pb: 1,
+          }}
+        >
+          <SyncIcon fontSize="large" /> Switch Group
+        </DialogTitle>
+        <DialogContent sx={{ pb: 1 }}>
+          <DialogContentText
+            sx={{
+              fontSize: "1rem",
+              color: "#152b48",
+              fontWeight: 500,
+              mb: 3,
+            }}
+          >
+            Select a new group for <strong>{courseToUpdate?.courseName}</strong>
+            .
+            <br />
+            <Typography variant="caption" color="text.secondary">
+              Current group: {courseToUpdate?.currentGroup}
+            </Typography>
+          </DialogContentText>
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink={true} id="switch-group-label">
+              New Group
+            </InputLabel>
+            <Select
+              labelId="switch-group-label"
+              value={newSelectedGroup}
+              onChange={(e) => setNewSelectedGroup(e.target.value)}
+              displayEmpty
+              label="New Group"
+              sx={{ borderRadius: "12px" }}
+              renderValue={(selected) =>
+                selected ? selected : <em>Choose new group</em>
+              }
+            >
+              <MenuItem disabled value="" sx={{ display: "none" }}>
+                <em>Choose new group</em>
+              </MenuItem>
+              {updateGroupOptions.map((grp, index) => {
+                const isFull = grp.capacity <= 0;
+                const isCurrent = grp.name === courseToUpdate?.currentGroup;
+
+                return (
+                  <MenuItem
+                    key={index}
+                    value={grp.name}
+                    disabled={isFull || isCurrent}
+                    sx={{
+                      p: 0,
+                      "& .group-row": {
+                        borderBottom:
+                          index === updateGroupOptions.length - 1
+                            ? "none"
+                            : "1px solid #f1f5f9",
+                      },
+                    }}
+                  >
+                    <Tooltip
+                      title={getGroupScheduleTooltip(
+                        grp.name,
+                        courseToUpdate?.availableGroupsData,
+                      )}
+                      placement="right"
+                      arrow
+                      componentsProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: "rgba(21, 43, 72, 0.95)",
+                            borderRadius: "8px",
+                            p: 1,
+                          },
+                        },
+                        arrow: { sx: { color: "rgba(21, 43, 72, 0.95)" } },
+                      }}
+                    >
+                      <Box
+                        className="group-row"
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%",
+                          px: 2,
+                          py: 1.5,
+                          "&:hover": { backgroundColor: "#f8fafc" },
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{ flexGrow: 1, fontWeight: 600 }}
+                        >
+                          {grp.name} {isCurrent && "(Current)"}
+                        </Typography>
+                        <Box sx={{ minWidth: "65px", textAlign: "right" }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: isFull ? "error.main" : "text.secondary",
+                              bgcolor: isFull ? "#ffe4e6" : "#f1f5f9",
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: "6px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {isFull ? "Full" : `Cap: ${grp.capacity}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Tooltip>
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button
+            onClick={handleCloseUpdateDialog}
+            disabled={isActionLoading}
+            sx={{
+              color: "text.secondary",
+              fontWeight: "bold",
+              textTransform: "none",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmUpdate}
+            disabled={isActionLoading || !newSelectedGroup}
+            variant="contained"
+            disableElevation
+            sx={{
+              borderRadius: "10px",
+              fontWeight: "bold",
+              px: 3,
+              backgroundColor: "#152b48",
+              textTransform: "none",
+              "&:hover": { backgroundColor: "#152b48" },
+            }}
+          >
+            {isActionLoading ? "Updating..." : "Update Group"}
           </Button>
         </DialogActions>
       </Dialog>

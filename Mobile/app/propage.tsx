@@ -40,7 +40,6 @@ const Propage = () => {
         const userRole = await getRole();
         setRole(userRole);
 
-        // جيب بيانات الـ Student من الـ Backend
         const data = await getStudentProfile();
         setUserData(data);
       } catch (err: any) {
@@ -54,7 +53,7 @@ const Propage = () => {
     fetchProfile();
   }, []);
 
-  // شاشة التحميل
+ 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -64,7 +63,7 @@ const Propage = () => {
     );
   }
 
-  // لو في error
+ 
   if (error) {
     return (
       <View style={styles.loadingContainer}>
@@ -89,7 +88,7 @@ const Propage = () => {
       </View>
 
       <ScrollView style={styles.mainContainer}>
-        {/* Profile Header */}
+    
         <View style={styles.profileContainer}>
           <View style={styles.imageContainer}>
             <Image
@@ -109,7 +108,6 @@ const Propage = () => {
           </View>
         </View>
 
-        {/* البيانات */}
         <View style={styles.fieldContainer}>
           <Text style={styles.dataLabel}>ID</Text>
           <Text style={styles.dataValue}>{userData?._id}</Text>
