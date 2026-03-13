@@ -143,7 +143,7 @@ export default function EnrollmentManagementPage() {
                     Total Courses
                   </Typography>
                   <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 900, mt: 0.5 }}>
-                    {studentEnrollments.length}
+                   {new Set(studentEnrollments.map((e) => e.courseId)).size}
                   </Typography>
                 </Box>
 

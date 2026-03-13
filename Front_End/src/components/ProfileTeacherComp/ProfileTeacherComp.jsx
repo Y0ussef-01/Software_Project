@@ -11,12 +11,14 @@ import {
   Button,
 } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
+import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";   
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ProfileTeacherComp() {
   const {
@@ -54,282 +56,281 @@ export default function ProfileTeacherComp() {
     );
   }
 
+  const uniqueCourses = [];
+  const seenCourseIds = new Set();
+  if (teacherData?.courses && Array.isArray(teacherData.courses)) {
+    teacherData.courses.forEach((item) => {
+      const c = item?.course;
+      if (c && c._id && !seenCourseIds.has(c._id)) {
+        seenCourseIds.add(c._id);
+        uniqueCourses.push(c);
+      }
+    });
+  }
+
   const details = [
-    { label: "Teacher ID", value: teacherData._id },
-    { label: "Email", value: teacherData.email },
-    { label: "Department", value: teacherData.department },
-    { label: "Total Courses", value: teacherData.courses?.length || 0 },
+    { label: "Teacher ID", value: teacherData._id || "N/A" },
+    { label: "Email", value: teacherData.email || "N/A" },
+    { label: "Department", value: teacherData.department || "N/A" },
+    { label: "Total Courses", value: uniqueCourses.length },
   ];
 
   const hasCustomImage =
     teacherData.profileImg && !teacherData.profileImg.includes("default");
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        position: "relative",
-        p: { xs: 4, md: 5, lg: 6 },
-        borderRadius: { xs: "24px", xl: "32px" },
-        backgroundColor: "#fff",
-        width: "100%",
-        boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-        overflow: "hidden",
-      }}
-    >
-      <Box
+    <>
+      <Paper
+        elevation={0}
         sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: { xs: "8px", lg: "10px" },
-          background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
+          position: "relative",
+          p: { xs: 4, md: 5 },     
+          borderRadius: "20px",     
+          backgroundColor: "#fff",
+          width: "100%",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+          overflow: "hidden",
         }}
-      />
-      <Box
-        sx={{
-          position: "absolute",
-          top: "-15%",
-          left: "-5%",
-          width: { xs: "250px", md: "350px", xl: "450px" },
-          height: { xs: "250px", md: "350px", xl: "450px" },
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box sx={{ position: "relative", zIndex: 1 }}>
+      >
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", lg: "row" },
-            justifyContent: "space-between",
-            alignItems: { xs: "center", lg: "flex-start" },
-            mb: { xs: 5, lg: 6 },
+            position: "absolute",
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: "8px",
+            background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
           }}
-        >
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            top: "-15%",
+            left: "-5%",
+            width: "250px",
+            height: "250px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)",
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        />
+
+        <Box sx={{ position: "relative", zIndex: 1 }}>
           <Box
             sx={{
               display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "center",
-              alignSelf: { xs: "center", lg: "flex-start" },
-              gap: 3,
-              mb: { xs: 4, lg: 0 },
+              flexDirection: { xs: "column", lg: "row" },
+              justifyContent: "space-between",
+              alignItems: { xs: "center", lg: "flex-start" },
+              mb: { xs: 5, lg: 6 },
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <LocalLibraryIcon
-                sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
-              />
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: "900",
-                  color: "#152b48",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Teacher Profile
-              </Typography>
-            </Box>
-
-            <Button
-              variant="outlined"
-              startIcon={<VpnKeyOutlinedIcon />}
-              onClick={() => navigate("/teacher/reset-password")}
+            <Box
               sx={{
-                color: "#152b48",
-                borderColor: "#152b48",
-                borderRadius: "10px",
-                textTransform: "none",
-                fontWeight: 600,
-                borderWidth: "2px",
-                "&:hover": {
-                  backgroundColor: "rgba(21, 43, 72, 0.04)",
-                  borderColor: "#152b48",
-                  borderWidth: "2px",
-                },
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: "center",
+                alignSelf: { xs: "center", lg: "flex-start" },
+                gap: 3,
+                mb: { xs: 4, lg: 0 },
               }}
             >
-              Reset Password
-            </Button>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <Box sx={{ position: "relative", display: "inline-block" }}>
-              <Box
-                sx={{
-                  position: "relative",
-                  display: "inline-block",
-                  cursor: isImageUpdating ? "default" : "pointer",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  "&:hover .overlay": { opacity: isImageUpdating ? 0 : 1 },
-                }}
-                onClick={handleImageClick}
-              >
-                <Avatar
-                  src={teacherData.profileImg}
-                  alt={teacherData.name}
-                  sx={{
-                    width: { xs: 130, lg: 150, xl: 170 },
-                    height: { xs: 130, lg: 150, xl: 170 },
-                    boxShadow: "0px 8px 24px rgba(21,43,72,0.15)",
-                    border: "5px solid #fff",
-                    opacity: isImageUpdating ? 0.5 : 1,
-                    transition: "opacity 0.3s ease",
-                  }}
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <LocalLibraryIcon
+                  sx={{ fontSize: 32, color: "#152b48", mr: 1.5 }}
                 />
-                {isImageUpdating && (
-                  <CircularProgress
-                    size={40}
-                    sx={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      marginTop: "-20px",
-                      marginLeft: "-20px",
-                      color: "#152b48",
-                    }}
-                  />
-                )}
-                {!isImageUpdating && (
-                  <Box
-                    className="overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: "rgba(21, 43, 72, 0.6)",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      opacity: 0,
-                      transition: "opacity 0.3s ease",
-                    }}
-                  >
-                    <PhotoCameraIcon sx={{ color: "#fff", fontSize: 45 }} />
-                  </Box>
-                )}
-              </Box>
-
-              {hasCustomImage && !isImageUpdating && (
-                <Tooltip title="Remove photo" placement="left">
-                  <IconButton
-                    onClick={handleRemoveImage}
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      bottom: 5,
-                      right: 5,
-                      backgroundColor: "#fff",
-                      color: "#e11d48",
-                      boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
-                      "&:hover": { backgroundColor: "#ffe4e6" },
-                    }}
-                  >
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                style={{ display: "none" }}
-              />
-            </Box>
-
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: "900",
-                mt: 3,
-                color: "#1e293b",
-                textAlign: "center",
-                lineHeight: 1.2,
-              }}
-            >
-              Dr. {teacherData.name}
-            </Typography>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                color: "#64748b",
-                textAlign: "center",
-                mt: 0.5,
-                fontWeight: 600,
-              }}
-            >
-              {teacherData.department}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box>
-          <Grid container spacing={{ xs: 2, md: 3, lg: 4 }}>
-            {details.map((item, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <Box
+                <Typography
+                  variant="h5"
                   sx={{
-                    p: { xs: 2.5, lg: 3 },
-                    height: "100%",
-                    backgroundColor: "#fcfcfd",
-                    borderRadius: "16px",
-                    border: "1px solid #eef2f6",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      borderColor: "#152b48",
-                      backgroundColor: "#fff",
-                      boxShadow: "0px 8px 24px rgba(21,43,72,0.08)",
-                      transform: "translateY(-4px)",
-                    },
+                    fontWeight: "900",
+                    color: "#152b48",
+                    letterSpacing: "0.5px",
                   }}
                 >
-                  <Typography
-                    variant="caption"
+                  Teacher Profile
+                </Typography>
+              </Box>
+
+              <Button
+                variant="outlined"
+                startIcon={<VpnKeyOutlinedIcon />}
+                onClick={() => navigate("/teacher/reset-password")}
+                sx={{
+                  color: "#152b48",
+                  borderColor: "#152b48",
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "rgba(21, 43, 72, 0.04)",
+                    borderColor: "#152b48",
+                  },
+                }}
+              >
+                Reset Password
+              </Button>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <Box sx={{ position: "relative", display: "inline-block" }}>
+                <Box
+                  sx={{
+                    position: "relative",
+                    display: "inline-block",
+                    cursor: isImageUpdating ? "default" : "pointer",
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    "&:hover .overlay": { opacity: isImageUpdating ? 0 : 1 },
+                  }}
+                  onClick={handleImageClick}
+                >
+                  <Avatar
+                    src={teacherData.profileImg}
+                    alt={teacherData.name}
                     sx={{
-                      color: "#64748b",
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      mb: 1,
-                      display: "block",
+                      width: { xs: 130, lg: 150, xl: 170 },
+                      height: { xs: 130, lg: 150, xl: 170 },
+                      boxShadow: "0px 8px 24px rgba(21,43,72,0.15)",
+                      border: "5px solid #fff",
+                      opacity: isImageUpdating ? 0.5 : 1,
+                      transition: "opacity 0.3s ease",
                     }}
-                  >
-                    {item.label}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontWeight: 800,
-                      color: "#0f172a",
-                      fontSize: "1.1rem",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {item.value}
-                  </Typography>
+                  />
+                  {isImageUpdating && (
+                    <CircularProgress
+                      size={40}
+                      sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        marginTop: "-20px",
+                        marginLeft: "-20px",
+                        color: "#152b48",
+                      }}
+                    />
+                  )}
+                  {!isImageUpdating && (
+                    <Box
+                      className="overlay"
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "rgba(21, 43, 72, 0.6)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        opacity: 0,
+                        transition: "opacity 0.3s ease",
+                      }}
+                    >
+                      <PhotoCameraIcon sx={{ color: "#fff", fontSize: 45 }} />
+                    </Box>
+                  )}
                 </Box>
-              </Grid>
-            ))}
-          </Grid>
+                {hasCustomImage && !isImageUpdating && (
+                  <Tooltip title="Remove photo" placement="left">
+                    <IconButton
+                      onClick={handleRemoveImage}
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        bottom: 5,
+                        right: 5,
+                        backgroundColor: "#fff",
+                        color: "#e11d48",
+                        boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                        "&:hover": { backgroundColor: "#ffe4e6" },
+                      }}
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                />
+              </Box>
+
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "900",
+                  mt: 3,
+                  color: "#1e293b",
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                }}
+              >
+                Dr. {teacherData.name}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: "#64748b", textAlign: "center", mt: 0.5 }}
+              >
+                {teacherData.department}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box>
+            <Grid container spacing={3}>
+              {details.map((item, index) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={index}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      height: "100%",
+                      backgroundColor: "#fcfcfd",
+                      borderRadius: "12px",
+                      border: "1px solid #eef2f6",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        borderColor: "#152b48",
+                        backgroundColor: "#fff",
+                        boxShadow: "0px 4px 15px rgba(21,43,72,0.06)",
+                        transform: "translateY(-3px)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#64748b",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 700, color: "#0f172a", mt: 0.5 }}
+                    >
+                      {item.value}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         </Box>
-      </Box>
-    </Paper>
+      </Paper>
+    </>
   );
 }

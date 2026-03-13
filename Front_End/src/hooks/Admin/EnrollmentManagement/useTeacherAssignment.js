@@ -15,7 +15,6 @@ export default function useTeacherAssignment() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [editFormData, setEditFormData] = useState({ courseId: "", groupName: "" });
-  
   const [addFormData, setAddFormData] = useState({ courseId: "", type: "", groupName: "" });
 
   useEffect(() => { fetchAllCourses(); }, []);
@@ -40,9 +39,14 @@ export default function useTeacherAssignment() {
     return codeMatch ? codeMatch[1] : "N/A";
   };
 
+  // ✅ استخرج الجروب فقط (G1، G2، G3) - بدون Lecture
   const extractGroupOnly = (groupName) => {
     if (!groupName) return "N/A";
-    return String(groupName).replace(/[A-Za-z]+-\d+-/, "") || "N/A";
+    const groupStr = String(groupName);
+    
+    // البحث عن G1, G2, G3, G4 إلخ
+    const match = groupStr.match(/(G\d+)/);
+    return match ? match[1] : groupStr;
   };
 
   const extractGroupCode = (groupName) => {
@@ -60,43 +64,71 @@ export default function useTeacherAssignment() {
     return String(value);
   };
 
- const processTeacherCourses = (teacher) => {
-  if (!teacher) return [];
-  const courses =
-    teacher.courses || teacher.assigned_courses ||
-    teacher.assignedCourses || teacher.enrollments || [];
+  const findGroupDataFromCourses = (courseId, groupName, courses) => {
+    if (!courseId || !groupName || !courses?.length) return null;
+    const course = courses.find((c) => String(c._id) === String(courseId));
+    if (!course || !Array.isArray(course.groups)) return null;
+    return course.groups.find((g) =>
+      g.groupName === groupName || groupName.includes(g.groupName)
+    ) || null;
+  };
 
-  if (!Array.isArray(courses) || courses.length === 0) return [];
+  const processTeacherCourses = (teacher, courses) => {
+    if (!teacher) return [];
+    const teacherCoursesList =
+      teacher.courses || teacher.assigned_courses ||
+      teacher.assignedCourses || teacher.enrollments || [];
 
-  const seen = new Set(); 
+    if (!Array.isArray(teacherCoursesList) || teacherCoursesList.length === 0) return [];
 
-  return courses
-    .map((course, index) => {
-      const courseId = String(course.courseId || course.course?._id || course._id || "");
-      const courseName = extractValue(course.name || course.courseName || course.course?.name || "Unknown");
-      const groupName = extractValue(course.groupName || course.group?.name || course.group || "");
+    const seen = new Set();
 
-      if (!courseId) return null;
+    return teacherCoursesList
+      .map((course, index) => {
+        const courseId = String(course.courseId || course.course?._id || course._id || "");
+        const courseName = extractValue(course.name || course.courseName || course.course?.name || "Unknown");
+        const groupName = extractValue(course.groupName || course.group?.name || course.group || "");
 
-      
-      const groupCode = extractGroupCode(groupName); 
-      const dedupeKey = `${courseId}-${groupCode}`;
-      if (seen.has(dedupeKey)) return null; 
-      seen.add(dedupeKey);
+        if (!courseId) return null;
 
-      return {
-        _id: `${teacher._id}-${courseId}-${index}`,
-        courseId,
-        courseName,
-        courseCode: extractCodeFromGroup(groupName),
-        groupName,
-        groupOnly: extractGroupOnly(groupName),
-        groupCode,
-        teacherId: teacher._id,
-      };
-    })
-    .filter(Boolean);
-};
+        const groupCode = extractGroupCode(groupName);
+        const dedupeKey = `${courseId}-${groupCode}`;
+        if (seen.has(dedupeKey)) return null;
+        seen.add(dedupeKey);
+
+        let appointment = null;
+        let room = "";
+        let type = "";
+
+        if (course.group && typeof course.group === "object") {
+          appointment = course.group.appointment || null;
+          room = course.group.Room || course.group.room || "";
+          type = course.group.type || "";
+        } else {
+          const groupData = findGroupDataFromCourses(courseId, groupName, courses);
+          if (groupData) {
+            appointment = groupData.appointment || null;
+            room = groupData.Room || groupData.room || "";
+            type = groupData.type || "";
+          }
+        }
+
+        return {
+          _id: `${teacher._id}-${courseId}-${index}`,
+          courseId,
+          courseName,
+          courseCode: extractCodeFromGroup(groupName),
+          groupName,
+          groupOnly: extractGroupOnly(groupName), // ✅ فقط G1, G2, G3 (بدون Lecture)
+          groupCode,
+          teacherId: teacher._id,
+          appointment,
+          Room: room,
+          type,
+        };
+      })
+      .filter(Boolean);
+  };
 
   const handleSearchTeacher = async (id) => {
     const cleanSearchId = String(id).trim();
@@ -114,7 +146,7 @@ export default function useTeacherAssignment() {
 
       if (teacherInfo) {
         setTeacherData(teacherInfo);
-        const courses = processTeacherCourses(teacherInfo);
+        const courses = processTeacherCourses(teacherInfo, allCourses);
         setTeacherCourses(courses);
         setShowResults(true);
         courses.length > 0
@@ -140,24 +172,23 @@ export default function useTeacherAssignment() {
     return course ? String(course.name || courseId) : courseId;
   };
 
- const getGroupsForCourse = (courseId) => {
-  if (!courseId) return [];
-  const course = allCourses.find((c) => c._id === courseId);
-  if (!course || !Array.isArray(course.groups)) return [];
-  return course.groups
-    .map((group) => ({
-      _id: String(group._id || group.groupName || group.name || ""),
-      name: String(group.groupName || group.name || ""),
-      groupName: String(group.groupName || group.name || ""),
-      type: String(group.type || ""),
-      
-      appointment: group.appointment || null,
-      Room: group.Room || group.room || "",
-    }))
-    .filter((g) => g.groupName !== "");
-};
+  const getGroupsForCourse = (courseId) => {
+    if (!courseId) return [];
+    const course = allCourses.find((c) => c._id === courseId);
+    if (!course || !Array.isArray(course.groups)) return [];
+    return course.groups
+      .map((group) => ({
+        _id: String(group._id || group.groupName || group.name || ""),
+        name: String(group.groupName || group.name || ""),
+        groupName: String(group.groupName || group.name || ""),
+        type: String(group.type || ""),
+        capacity: Number(group.capacity) || 50,
+        appointment: group.appointment || null,
+        Room: group.Room || group.room || "",
+      }))
+      .filter((g) => g.groupName !== "");
+  };
 
-  
   const handleOpenEditModal = (course) => {
     setSelectedCourse(course);
     setEditFormData({
@@ -246,27 +277,27 @@ export default function useTeacherAssignment() {
   };
 
   const handleAddSubmit = async () => {
-  if (!addFormData.courseId || !addFormData.groupName) {
-    toast.warning("Please select both course and group");
-    return;
-  }
-  try {
-    setIsLoading(true);
-    await axiosInstance.post("/admin/assign-teacher-course", {
-      teacherId: teacherData._id,
-      courseId: addFormData.courseId,
-      groupName: addFormData.fullGroupName || addFormData.groupName, 
-    });
-    await handleSearchTeacher(teacherData._id);
-    handleCloseAddModal();
-    toast.success("Course assigned successfully!");
-  } catch (error) {
-    console.error("Error adding:", error);
-    toast.error(error.response?.data?.message || "Failed to assign course.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    if (!addFormData.courseId || !addFormData.groupName) {
+      toast.warning("Please select both course and group");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await axiosInstance.post("/admin/assign-teacher-course", {
+        teacherId: teacherData._id,
+        courseId: addFormData.courseId,
+        groupName: addFormData.fullGroupName || addFormData.groupName,
+      });
+      await handleSearchTeacher(teacherData._id);
+      handleCloseAddModal();
+      toast.success("Course assigned successfully!");
+    } catch (error) {
+      console.error("Error adding:", error);
+      toast.error(error.response?.data?.message || "Failed to assign course.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleClearSearch = () => {
     setSearchId("");
