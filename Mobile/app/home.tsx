@@ -198,6 +198,7 @@ const home = () => {
                             style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
                             onPressIn={() => setPressedItem('pencil-box-multiple')}
                             onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/studentgrades' as any)}
                         >
                             <MaterialCommunityIcons
                                 name="pencil-box-multiple"
@@ -262,8 +263,8 @@ const home = () => {
                                 <Image
                                     source={
                                         profileImg &&
-                                        profileImg !== 'default-student.jpg' &&
-                                        profileImg !== 'default-teacher.jpg'
+                                            profileImg !== 'default-student.jpg' &&
+                                            profileImg !== 'default-teacher.jpg'
                                             ? { uri: profileImg }
                                             : require('../assets/images/11.png')
                                     }

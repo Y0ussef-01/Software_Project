@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Stack, router } from "expo-router";
 import { I18nManager } from 'react-native';

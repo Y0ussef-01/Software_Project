@@ -2,10 +2,9 @@ const express = require('express');
 const router = express.Router();
 const studentAuth = require('../middlewares/studentAuth');
 const controller = require('../Controllers/student.controller');
-const { getAllCourses } = require("../Controllers/course.controller");
+const {getAllCourses} = require("../Controllers/course.controller");
 const Student = require('../models/Student');
 
-router.post('/attend', studentAuth, controller.registerAttendance);
 router.get('/Profile', studentAuth, controller.getProfile);
 router.put('/updateProfileImg', studentAuth, controller.updateProfileImg);
 router.put('/updatePassword', studentAuth, controller.updatePassword);
@@ -25,5 +24,4 @@ router.put('/registerToken', studentAuth, async (req, res) => {
 });
 router.get('/notifications', studentAuth, controller.getNotifications);
 router.put('/notifications/read', studentAuth, controller.markAllRead);
-
 module.exports = router;

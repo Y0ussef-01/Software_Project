@@ -1,70 +1,31 @@
 const Teacher = require('../models/Teacher');
-const Student = require('../models/Student');
-const xlsx = require('xlsx');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const Attendance = require('../models/Attendance');
 
-const generateAttendanceToken = async (req, res) => {
-    try {
-        const { groups } = req.body;
-
-        if (!groups || !Array.isArray(groups) || groups.length === 0) {
-            return res.status(400).json({ message: "groups array is required" });
-        }
-
-        const qrToken = jwt.sign(
-            { groups: groups, teacherId: req.user.id },
-            process.env.JWT_SECRET,
-            { expiresIn: "15s" }
-        );
-
-        res.status(200).json({ qrToken });
-
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-
-const getGroupAttendance = async (req, res) => {
-    try {
-        const { groupId } = req.params;
-        const { date } = req.query;
-
-        let queryDate = new Date();
-        if (date) {
-            queryDate = new Date(date);
-        }
-        queryDate.setHours(0, 0, 0, 0);
-
-        const attendanceList = await Attendance.find({
-            group: groupId,
-            date: queryDate
-        }).populate('student', '_id name');
-
-        res.status(200).json(attendanceList);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
 
 const updatePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
+
         if (!oldPassword || !newPassword) {
-            return res.status(400).json({ message: "Please enter old and new password" });
+            return res.status(400).json({ message: 'Please enter a new and old password' });
         }
+
         const teacher = await Teacher.findById(req.user.id).select('+password');
+
         if (!teacher) {
-            return res.status(404).json({ message: "Teacher not found" });
+            return res.status(404).json({ message: 'Teacher not found' });
         }
+
         const isMatch = await bcrypt.compare(oldPassword, teacher.password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid password" });
+            return res.status(400).json({ message: 'Invalid password' });
         }
+
         teacher.password = await bcrypt.hash(newPassword, 10);
         await teacher.save();
-        res.json({ message: "Password updated successfully" });
+
+        res.json({ message: 'Password updated successfully' });
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -77,8 +38,12 @@ const getProfile = async (req, res) => {
         }).populate({
             path: "courses.group", select: 'groupName Room type appointment',
         });
-        if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+
+        if (!teacher)
+            return res.status(404).json({ message: 'Teacher not found' });
+
         res.json(teacher);
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -87,37 +52,47 @@ const getProfile = async (req, res) => {
 const updateProfileImg = async (req, res) => {
     try {
         const { profileImg } = req.body;
+
         if (!profileImg) {
-            return res.status(400).json({ message: "Please send a profile picture" });
+            return res.status(400).json({ message: 'Please send a profile picture' });
         }
+
         const updatedTeacher = await Teacher.findByIdAndUpdate(
             req.user.id,
             { profileImg },
             { new: true, runValidators: true }
         );
+
         if (!updatedTeacher) {
-            return res.status(404).json({ message: "Teacher not found" });
+            return res.status(404).json({ message: 'Teacher not found' });
         }
-        res.json({ message: "Profile image updated", Teacher: updatedTeacher });
+
+        res.json({ message: 'The data was successfully updated', Teacher: updatedTeacher });
+
     } catch (err) {
         if (err.name === 'ValidationError') {
-            return res.status(400).json({ message: "Invalid data", details: err.message });
+            return res.status(400).json({ message: 'Invalid data', details: err.message });
         }
         res.status(500).json({ message: err.message });
     }
 };
+
+const Student = require('../models/Student');
+const xlsx = require('xlsx');
 
 const uploadGradesExcel = async (req, res) => {
     try {
         const { courseId } = req.body;
         const file = req.file || (req.files && req.files[0]);
 
-        if (!file) return res.status(400).json({ message: "File required" });
-        if (!courseId) return res.status(400).json({ message: "CourseId required" });
+        if (!file) return res.status(400).json({ message: 'Please upload a file' });
+        if (!courseId) return res.status(400).json({ message: 'Please upload a courseID' });
 
         const teacher = await Teacher.findById(req.user.id);
         const isTeachesCourse = teacher.courses.some(c => c.course === courseId);
-        if (!isTeachesCourse) return res.status(403).json({ message: "Forbidden" });
+        if (!isTeachesCourse) {
+            return res.status(403).json({ message: 'You are not allowed to upload a course degrees' });
+        }
 
         const workbook = xlsx.read(file.buffer, { type: 'buffer' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -128,7 +103,7 @@ const uploadGradesExcel = async (req, res) => {
         }
 
         const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'الكود', 'رقم الطالب'];
-        const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial', 'الاسم'];
+        const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial',  'الاسم'];
 
         const bulkOperations = [];
 
@@ -194,8 +169,8 @@ const uploadGradesExcel = async (req, res) => {
 
         const notifDocs = studentsForNotif.map(s => ({
             studentId: s._id,
-            title: '📊 New Grades Posted',
-            body: `Your grades for ${courseName} have been updated. Check them now!`
+            title: ' New Grades Posted',
+            body: `Your grades for ${courseId} have been updated. Check them now!`
         }));
         await Notification.insertMany(notifDocs);
 
@@ -203,7 +178,7 @@ const uploadGradesExcel = async (req, res) => {
             .map(s => s.pushToken)
             .filter(token => token && token !== null && token !== 'null');
 
-        await sendPushNotification(tokens, '📊 New Grades Posted', `Your grades for ${courseName} have been updated!`);
+        await sendPushNotification(tokens, ' New Grades Posted', `Your grades for ${courseId} have been updated!`);
 
         res.status(200).json({ message: 'Updated Successfully' });
 
@@ -212,4 +187,4 @@ const uploadGradesExcel = async (req, res) => {
     }
 };
 
-module.exports = { generateAttendanceToken, getGroupAttendance, getProfile, updateProfileImg, updatePassword, uploadGradesExcel };
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel };
