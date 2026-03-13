@@ -17,7 +17,7 @@ export default function FeaturesComp() {
     },
     {
       id: 2,
-      title: "appointments",
+      title: "Appointments",
       icon: <CalendarMonthIcon fontSize="inherit" />,
       path: "/appointments",
     },
@@ -36,36 +36,39 @@ export default function FeaturesComp() {
   ];
 
   return (
-    <Box sx={{ mt: { xs: 4, md: 5 } }}>
-      <Grid container spacing={3} justifyContent="center" alignItems="center">
+    <Box sx={{ mt: { xs: 4, md: 5 }, width: "100%" }}>
+      <Grid container spacing={2} justifyContent="center">
         {features.map((feature) => (
-          <Grid
-            item
-            xs={6}
-            sm={4}
-            md={4}
-            lg={2}
-            key={feature.id}
-            sx={{ display: "flex", justifyContent: "center" }}
-          >
+          <Grid item xs={12} sm={4} md={4} lg={2.5} key={feature.id}>
             <Paper
               component={Link}
               to={feature.path}
               elevation={0}
               sx={{
-                width: { xs: "100%", md: "180px", lg: "200px", xl: "240px" },
-                height: { xs: "135px", lg: "160px", xl: "180px" },
+                width: {
+                  xs: "100%",
+                  sm: "160px",
+                  md: "180px",
+                  lg: "200px",
+                  xl: "240px",
+                },
+                height: {
+                  xs: "80px",
+                  sm: "150px",
+                  md: "160px",
+                  lg: "170px",
+                  xl: "180px",
+                },
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: { xs: "row", sm: "column" },
                 alignItems: "center",
-                justifyContent: "center",
-                p: { xs: 2, md: 3 },
+                justifyContent: { xs: "flex-start", sm: "center" },
+                px: { xs: 3, sm: 2 },
                 borderRadius: "16px",
                 border: "1px solid",
                 borderColor: feature.active ? "#152b48" : "#eef2f6",
                 backgroundColor: feature.active ? "#152b48" : "#fff",
                 color: feature.active ? "#fff" : "#152b48",
-                cursor: "pointer",
                 textDecoration: "none",
                 transition: "all 0.3s ease",
                 boxShadow: feature.active
@@ -82,16 +85,12 @@ export default function FeaturesComp() {
             >
               <Box
                 sx={{
-                  mb: 1.5,
+                  mr: { xs: 2, sm: 0 },
+                  mb: { xs: 0, sm: 1.5 },
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: {
-                    xs: "2.2rem",
-                    md: "2.5rem",
-                    lg: "2.8rem",
-                    xl: "3.2rem",
-                  },
+                  fontSize: { xs: "2rem", sm: "2.5rem", lg: "2.8rem" },
                 }}
               >
                 {feature.icon}
@@ -99,17 +98,20 @@ export default function FeaturesComp() {
 
               <Typography
                 variant="subtitle1"
-                title={feature.title}
                 sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  fontSize: { xs: "0.85rem", lg: "0.95rem", xl: "1.05rem" },
+                  fontWeight: "900",
+                  textAlign: { xs: "left", sm: "center" },
+                  fontSize: {
+                    xs: "1.05rem",
+                    sm: "0.9rem",
+                    md: "0.95rem",
+                    lg: "1rem",
+                  },
                   letterSpacing: "0.5px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  width: "100%",
-                  px: 1,
+                  width: { xs: "auto", sm: "100%" },
                 }}
               >
                 {feature.title}
