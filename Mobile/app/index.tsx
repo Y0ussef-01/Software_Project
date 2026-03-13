@@ -18,15 +18,14 @@ import {
 } from "react-native";
 import { login } from "../api/authApi";
 import { saveRole, saveToken } from "../api/storage";
+import { registerPushToken } from "../api/notifications";
 
 export default function Index() {
   const [showpassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [useID, setUserID] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ useID?: string; password?: string; general?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{ useID?: string; password?: string; general?: string }>({});
 
   const validateForm = async () => {
     let errors: { [key: string]: string } = {};
@@ -50,8 +49,8 @@ export default function Index() {
 
       await saveToken(res.token);
       await saveRole(res.role);
+      await registerPushToken();
 
-     
       if (res.role === 'student') {
         router.replace('/home' as any);
       } else if (res.role === 'teacher') {
@@ -92,7 +91,6 @@ export default function Index() {
                 <Ionicons name="globe-outline" size={20} color="white" />
                 <Text style={styles.languageText}>En</Text>
               </Pressable>
-
               <Pressable style={styles.iconButton}>
                 <Ionicons name="help-circle-outline" size={24} color="white" />
               </Pressable>
@@ -115,12 +113,7 @@ export default function Index() {
 
                 <Text style={styles.text}>User ID</Text>
                 <View style={[styles.passwordContainer]}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color="gray"
-                    style={{ marginRight: 10 }}
-                  />
+                  <Ionicons name="person-outline" size={20} color="gray" style={{ marginRight: 10 }} />
                   <TextInput
                     placeholder="Enter your userID"
                     placeholderTextColor="#999"
@@ -137,12 +130,7 @@ export default function Index() {
 
                 <Text style={styles.text}>Password</Text>
                 <View style={styles.passwordContainer}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color="gray"
-                    style={{ marginRight: 10 }}
-                  />
+                  <Ionicons name="lock-closed-outline" size={20} color="gray" style={{ marginRight: 10 }} />
                   <TextInput
                     placeholder="Enter password"
                     placeholderTextColor="#999"
@@ -166,7 +154,6 @@ export default function Index() {
                   </Text>
                 )}
 
-                
                 {errors.general && (
                   <View style={styles.accessDeniedBox}>
                     <Text style={styles.accessDeniedText}>{errors.general}</Text>
@@ -174,10 +161,7 @@ export default function Index() {
                 )}
 
                 <Pressable
-                  style={({ pressed }) => [
-                    styles.button,
-                    { opacity: pressed ? 0.8 : 1 },
-                  ]}
+                  style={({ pressed }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}
                   onPress={validateForm}
                   disabled={loading}
                 >
@@ -198,134 +182,23 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-    borderRadius: 15,
-  },
-  headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: Platform.OS === "android" ? 30 : 40,
-    paddingHorizontal: 20,
-    paddingBottom: 0,
-  },
-  headerIconsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 15,
-  },
-  languageText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 5,
-  },
-  form: {
-    padding: 40,
-    marginLeft: 20,
-    marginRight: 20,
-    backgroundColor: "white",
-    borderRadius: 15,
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "rgb(23, 42, 70)",
-    marginBottom: 5,
-  },
-  textInput: {
-    flex: 1,
-    flexDirection: "row",
-    minHeight: 40,
-    borderColor: "gray",
-    borderRadius: 8,
-    paddingTop: 15,
-    paddingHorizontal: 10,
-  },
-  button: {
-    backgroundColor: "rgb(23, 42, 70)",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderColor: "rgb(224, 224, 224)",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    minHeight: 45,
-    backgroundColor: "rgb(250, 250, 250)",
-    marginBottom: 10,
-  },
-  passwordInput: {
-    flex: 1,
-    minHeight: 40,
-    marginBottom: 1,
-    borderColor: "gray",
-    borderRadius: 8,
-    paddingTop: 20,
-  },
-  image: {
-    width: 100,
-    height: 80,
-    alignItems: "center",
-    resizeMode: "contain",
-  },
-  universityText: {
-    color: "rgb(23, 42, 70)",
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  footerText: {
-    color: "white",
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 20,
-    opacity: 0.7,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    backgroundColor: "rgb(23, 42, 70)",
-  },
-  offWhiteContainer: {
-    backgroundColor: "rgb(244, 245, 248)",
-    flex: 1,
-    marginTop: 20,
-    borderTopLeftRadius: 60,
-    borderBottomRightRadius: 60,
-    paddingTop: 40,
-  },
-  accessDeniedBox: {
-    backgroundColor: '#ffe4e4',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ffb3b3',
-  },
-  accessDeniedText: {
-    color: 'red',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 13,
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, borderRadius: 15 },
+  headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: Platform.OS === "android" ? 30 : 40, paddingHorizontal: 20, paddingBottom: 0 },
+  headerIconsContainer: { flexDirection: "row", alignItems: "center" },
+  iconButton: { flexDirection: "row", alignItems: "center", marginLeft: 15 },
+  languageText: { color: "white", fontSize: 16, fontWeight: "bold", marginLeft: 5 },
+  form: { padding: 40, marginLeft: 20, marginRight: 20, backgroundColor: "white", borderRadius: 15, marginBottom: 10 },
+  text: { fontSize: 14, fontWeight: "bold", color: "rgb(23, 42, 70)", marginBottom: 5 },
+  textInput: { flex: 1, flexDirection: "row", minHeight: 40, borderColor: "gray", borderRadius: 8, paddingTop: 15, paddingHorizontal: 10 },
+  button: { backgroundColor: "rgb(23, 42, 70)", padding: 10, borderRadius: 8, marginTop: 20, alignItems: "center", justifyContent: "center" },
+  buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  passwordContainer: { flexDirection: "row", alignItems: "center", borderColor: "rgb(224, 224, 224)", borderWidth: 1, borderRadius: 8, paddingHorizontal: 15, minHeight: 45, backgroundColor: "rgb(250, 250, 250)", marginBottom: 10 },
+  passwordInput: { flex: 1, minHeight: 40, marginBottom: 1, borderColor: "gray", borderRadius: 8, paddingTop: 20 },
+  image: { width: 100, height: 80, alignItems: "center", resizeMode: "contain" },
+  universityText: { color: "rgb(23, 42, 70)", fontSize: 22, fontWeight: "bold", textAlign: "center" },
+  footerText: { color: "white", fontSize: 14, textAlign: "center", marginBottom: 20, opacity: 0.7 },
+  scrollContainer: { flexGrow: 1, backgroundColor: "rgb(23, 42, 70)" },
+  offWhiteContainer: { backgroundColor: "rgb(244, 245, 248)", flex: 1, marginTop: 20, borderTopLeftRadius: 60, borderBottomRightRadius: 60, paddingTop: 40 },
+  accessDeniedBox: { backgroundColor: '#ffe4e4', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#ffb3b3' },
+  accessDeniedText: { color: 'red', fontWeight: 'bold', textAlign: 'center', fontSize: 13 },
 });

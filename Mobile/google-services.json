@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1095666711721",
+    "project_id": "appp-450c1",
+    "storage_bucket": "appp-450c1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095666711721:android:c0a14eb9cd40ce36b8fdb8",
+        "android_client_info": {
+          "package_name": "com.anonymous.firstapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9mmVVKxe7E-lNvV0i12UAzhFw9dMhQWU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
