@@ -11,7 +11,6 @@ const StudentSchema = new mongoose.Schema({
   grade: { type: String, default: "المستوي الاول" },
   GPA: { type: Number, default: 0 },
   maxHours: { type: Number, default: 19 },
-  pushToken: { type: String, default: null },
   registeredCourses: [
     {
       course: { type: String, ref: "Course" },

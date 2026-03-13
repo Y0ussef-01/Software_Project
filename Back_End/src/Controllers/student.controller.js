@@ -2,7 +2,6 @@ const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
 const Course = require('../models/Course');
 const Group = require('../models/Group');
-const Notification = require('../models/Notification');
 const getProfile = async (req, res) => {
     try {
         const student = await Student.findById(req.user.id).populate({
@@ -18,33 +17,6 @@ const getProfile = async (req, res) => {
     }
 };
 
-const registerToken = async (req, res) => {
-    try {
-        const { pushToken } = req.body;
-        await Student.findByIdAndUpdate(req.user.id, { pushToken });
-        res.json({ message: 'Token registered successfully' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-const getNotifications = async (req, res) => {
-    try {
-        const notifications = await Notification.find({ studentId: req.user.id })
-            .sort({ createdAt: -1 });
-        res.json(notifications);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-
-const markAllRead = async (req, res) => {
-    try {
-        await Notification.updateMany({ studentId: req.user.id }, { read: true });
-        res.json({ message: 'All marked as read' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
 const updateProfileImg = async (req, res) => {
     try {
         const { profileImg } = req.body;
@@ -228,7 +200,6 @@ const dropCourse = async (req, res) => {
     }
 };
 
-
 const getMyGrades = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -342,7 +313,6 @@ const switchGroup = async (req, res) => {
 
 module.exports = {
     getProfile,
-    registerToken,
     updateProfileImg,
     updatePassword,
     registerCourse,
@@ -350,8 +320,5 @@ module.exports = {
     getMyGrades,
     isTimeConflict,
     timeToMinutes,
-    switchGroup,
-    getNotifications,
-    markAllRead
-
+    switchGroup
 };
