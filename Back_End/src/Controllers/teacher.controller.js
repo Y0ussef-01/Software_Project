@@ -1,5 +1,9 @@
 const Teacher = require('../models/Teacher');
+const Student = require('../models/Student');
+const xlsx = require('xlsx');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const Attendance = require('../models/Attendance');
 
 
 const updatePassword = async (req, res) => {
@@ -76,9 +80,6 @@ const updateProfileImg = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
-const Student = require('../models/Student');
-const xlsx = require('xlsx');
 
 const uploadGradesExcel = async (req, res) => {
     try {
@@ -187,4 +188,51 @@ const uploadGradesExcel = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel };
+const generateAttendanceToken = async (req, res) => {
+    try {
+        const { groups, sessionNumber } = req.body;
+
+        if (!groups || !Array.isArray(groups) || groups.length === 0) {
+            return res.status(400).json({ message: "groups array is required" });
+        }
+        if (!sessionNumber) {
+            return res.status(400).json({ message: "sessionNumber is required" });
+        }
+
+        const qrToken = jwt.sign(
+            { groups: groups, sessionNumber: sessionNumber, teacherId: req.user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: "15s" }
+        );
+
+        res.status(200).json({ qrToken });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getGroupAttendance = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { date } = req.query;
+
+        let queryDate = new Date();
+        if (date) {
+            queryDate = new Date(date);
+        }
+        queryDate.setHours(0, 0, 0, 0);
+
+        const attendanceList = await Attendance.find({
+            group: groupId,
+            date: queryDate
+        }).populate('student', '_id name');
+
+        res.status(200).json(attendanceList);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel,getGroupAttendance,generateAttendanceToken };

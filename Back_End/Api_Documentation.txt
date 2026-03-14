@@ -1,0 +1,506 @@
+Base URL: http://localhost:5000
+
+--------------------------------------------------------------------
+1. Authentication
+--------------------------------------------------------------------
+[1] Login
+- Endpoint: /auth/login
+- Method: POST
+- Description: Login for any user (Student, Teacher, Admin)
+- Headers: None
+- Request Body:
+{
+  "id": "2327443",
+  "password": "123456"
+}
+- Response (200 OK):
+{
+  "user": {
+    "_id": "2327443",
+    "name": "Youssef Ashraf Mahmoud",
+    "email": "202327443@std.sci.cu.edu.eg",
+    "profileImg": "default-student.jpg",
+    "department": "Computer Science",
+    "grade": "المستوي الثالث",
+    "hours": 0
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
+  "role": "student"
+}
+
+--------------------------------------------------------------------
+2. Student Routes 
+--------------------------------------------------------------------
+[1] Get Student Profile
+- Endpoint: /student/Profile
+- Method: GET
+- Request Body: None
+- Response (200 OK): Returns the full student object including registered courses and groups.
+
+[2] Update Profile Image
+- Endpoint: /student/updateProfileImg
+- Method: PUT
+- Request Body:
+{
+  "profileImg": "new_image_base64_or_url"
+}
+- Response (200 OK):
+{
+  "message": "The data was successfully updated",
+  "student": { ... }
+}
+
+[3] Update Password
+- Endpoint: /student/updatePassword
+- Method: PUT
+- Request Body:
+{
+  "oldPassword": "123",
+  "newPassword": "456"
+}
+- Response (200 OK): 
+{ "message": "The password updated successfully" }
+
+[4] Get All Courses
+- Endpoint: /student/getAllCourses
+- Method: GET
+- Request Body: None
+- Response (200 OK): Returns an array of all available courses with their groups in the college.
+
+[5] Register Course
+- Endpoint: /student/register-course
+- Method: POST
+- Description: Registers a course for a student. Validates max hours, prerequisites, and checks for time conflicts.
+- Request Body:
+{
+  "courseId": "CS101",
+  "groupName": "G1"
+}
+- Response (200 OK): 
+{ 
+  "message": "Course registered successfully in group G1", 
+  "hours": 3 
+}
+
+[6] Drop Course
+- Endpoint: /student/drop-course
+- Method: DELETE
+- Request Body:
+{
+  "courseId": "CS101"
+}
+- Response (200 OK): 
+{ 
+  "message": "Course dropped successfully", 
+  "hours": 0 
+}
+
+[7] Get My Grades
+- Endpoint: /student/grades
+- Method: GET
+- Request Body: None
+- Response (200 OK): 
+{
+  "message": "Degrees of Student",
+  "grades": [
+    {
+      "courseId": "CS101",
+      "courseName": "Introduction to CS",
+      "Degrees": [ { "title": "Midterm", "score": 20 } ]
+    }
+  ]
+}
+
+[8] Switch Course Group
+- Endpoint: /student/switch-group
+- Method: PUT
+- Description: Allows a student to switch their group in a registered course to another group. Validates new group capacity and time conflicts.
+- Request Body:
+{
+  "courseId": "CS101",
+  "newGroupName": "G2"
+}
+- Response (200 OK): 
+{ 
+  "message": "Switched successfully to group G2", 
+  "registeredCourses": [ ... ] 
+}
+
+[9] Register Push Notification Token
+- Endpoint: /student/registerToken
+- Method: PUT
+- Description: Saves the Expo push token for the student to receive notifications.
+- Request Body:
+{
+  "pushToken": "ExponentPushToken[xxxxxx]"
+}
+- Response (200 OK):
+{ 
+  "message": "Token saved" 
+}
+
+[10] Get Notifications
+- Endpoint: /student/notifications
+- Method: GET
+- Description: Returns a list of all notifications for the student, sorted by newest first.
+- Response (200 OK):
+[
+  {
+    "_id": "notif123",
+    "studentId": "2327443",
+    "title": "New Grades Posted",
+    "body": "Your grades for CS101 have been updated. Check them now!",
+    "read": false,
+    "createdAt": "2026-03-14T10:00:00.000Z"
+  }
+]
+
+[11] Mark Notifications as Read
+- Endpoint: /student/notifications/read
+- Method: PUT
+- Description: Marks all notifications for the student as read.
+- Response (200 OK):
+{ 
+  "message": "All marked as read" 
+}
+
+[12] Register Attendance
+- Endpoint: /student/attend
+- Method: POST
+- Description: Records student attendance using the QR code scanned from the teacher. Validates session number and device ID.
+- Request Body:
+{
+  "qrToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "deviceId": "device-uuid-123"
+}
+- Response (200 OK):
+{ 
+  "message": "Attendance recorded successfully" 
+}
+
+
+--------------------------------------------------------------------
+3. Teacher Routes
+--------------------------------------------------------------------
+[1] Get Teacher Profile
+- Endpoint: /teacher/profile
+- Method: GET
+- Request Body: None
+- Response (200 OK):
+{
+  "_id": "T-1",
+  "name": "Hassan Ayad",
+  "email": "Hassan@cu.edu.eg",
+  "department": "Computer Science",
+  "profileImg": "default-teacher.jpg",
+  "courses": [ ... ]
+}
+
+[2] Update Profile Image
+- Endpoint: /teacher/update-profile-img
+- Method: PUT
+- Request Body:
+{
+  "profileImg": "new_image.jpg"
+}
+- Response (200 OK):
+{ "message": "The data was successfully updated", "Teacher": { ... } }
+
+[3] Update Password
+- Endpoint: /teacher/update-password
+- Method: PUT
+- Request Body:
+{
+  "oldPassword": "123",
+  "newPassword": "456"
+}
+- Response (200 OK): 
+{ "message": "Password updated successfully" }
+
+[4] Upload Grades Excel
+- Endpoint: /teacher/upload-grades-excel
+- Method: POST
+- Content-Type: multipart/form-data
+- Request Body: (Form Data)
+  - courseId: "CS101"
+  - excelFile: <Attached Excel File>
+- Response (200 OK): 
+{ "message": "Updated Successfully" }
+
+[5] Generate Attendance QR Token
+- Endpoint: /teacher/generate-qr
+- Method: POST
+- Description: Generates a temporary 15-second JWT token containing the groups and session number.
+- Request Body:
+{
+  "groups": ["CS101-G1-Lecture", "CS101-G2-Lecture"],
+  "sessionNumber": 1
+}
+- Response (200 OK):
+{
+  "qrToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+[6] Get Group Attendance
+- Endpoint: /teacher/attendance/:groupId
+- Method: GET
+- Description: Retrieves the attendance list for a specific group. Can optionally filter by date.
+- Request Params: groupId (Format: courseId-groupName-type)
+- Query Params (Optional): ?date=YYYY-MM-DD (e.g., ?date=2026-03-14)
+- Response (200 OK):
+[
+  {
+    "_id": "att123",
+    "group": "CS101-G1-Lecture",
+    "student": {
+      "_id": "2327443",
+      "name": "Youssef Ashraf Mahmoud"
+    },
+    "deviceId": "device-uuid-123",
+    "sessionNumber": 1,
+    "date": "2026-03-14T00:00:00.000Z",
+    "timestamp": "2026-03-14T10:05:00.000Z"
+  }
+]
+
+
+--------------------------------------------------------------------
+4. Admin Routes
+--------------------------------------------------------------------
+--- 4.A Student Management ---
+
+[1] Add Student
+- Endpoint: /admin/add-student
+- Method: POST
+- Request Body:
+{
+  "_id": "2327999",
+  "name": "Ahmed",
+  "password": "123"
+}
+- Response (201 Created): 
+{ "message": "added student successfully", "student": { ... } }
+
+[2] Get Student
+- Endpoint: /admin/student/:id
+- Method: GET
+- Request Params: id (Student ID in the URL)
+- Response (200 OK): Returns student data along with their courses.
+
+[3] Update Student
+- Endpoint: /admin/update-student/:id
+- Method: PUT
+- Request Params: id (Student ID in the URL)
+- Description: Restricted to updating ONLY: (password, profileImg, department, grade, GPA, maxHours)
+- Request Body Example:
+{
+  "GPA": 3.5,
+  "maxHours": 18
+}
+- Response (200 OK): 
+{ "message": "updated successfully", "student": { ... } }
+
+[4] Delete Student
+- Endpoint: /admin/delete-student/:id
+- Method: DELETE
+- Request Params: id (Student ID in the URL)
+- Response (200 OK): 
+{ "message": "Deleted student successfully", "student": { ... } }
+
+--- 4.B Teacher Management ---
+
+[1] Add Teacher
+- Endpoint: /admin/add-teacher
+- Method: POST
+- Request Body:
+{
+  "_id": "T-5",
+  "name": "Khaled",
+  "email": "Khaled@cu.edu.eg",
+  "password": "123",
+  "department": "Math"
+}
+- Response (201 Created): 
+{ "message": "added Teacher Successfully", "teacher": { ... } }
+
+[2] Get Teacher
+- Endpoint: /admin/teacher/:id
+- Method: GET
+- Request Params: id (Teacher ID in the URL)
+- Response (200 OK): Returns teacher data and assigned courses.
+
+[3] Update Teacher
+- Endpoint: /admin/update-teacher/:id
+- Method: PUT
+- Request Params: id (Teacher ID in the URL)
+- Description: Restricted to updating ONLY: (password, profileImg)
+- Request Body Example:
+{
+  "profileImg": "new_pic.jpg"
+}
+- Response (200 OK): 
+{ "message": "Data updated Successfully", "teacher": { ... } }
+
+[4] Delete Teacher
+- Endpoint: /admin/delete-teacher/:id
+- Method: DELETE
+- Request Params: id (Teacher ID in the URL)
+- Response (200 OK): 
+{ "message": "Deleted Teacher Successfully" }
+
+--- 4.C Admin Management ---
+
+[1] Add Admin
+- Endpoint: /admin/add-admin
+- Method: POST
+- Request Body:
+{
+  "_id": "A-2",
+  "name": "Omar",
+  "email": "omar@sci.cu.edu.eg",
+  "password": "123"
+}
+- Response (201 Created): 
+{ "message": "Admin added successfully", "admin": { ... } }
+
+[2] Get Admin Profile
+- Endpoint: /admin/getAdmin
+- Method: GET
+- Response (200 OK): Returns admin details.
+
+[3] Update Admin Profile Image
+- Endpoint: /admin/updateProfileImg
+- Method: PUT
+- Request Body:
+{
+  "profileImg": "new_admin_img.jpg"
+}
+- Response (200 OK): 
+{ "message": "The data was successfully updated", "admin": { ... } }
+
+[4] Update Admin Password
+- Endpoint: /admin/updatePassword
+- Method: PUT
+- Request Body:
+{
+  "oldPassword": "123",
+  "newPassword": "456"
+}
+- Response (200 OK): 
+{ "message": "The password updated successfully" }
+
+--- 4.D Course Management ---
+
+[1] Add Course
+- Endpoint: /admin/add-course
+- Method: POST
+- Request Body:
+{
+  "_id": "CS101",
+  "name": "Introduction to Computer Science",
+  "hours": 3,
+  "prerequisites": []
+}
+- Response (201 Created):
+{ "message": "The Course has been Successfully Added", "course": { ... } }
+
+[2] Delete Course
+- Endpoint: /admin/delete-course/:id
+- Method: DELETE
+- Request Params: id (Course ID in the URL)
+- Response (200 OK):
+{ "message": "The Course and its Group has been deleted successfully" }
+
+[3] Get All Courses
+- Endpoint: /admin/courses
+- Method: GET
+- Response (200 OK): Returns an array of all courses with their groups.
+
+[4] Get Course By ID
+- Endpoint: /admin/course/:id
+- Method: GET
+- Request Params: id (Course ID in the URL)
+- Response (200 OK): Returns specific course details.
+
+--- 4.E Group Management ---
+
+[1] Add Group
+- Endpoint: /admin/add-group
+- Method: POST
+- Description: Adds a new group. Validates time conflicts for different types (Lecture vs Lab) in the same course.
+- Note: Time accepts 12-hour format (AM/PM) and Day is preferred to be lowercase.
+- Request Body:
+{
+  "courseId": "CS101",
+  "groupName": "G1",
+  "Room": "Hall A",
+  "type": "Lecture",
+  "capacity": 50,
+  "appointment": {
+    "day": "sunday",
+    "startTime": "08:00 AM",
+    "endTime": "10:00 AM"
+  }
+}
+- Response (201 Created):
+{ "message": "The Group was added and successfully linked to the Course", "group": { ... } }
+
+[2] Delete Group
+- Endpoint: /admin/delete-group/:id
+- Method: DELETE
+- Request Params: id (Group ID in the URL - Format: courseId-groupName-type)
+- Response (200 OK):
+{ "message": "The Group has been deleted successfully" }
+
+--- 4.F Schedule Management (Admin Overrides) ---
+
+[1] Assign Course to Student
+- Endpoint: /admin/assign-student-course
+- Method: POST
+- Description: Allows Admin to forcefully assign a course to a student, bypassing max hours and time conflicts.
+- Request Body:
+{
+  "studentId": "2327443",
+  "courseId": "CS101",
+  "groupName": "G1"
+}
+- Response (200 OK):
+{ "message": "Course assigned to student successfully by Admin" }
+
+[2] Drop Course from Student
+- Endpoint: /admin/drop-student-course
+- Method: DELETE
+- Description: Allows Admin to forcefully drop a course from a student's schedule.
+- Request Body:
+{
+  "studentId": "2327443",
+  "courseId": "CS101"
+}
+- Response (200 OK):
+{ "message": "Course dropped from student successfully by Admin" }
+
+[3] Assign Course/Group to Teacher
+- Endpoint: /admin/assign-teacher-course
+- Method: POST
+- Description: Allows Admin to assign a specific group of a course to a teacher.
+- Request Body:
+{
+  "teacherId": "T-1",
+  "courseId": "CS101",
+  "groupName": "G1"
+}
+- Response (200 OK):
+{ "message": "Course and Group assigned to teacher successfully" }
+
+[4] Remove Course/Group from Teacher
+- Endpoint: /admin/remove-teacher-course
+- Method: DELETE
+- Description: Allows Admin to remove a specific group of a course from a teacher's schedule.
+- Request Body:
+{
+  "teacherId": "T-1",
+  "courseId": "CS101",
+  "groupName": "G1"
+}
+- Response (200 OK):
+{ "message": "Course removed from teacher successfully" }

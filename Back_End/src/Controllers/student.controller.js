@@ -3,6 +3,80 @@ const bcrypt = require('bcrypt');
 const Course = require('../models/Course');
 const Group = require('../models/Group');
 const Notification = require('../models/Notification');
+const jwt = require('jsonwebtoken');
+const Attendance = require('../models/Attendance');
+
+const registerAttendance = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { qrToken, deviceId } = req.body;
+
+        if (!qrToken || !deviceId) {
+            return res.status(400).json({ message: "qrToken and deviceId are required" });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(qrToken, process.env.JWT_SECRET);
+        } catch (error) {
+            return res.status(400).json({ message: "QR Token is expired or invalid" });
+        }
+
+        const allowedGroups = decoded.groups;
+        const sessionNumber = decoded.sessionNumber;
+
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        const studentRegisteredGroups = student.registeredCourses.map(rc => rc.group);
+        const matchingGroup = allowedGroups.find(g => studentRegisteredGroups.includes(g));
+
+        if (!matchingGroup) {
+            return res.status(403).json({ message: "You are not registered in any of these groups" });
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const deviceUsedBefore = await Attendance.findOne({
+            group: { $in: allowedGroups },
+            sessionNumber: sessionNumber,
+            deviceId: deviceId
+        });
+
+        if (deviceUsedBefore && deviceUsedBefore.student !== studentId) {
+            return res.status(403).json({ message: "Device already used by another student for this session" });
+        }
+
+        const studentAttended = await Attendance.findOne({
+            group: { $in: allowedGroups },
+            sessionNumber: sessionNumber,
+            student: studentId
+        });
+
+        if (studentAttended) {
+            return res.status(400).json({ message: `Attendance for session ${sessionNumber} already recorded` });
+        }
+
+        const newAttendance = new Attendance({
+            group: matchingGroup,
+            sessionNumber: sessionNumber,
+            student: studentId,
+            deviceId: deviceId,
+            date: today
+        });
+
+        await newAttendance.save();
+
+        res.status(200).json({ message: "Attendance recorded successfully" });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const getProfile = async (req, res) => {
     try {
         const student = await Student.findById(req.user.id).populate({
@@ -27,6 +101,7 @@ const registerToken = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 const getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.find({ studentId: req.user.id })
@@ -45,6 +120,7 @@ const markAllRead = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 const updateProfileImg = async (req, res) => {
     try {
         const { profileImg } = req.body;
@@ -228,7 +304,6 @@ const dropCourse = async (req, res) => {
     }
 };
 
-
 const getMyGrades = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -352,6 +427,6 @@ module.exports = {
     timeToMinutes,
     switchGroup,
     getNotifications,
-    markAllRead
-
+    markAllRead,
+    registerAttendance
 };

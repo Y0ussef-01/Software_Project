@@ -24,4 +24,5 @@ router.put('/registerToken', studentAuth, async (req, res) => {
 });
 router.get('/notifications', studentAuth, controller.getNotifications);
 router.put('/notifications/read', studentAuth, controller.markAllRead);
+router.post('/attend', studentAuth, controller.registerAttendance);
 module.exports = router;

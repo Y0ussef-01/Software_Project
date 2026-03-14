@@ -5,112 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Back_End/Api_Documentation.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/Full_FrontEnd.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/full_front.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/full_frontend_project.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/full_projectFront.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/package.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/App.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/api/axiosInstance.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/assets/images/imagePen.jpeg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/assets/images/logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/assets/images/restStud.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/AdminLayout/AdminAvatarSection.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/AdminLayout/AdminSidebar.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/AdminLayout/AdminTopbar.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/AdminProfile/AdminProfileComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/AddEnrollmentModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/AddTeacherCourseModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/DeleteConfirmModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/DeleteTeacherCourseModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/EditEnrollmentModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/EditTeacherCourseModal.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/EnrollmentSearchSection.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/EnrollmentTable.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/TeacherCoursesTable.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/EnrollmentManagement/TeacherSearchSection.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/RestAdminPassword/RestAdminPasswordComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/AddStudentComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/StudentDetailsCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/StudentSearchSection.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/TeatureManagement/AddTeacherComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/TeatureManagement/TeacherDetailsCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/TeatureManagement/TeacherSearchSection.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdvertisementsComp/Advertisments.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdvertisementsComp/useAdvertisments.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/Appointments/AppointmentsComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/FeatureComp/FeatureComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/FooterComp/Footer.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/FooterComp/Footer.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/HeaderComp/Header.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/HeaderComp/useHeader.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/HelpComp/HelpComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/HelpComp/useHelp.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/LoginForm/LoginForm.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/LoginForm/LoginForm.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/ProfileStudentComp/ProfileStudentComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/ProfileTeacherComp/ProfileTeacherComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/ProtectedRoute.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/PublicRoute.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/RegistrationComp/RegistrationComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/RestStudentPassword/RestStudentPasswordComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/RestTeacherPassword/RestTeacherPassword.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/TeacherFeaturesComp/TeacherFeaturesComp.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/TeacherGradesComp/ManageGradesContainer.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/context/Admin/AdminProfileContext.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/context/Admin/ThemeContext.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/context/AuthContext.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/EnrollmentManagement/useEnrollmentManagement.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/EnrollmentManagement/useTeacherAssignment.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/StudentManagement/useAddStudent.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/StudentManagement/useStudentManagement.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/TeatureManagement/useAddTeacher.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/TeatureManagement/useTeacherManagement.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Admin/useResetAdminPassword.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Student/useAppointments.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Student/useRegistration.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Student/useStudentProfile.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Student/useStudentResetPassword.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useTeacherGrades.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useTeacherProfile.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useTeacherResetPassword.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/useLoginForm.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/main.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/AdminProfilePage/AdminProfilePage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/Classes/Classes.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/Dashboard/AdminLayout.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/Dashboard/DashboardPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/EnrollmentManagement/EnrollmentManagementPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/EnrollmentManagement/TeacherAssignmentPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/RestAdminPage/RestAdminPasswordPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/StudentManagement/AddStudentPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/StudentManagement/StudentManagementPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/TeatureManagement/AddTeacherPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AdminPage/TeatureManagement/TeacherManagementPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/AppointmentsPage/AppointmentsPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/Error404/Error404.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/HelpPage/HelpPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/Home/HomeStuentPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/Home/HomeTeacherPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/LoginPage/LoginPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/ProfilePage/ProfileStudentPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/ProfilePage/TeacherProfilePage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/RegistrationPage/RegistrationPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/RestPasswordPage/RestStudentPasswordPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/RestPasswordPage/RestTeacherPasswordPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/TeacherManageGradesPage/TeacherManageGradesPage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/pages/TeacherSchedulePage/TeacherSchedulePage.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/shared/VideoPopup.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Mobile/app/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mobile/app/home.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/models/Attendance.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/models/Attendance.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/routes/student.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/student.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/routes/teacher.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/teacher.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/full_projectMy.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,12 +66,11 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "git-widget-placeholder": "main",
     "javascript.preferred.runtime.type.id": "node",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/home/youssef/WebstormProjects/Software_Project",
+    "last_opened_file_path": "/home/youssef/WebstormProjects/Software_Project/Back_End",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -304,6 +206,9 @@
       <workItem from="1773365762674" duration="757000" />
       <workItem from="1773396307793" duration="75000" />
       <workItem from="1773406647152" duration="4440000" />
+      <workItem from="1773431215899" duration="1089000" />
+      <workItem from="1773438533414" duration="1779000" />
+      <workItem from="1773447670165" duration="3079000" />
     </task>
     <servers />
   </component>
