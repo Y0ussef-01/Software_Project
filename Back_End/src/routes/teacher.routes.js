@@ -17,6 +17,7 @@ router.get('/profile', teacherAuth, controller.getProfile);
 router.put('/update-profile-img', teacherAuth, controller.updateProfileImg);
 router.put('/update-password', teacherAuth, controller.updatePassword);
 router.post('/upload-grades-excel', teacherAuth, upload.any(), controller.uploadGradesExcel);
+router.put('/update-grade', teacherAuth, controller.updateStudentGrade);
 router.get('/attendance/:groupId', teacherAuth, controller.getGroupAttendance);
 router.post('/generate-qr', teacherAuth, controller.generateAttendanceToken);
 module.exports = router;
