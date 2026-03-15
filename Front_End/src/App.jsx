@@ -32,6 +32,7 @@ import TeacherAssignmentPage from "./pages/AdminPage/EnrollmentManagement/Teache
 import TeacherSchedulePage from "./pages/TeacherSchedulePage/TeacherSchedulePage.jsx";
 import TeacherManageGradesPage from "./pages/TeacherManageGradesPage/TeacherManageGradesPage.jsx";
 import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
+import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendancePage.jsx";
 
 function App() {
   return (
@@ -65,6 +66,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route path="/teacher" element={<HomeTeacherPage />} />
             <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+            <Route path="/teacher/attendance" element={<ManageAttendancePage />} />
             <Route
               path="/teacher/manage-grades"
               element={<TeacherManageGradesPage />}

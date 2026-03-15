@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Box, Grid, Typography, Paper } from "@mui/material";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import SchoolIcon from "@mui/icons-material/School";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 export default function TeacherFeaturesComp() {
@@ -18,13 +19,20 @@ export default function TeacherFeaturesComp() {
     },
     {
       id: 2,
+      title: "Attendance",
+      icon: <AccessTimeIcon fontSize="inherit" />,
+      active: location.pathname === "/teacher/attendance",
+      path: "/teacher/attendance",
+    },
+    {
+      id: 3,
       title: "Schedule",
       icon: <CalendarMonthIcon fontSize="inherit" />,
       active: location.pathname === "/teacher/schedule",
       path: "/teacher/schedule",
     },
     {
-      id: 3,
+      id: 4,
       title: "Profile",
       icon: <SchoolIcon fontSize="inherit" />,
       active: location.pathname === "/teacher/profile",

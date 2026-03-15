@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -36,6 +36,26 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 import useRegistration from "../../hooks/Student/useRegistration";
+
+const daysOrder = {
+  saturday: 1,
+  sunday: 2,
+  monday: 3,
+  tuesday: 4,
+  wednesday: 5,
+  thursday: 6,
+  friday: 7,
+};
+
+const parseTime = (timeStr) => {
+  if (!timeStr || timeStr === "TBA") return 9999;
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":");
+  hours = parseInt(hours, 10);
+  if (modifier?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+  if (modifier?.toUpperCase() === "AM" && hours === 12) hours = 0;
+  return hours * 60 + parseInt(minutes, 10);
+};
 
 export default function RegistrationComp() {
   const {
@@ -99,6 +119,32 @@ export default function RegistrationComp() {
       handleCloseUpdateDialog();
     }
   };
+
+  const sortedRegisteredCourses = useMemo(() => {
+    if (!registeredCourses || registeredCourses.length === 0) return [];
+
+    return [...registeredCourses].sort((a, b) => {
+      const scheduleA =
+        a.appointment || a.course?.appointment || a.group?.appointment || {};
+      const scheduleB =
+        b.appointment || b.course?.appointment || b.group?.appointment || {};
+
+      const dayA = (scheduleA.day || "").toLowerCase();
+      const dayB = (scheduleB.day || "").toLowerCase();
+
+      const dayOrderA = daysOrder[dayA] || 99;
+      const dayOrderB = daysOrder[dayB] || 99;
+
+      if (dayOrderA !== dayOrderB) {
+        return dayOrderA - dayOrderB;
+      }
+
+      const timeA = parseTime(scheduleA.startTime);
+      const timeB = parseTime(scheduleB.startTime);
+
+      return timeA - timeB;
+    });
+  }, [registeredCourses]);
 
   if (isLoading) {
     return (
@@ -529,7 +575,7 @@ export default function RegistrationComp() {
           </Typography>
         </Box>
 
-        {registeredCourses.length === 0 ? (
+        {sortedRegisteredCourses.length === 0 ? (
           <Box
             sx={{
               textAlign: "center",
@@ -573,7 +619,7 @@ export default function RegistrationComp() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {registeredCourses.map((row, index) => {
+                {sortedRegisteredCourses.map((row, index) => {
                   const courseObj = row.course || row;
                   const groupObj = row.group || row;
 

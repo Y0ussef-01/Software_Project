@@ -3,24 +3,45 @@ import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 export const useTeacherProfile = () => {
-  const [teacherData, setTeacherData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const encodeData = (data) =>
+    btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+
+  const decodeData = (encoded) => {
+    if (!encoded) return null;
+    try {
+      return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const [teacherData, setTeacherData] = useState(() =>
+    decodeData(sessionStorage.getItem("teacher_profile_data")),
+  );
+
+  const [loading, setLoading] = useState(!teacherData);
   const [isImageUpdating, setIsImageUpdating] = useState(false);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const response = await axiosInstance.get("/teacher/profile");
-        setTeacherData(response.data);
-      } catch (error) {
-        toast.error("Failed to load teacher profile data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProfileData = async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    try {
+      const response = await axiosInstance.get("/teacher/profile");
+      const data = response.data?.Teacher || response.data;
 
-    fetchProfileData();
+      setTeacherData(data);
+      sessionStorage.setItem("teacher_profile_data", encodeData(data));
+    } catch (error) {
+      if (!teacherData) {
+        toast.error("Failed to load teacher profile data. Please try again.");
+      }
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData(!teacherData);
   }, []);
 
   const convertToBase64 = (file) => {
@@ -50,14 +71,17 @@ export const useTeacherProfile = () => {
         profileImg: base64Image,
       });
 
-      
-      setTeacherData(response.data.Teacher);
+      const updatedData = response.data.Teacher || response.data;
+
+      setTeacherData(updatedData);
+      sessionStorage.setItem("teacher_profile_data", encodeData(updatedData));
+
       toast.success("Profile image updated successfully!");
     } catch (error) {
       toast.error("Failed to update profile image.");
     } finally {
       setIsImageUpdating(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";    
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -66,10 +90,14 @@ export const useTeacherProfile = () => {
     try {
       setIsImageUpdating(true);
       const response = await axiosInstance.put("/teacher/update-profile-img", {
-        profileImg: "default-teacher.jpg", 
+        profileImg: "default-teacher.jpg",
       });
 
-      setTeacherData(response.data.Teacher);
+      const updatedData = response.data.Teacher || response.data;
+
+      setTeacherData(updatedData);
+      sessionStorage.setItem("teacher_profile_data", encodeData(updatedData));
+
       toast.success("Profile image removed successfully!");
     } catch (error) {
       toast.error("Failed to remove profile image.");

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";      
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext(null);
 
@@ -54,6 +54,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("role");
+    sessionStorage.removeItem("user_data");
+    sessionStorage.removeItem("reg_courses");
+    sessionStorage.clear();
   };
 
   return (
