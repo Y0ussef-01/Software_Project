@@ -188,6 +188,54 @@ const uploadGradesExcel = async (req, res) => {
     }
 };
 
+const updateStudentGrade = async (req, res) => {
+    try {
+        const { studentId, courseId, assessmentTitle, newScore } = req.body;
+        const teacherId = req.user.id;
+
+        const teacher = await Teacher.findById(teacherId);
+        const authorizedGroups = teacher.courses
+            .filter(c => c.course === courseId)
+            .map(c => c.group);
+
+        if (authorizedGroups.length === 0) {
+            return res.status(403).json({
+                message: "Unauthorized: You do not teach this course"
+            });
+        }
+
+        const student = await Student.findOneAndUpdate(
+            {
+                _id: studentId,
+                "registeredCourses.course": courseId,
+                "registeredCourses.group": { $in: authorizedGroups },
+                "registeredCourses.Degrees.title": assessmentTitle
+            },
+            {
+                $set: { "registeredCourses.$[courseElem].Degrees.$[degreeElem].score": newScore }
+            },
+            {
+                arrayFilters: [
+                    { "courseElem.course": courseId },
+                    { "degreeElem.title": assessmentTitle }
+                ],
+                new: true
+            }
+        );
+
+        if (!student) {
+            return res.status(404).json({
+                message: "Record not found or grade title does not exist"
+            });
+        }
+
+        res.status(200).json({ message: "Grade updated successfully", student });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const generateAttendanceToken = async (req, res) => {
     try {
         const { groups, sessionNumber } = req.body;
@@ -235,4 +283,4 @@ const getGroupAttendance = async (req, res) => {
 };
 
 
-module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel,getGroupAttendance,generateAttendanceToken };
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel,updateStudentGrade,getGroupAttendance,generateAttendanceToken };

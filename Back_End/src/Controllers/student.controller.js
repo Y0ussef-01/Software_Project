@@ -5,7 +5,7 @@ const Group = require('../models/Group');
 const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
-
+const {isTimeConflict} = require('../utils/Test_Conflict');
 const registerAttendance = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -165,22 +165,6 @@ const updatePassword = async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-};
-
-const timeToMinutes = (timeString) => {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
-};
-
-const isTimeConflict = (app1, app2) => {
-    if (app1.day !== app2.day) return false;
-
-    const start1 = timeToMinutes(app1.startTime);
-    const end1 = timeToMinutes(app1.endTime);
-    const start2 = timeToMinutes(app2.startTime);
-    const end2 = timeToMinutes(app2.endTime);
-
-    return start1 < end2 && end1 > start2;
 };
 
 const registerCourse = async (req, res) => {
@@ -414,8 +398,176 @@ const switchGroup = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+const requestSwap = async (req, res) => {
+    try {
+        const senderId = req.user.id;
+        const { receiverId, courseId } = req.body;
+
+        if (senderId === receiverId) {
+            return res.status(400).json({ message: 'You cannot send a swap request to yourself' });
+        }
+
+        const sender = await Student.findById(senderId).populate('registeredCourses.group');
+        const receiver = await Student.findById(receiverId).populate('registeredCourses.group');
+
+        if (!receiver) {
+            return res.status(404).json({ message: 'Receiver student not found' });
+        }
+
+        const senderCourseGroups = sender.registeredCourses.filter(rc => rc.course === courseId);
+        const receiverCourseGroups = receiver.registeredCourses.filter(rc => rc.course === courseId);
+
+        if (senderCourseGroups.length === 0) {
+            return res.status(400).json({ message: 'You are not registered in this course' });
+        }
+        if (receiverCourseGroups.length === 0) {
+            return res.status(400).json({ message: 'The receiver student is not registered in this course' });
+        }
+
+        const senderGroupName = senderCourseGroups[0].group.groupName;
+        const receiverGroupName = receiverCourseGroups[0].group.groupName;
+
+        if (senderGroupName === receiverGroupName) {
+            return res.status(400).json({ message: 'You are both in the same group' });
+        }
+
+        const existingRequest = await SwapRequest.findOne({
+            sender: senderId,
+            receiver: receiverId,
+            courseId: courseId,
+            status: 'Pending'
+        });
+
+        if (existingRequest) {
+            return res.status(400).json({ message: 'A pending swap request already exists' });
+        }
+
+        const newSwapRequest = new SwapRequest({
+            sender: senderId,
+            receiver: receiverId,
+            courseId,
+            senderGroupName,
+            receiverGroupName
+        });
+
+        await newSwapRequest.save();
+
+        res.status(201).json({ message: 'Swap request sent successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getPendingSwapRequests = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const requests = await SwapRequest.find({ receiver: studentId, status: 'Pending' })
+            .populate('sender', 'name _id profileImg')
+            .populate('courseId', 'name _id');
+
+        res.status(200).json(requests);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const respondToSwapRequest = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { requestId, action } = req.body;
+
+        if (!['Accepted', 'Rejected'].includes(action)) {
+            return res.status(400).json({ message: 'Invalid action. Must be Accepted or Rejected' });
+        }
+
+        const swapRequest = await SwapRequest.findById(requestId);
+
+        if (!swapRequest) {
+            return res.status(404).json({ message: 'Swap request not found' });
+        }
+
+        if (swapRequest.receiver !== studentId) {
+            return res.status(403).json({ message: 'You are not authorized to respond to this request' });
+        }
+
+        if (swapRequest.status !== 'Pending') {
+            return res.status(400).json({ message: 'This request has already been processed' });
+        }
+
+        if (action === 'Rejected') {
+            swapRequest.status = 'Rejected';
+            await swapRequest.save();
+            return res.status(200).json({ message: 'Swap request rejected' });
+        }
+
+        const sender = await Student.findById(swapRequest.sender);
+        const receiver = await Student.findById(swapRequest.receiver);
+
+        const senderGroupsToDrop = await Group.find({ course: swapRequest.courseId, groupName: swapRequest.senderGroupName });
+        const receiverGroupsToDrop = await Group.find({ course: swapRequest.courseId, groupName: swapRequest.receiverGroupName });
+
+        const senderOtherGroupIds = sender.registeredCourses.filter(rc => rc.course !== swapRequest.courseId).map(rc => rc.group);
+        const senderOtherGroups = await Group.find({ _id: { $in: senderOtherGroupIds } });
+
+        for (let newGroup of receiverGroupsToDrop) {
+            for (let oldGroup of senderOtherGroups) {
+                if (isTimeConflict(newGroup.appointment, oldGroup.appointment)) {
+                    return res.status(400).json({ message: `Cannot accept. Swap causes a time conflict for the sender on ${newGroup.appointment.day}` });
+                }
+            }
+        }
+
+
+        const receiverOtherGroupIds = receiver.registeredCourses.filter(rc => rc.course !== swapRequest.courseId).map(rc => rc.group);
+        const receiverOtherGroups = await Group.find({ _id: { $in: receiverOtherGroupIds } });
+
+        for (let newGroup of senderGroupsToDrop) {
+            for (let oldGroup of receiverOtherGroups) {
+                if (isTimeConflict(newGroup.appointment, oldGroup.appointment)) {
+                    return res.status(400).json({ message: `Cannot accept. Swap causes a time conflict for you on ${newGroup.appointment.day}` });
+                }
+            }
+        }
+
+        for (let g of senderGroupsToDrop) {
+            g.enrolledStudents = g.enrolledStudents.filter(id => id.toString() !== sender._id.toString());
+            g.enrolledStudents.push(receiver._id);
+            await g.save();
+        }
+
+        for (let g of receiverGroupsToDrop) {
+            g.enrolledStudents = g.enrolledStudents.filter(id => id.toString() !== receiver._id.toString());
+            g.enrolledStudents.push(sender._id);
+            await g.save();
+        }
+
+        sender.registeredCourses = sender.registeredCourses.filter(rc => rc.course !== swapRequest.courseId);
+        receiver.registeredCourses = receiver.registeredCourses.filter(rc => rc.course !== swapRequest.courseId);
+
+        for (let g of receiverGroupsToDrop) {
+            sender.registeredCourses.push({ course: swapRequest.courseId, group: g._id });
+        }
+        for (let g of senderGroupsToDrop) {
+            receiver.registeredCourses.push({ course: swapRequest.courseId, group: g._id });
+        }
+
+        await sender.save();
+        await receiver.save();
+
+        swapRequest.status = 'Accepted';
+        await swapRequest.save();
+
+        res.status(200).json({ message: 'Swap executed successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
 
 module.exports = {
+    respondToSwapRequest,
+    getPendingSwapRequests,
+    requestSwap,
     getProfile,
     registerToken,
     updateProfileImg,
@@ -424,7 +576,6 @@ module.exports = {
     dropCourse,
     getMyGrades,
     isTimeConflict,
-    timeToMinutes,
     switchGroup,
     getNotifications,
     markAllRead,
