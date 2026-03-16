@@ -27,6 +27,24 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ useID?: string; password?: string; general?: string }>({});
 
+  // ✅ Custom handler عشان نعمل masking بنجوم بدل dots
+  const handlePasswordChange = (text: string) => {
+    if (showpassword) {
+      // لو الباسورد ظاهر، نحفظ القيمة الحقيقية مباشرة
+      setPassword(text);
+    } else {
+      // لو مخفي، نحسب إيه اللي اتضاف أو اتحذف
+      if (text.length > password.length) {
+        // إضافة حرف جديد - اخد آخر حرف كتبه اليوزر
+        const newChar = text[text.length - 1];
+        setPassword(password + newChar);
+      } else {
+        // حذف - قص من الآخر
+        setPassword(password.slice(0, text.length));
+      }
+    }
+  };
+
   const validateForm = async () => {
     let errors: { [key: string]: string } = {};
 
@@ -134,11 +152,13 @@ export default function Index() {
                   <TextInput
                     placeholder="Enter password"
                     placeholderTextColor="#999"
-                    secureTextEntry={!showpassword}
+                    // ✅ بدل secureTextEntry، بنعرض نجوم * يدوياً
+                    value={showpassword ? password : "*".repeat(password.length)}
+                    onChangeText={handlePasswordChange}
                     style={styles.passwordInput}
-                    value={password}
-                    onChangeText={setPassword}
                     underlineColorAndroid="transparent"
+                    autoCorrect={false}
+                    autoCapitalize="none"
                   />
                   <Pressable onPress={() => setShowPassword(!showpassword)}>
                     <Ionicons
@@ -193,7 +213,8 @@ const styles = StyleSheet.create({
   button: { backgroundColor: "rgb(23, 42, 70)", padding: 10, borderRadius: 8, marginTop: 20, alignItems: "center", justifyContent: "center" },
   buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
   passwordContainer: { flexDirection: "row", alignItems: "center", borderColor: "rgb(224, 224, 224)", borderWidth: 1, borderRadius: 8, paddingHorizontal: 15, minHeight: 45, backgroundColor: "rgb(250, 250, 250)", marginBottom: 10 },
-  passwordInput: { flex: 1, minHeight: 40, marginBottom: 1, borderColor: "gray", borderRadius: 8, paddingTop: 20 },
+  // ✅ letterSpacing عشان النجوم تبان واضحة ومتباعدة
+  passwordInput: { flex: 1, minHeight: 40, marginBottom: 1, borderColor: "gray", borderRadius: 8, paddingTop: 20, color: "#000" },
   image: { width: 100, height: 80, alignItems: "center", resizeMode: "contain" },
   universityText: { color: "rgb(23, 42, 70)", fontSize: 22, fontWeight: "bold", textAlign: "center" },
   footerText: { color: "white", fontSize: 14, textAlign: "center", marginBottom: 20, opacity: 0.7 },
