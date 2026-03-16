@@ -97,7 +97,6 @@ const ScanQR = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
@@ -106,13 +105,13 @@ const ScanQR = () => {
                 <View style={{ width: 26 }} />
             </View>
 
-            {/* Course info */}
+          
             <View style={styles.courseInfo}>
                 <Text style={styles.courseName}>{courseName}</Text>
                 <Text style={styles.groupName}>{groupName}</Text>
             </View>
 
-            {/* Camera */}
+          
             {!success ? (
                 <View style={styles.cameraContainer}>
                     <CameraView
@@ -122,13 +121,13 @@ const ScanQR = () => {
                         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
                     />
 
-                    {/* QR Frame Overlay */}
+                   
                     <View style={styles.overlay}>
                         <View style={styles.overlayTop} />
                         <View style={styles.overlayMiddle}>
                             <View style={styles.overlaySide} />
                             <View style={styles.qrFrame}>
-                                {/* corners */}
+                               
                                 <View style={[styles.corner, styles.cornerTL]} />
                                 <View style={[styles.corner, styles.cornerTR]} />
                                 <View style={[styles.corner, styles.cornerBL]} />
@@ -147,7 +146,7 @@ const ScanQR = () => {
                     </View>
                 </View>
             ) : (
-                // Success screen
+              
                 <View style={styles.successContainer}>
                     <View style={styles.successCircle}>
                         <MaterialCommunityIcons name="check-circle" size={80} color="#4CAF50" />

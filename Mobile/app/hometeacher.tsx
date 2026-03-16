@@ -76,7 +76,7 @@ const hometeacher = () => {
                 <View style={styles.gridContainer}>
                     <View style={styles.rowContainer}>
 
-                        {/* ✅ Attendance */}
+                    
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}

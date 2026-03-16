@@ -27,7 +27,6 @@ const AttendanceCourses = () => {
             const res = await API.get('/student/Profile');
             const registeredCourses = res.data?.registeredCourses || [];
 
-            // استخرج المواد الـ Lecture بس (مش Lab)
             const lectureGroups: Course[] = [];
             const seen = new Set<string>();
 
@@ -36,14 +35,12 @@ const AttendanceCourses = () => {
                 const courseName = rc.course?.name || courseId;
                 const groupName = rc.group?.groupName || rc.group?.name || rc.groupName || '';
 
-                // خد بس الـ Lecture
                 if (groupName.toLowerCase().includes('lecture') && !seen.has(courseId)) {
                     seen.add(courseId);
                     lectureGroups.push({ courseId, courseName, groupName });
                 }
             });
 
-            // لو مفيش lecture خد كل المواد
             if (lectureGroups.length === 0) {
                 const allCourses: Course[] = [];
                 const seenAll = new Set<string>();
@@ -83,7 +80,7 @@ const AttendanceCourses = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
+            
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
