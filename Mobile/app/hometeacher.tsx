@@ -96,12 +96,9 @@ const hometeacher = () => {
 
             <View style={styles.HeaderStyle}>
                 <View style={{ flexDirection: 'row', gap: 20, alignItems: 'center' }}>
-
-
                     <TouchableOpacity onPress={toggleDrawer}>
                         <MaterialCommunityIcons name="menu" size={24} color="white" />
                     </TouchableOpacity>
-
                 </View>
 
                 <Image
@@ -188,6 +185,7 @@ const hometeacher = () => {
                             style={[styles.gridItem, pressedItem === 'bell' && styles.gridItemActive]}
                             onPressIn={() => setPressedItem('bell')}
                             onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/sendnotification' as any)}
                         >
                             <MaterialCommunityIcons
                                 name="bell"
@@ -234,14 +232,12 @@ const hometeacher = () => {
                         { transform: [{ translateX: drawerAnim }] }
                     ]}
                 >
-
                     <View style={styles.drawerGroup}>
 
                         <TouchableOpacity
                             style={styles.drawerItem}
                             onPress={goToProfile}
                         >
-
                             <View style={styles.imageContainerPRO}>
                                 <Image
                                     source={
@@ -281,7 +277,6 @@ const hometeacher = () => {
                         </TouchableOpacity>
 
                     </View>
-
                 </Animated.View>
             )}
 

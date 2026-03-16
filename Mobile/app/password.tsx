@@ -120,7 +120,7 @@ export default function Password() {
                                 secureTextEntry={!showOld}
                                 style={styles.passwordInput}
                                 value={oldPassword}
-                                onChangeText={(t) => { setOldPassword(t); setErrors({}); }}
+                               onChangeText={(t: string) => { setOldPassword(t); setErrors({}); }}
                                 underlineColorAndroid="transparent"
                             />
                             <Pressable onPress={() => setShowOld(!showOld)}>
@@ -139,7 +139,7 @@ export default function Password() {
                                 secureTextEntry={!showNew}
                                 style={styles.passwordInput}
                                 value={newPassword}
-                                onChangeText={(t) => { setNewPassword(t); setErrors({}); }}
+                               onChangeText={(t: string) => { setNewPassword(t); setErrors({}); }}
                                 underlineColorAndroid="transparent"
                             />
                             <Pressable onPress={() => setShowNew(!showNew)}>
@@ -167,8 +167,7 @@ export default function Password() {
 
                 
                         <Pressable
-                            style={({ pressed }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}
-                            onPress={handleUpdate}
+style={({ pressed }: { pressed: boolean }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}                            onPress={handleUpdate}
                             disabled={loading}
                         >
                             {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Update Password</Text>}

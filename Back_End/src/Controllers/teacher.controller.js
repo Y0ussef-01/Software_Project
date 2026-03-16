@@ -5,6 +5,12 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 
+const sendPushNotification = require('../utils/sendPushNotification');
+const Course = require('../models/Course');
+
+
+
+
 
 const updatePassword = async (req, res) => {
     try {
@@ -282,5 +288,68 @@ const getGroupAttendance = async (req, res) => {
     }
 };
 
+//======================
+const sendCourseNotification = async (req, res) => {
+    try {
+        const { courseId, groupIds, title, body } = req.body;
+        const teacherId = req.user.id;
 
-module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel,updateStudentGrade,getGroupAttendance,generateAttendanceToken };
+        const teacher = await Teacher.findById(teacherId);
+        const isTeacherCourse = teacher.courses.some(c => c.course === courseId);
+        if (!isTeacherCourse) {
+            return res.status(403).json({ message: "Unauthorized: You do not teach this course" });
+        }
+
+        const Notification = require('../models/Notification');
+
+        // لو اختار جروب معين، بعت لطلاب الجروب ده بس — لو ALL بعت للكل
+const teacherGroups = teacher.courses
+    .filter(c => c.course === courseId)
+    .map(c => c.group);
+
+const query = {
+    'registeredCourses.course': courseId,
+    'registeredCourses.group': groupIds ? { $in: groupIds } : { $in: teacherGroups }
+};
+
+        const studentsForNotif = await Student.find(query).select('_id pushToken');
+
+const notifDocs = studentsForNotif.map((s) => ({            studentId: s._id,
+            title: title,
+            body: body
+        }));
+        await Notification.insertMany(notifDocs);
+
+        const tokens = studentsForNotif
+            .map((s) => s.pushToken)
+            .filter((token) => token && token !== null && token !== 'null');
+        if (tokens.length === 0) {
+            return res.status(200).json({ message: "No students with push tokens found" });
+        }
+
+        await sendPushNotification(tokens, title, body);
+
+        res.status(200).json({
+            message: "Notifications sent successfully",
+            count: tokens.length
+        });
+
+   } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const registerToken = async (req, res) => {
+    try {
+        const { pushToken } = req.body;
+        await Teacher.findByIdAndUpdate(req.user.id, { expoPushToken: pushToken });
+        res.status(200).json({ message: "Token saved" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+
+
+module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel, updateStudentGrade, getGroupAttendance, generateAttendanceToken, sendCourseNotification, registerToken };   

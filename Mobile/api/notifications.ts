@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import API from './axiosConfig';
-import { getToken } from './storage';
+import { getToken, getRole } from './storage';
 
 export const registerPushToken = async () => {
     try {
@@ -25,7 +25,9 @@ export const registerPushToken = async () => {
         const userToken = await getToken();
         if (!userToken) return;
 
-        await API.put('/student/registerToken', { pushToken: token });
+        const role = await getRole();
+        const endpoint = role === 'teacher' ? '/teacher/registerToken' : '/student/registerToken';
+        await API.put(endpoint, { pushToken: token });
 
     } catch (err) {
         console.log('Push token error:', err);
