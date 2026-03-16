@@ -177,7 +177,7 @@ export default function GenerateQRComp() {
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
               <CircularProgress
                 variant="determinate"
-                value={(timeLeft / 15) * 100}
+                value={(timeLeft / 5) * 100}
                 size={20}
                 sx={{ color: "#3b6ba5" }}
               />

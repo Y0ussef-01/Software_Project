@@ -181,8 +181,7 @@ export default function Index() {
                 )}
 
                 <Pressable
-                  style={({ pressed }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}
-                  onPress={validateForm}
+                  style={({ pressed }: { pressed: boolean }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}                    onPress={validateForm}
                   disabled={loading}
                 >
                   {loading ? (

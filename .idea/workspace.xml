@@ -5,11 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Back_End/src/utils/Test_Conflict.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/course.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/student.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/GenerateQRComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/GenerateQRComp.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useGenerateQR.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useGenerateQR.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +65,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/youssef/WebstormProjects/Software_Project/Back_End&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/youssef/WebstormProjects/Software_Project/Back_End/src/models&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -84,6 +83,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/Back_End/src/models" />
       <recent name="$PROJECT_DIR$/Back_End" />
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -207,6 +207,10 @@
       <workItem from="1773438533414" duration="1779000" />
       <workItem from="1773447670165" duration="3516000" />
       <workItem from="1773599947419" duration="3072000" />
+      <workItem from="1773611294996" duration="5774000" />
+      <workItem from="1773658379969" duration="1864000" />
+      <workItem from="1773662060598" duration="116000" />
+      <workItem from="1773664589423" duration="1929000" />
     </task>
     <servers />
   </component>

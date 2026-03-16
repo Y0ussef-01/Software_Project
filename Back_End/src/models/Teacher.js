@@ -7,6 +7,7 @@ const teacherSchema = new mongoose.Schema({
     password: { type: String, required: true,select: false },//
     department: { type: String, required: true },
     profileImg: { type: String , default: "default.jpg"},//
+    expoPushToken: { type: String, default: null },
     courses: [
         {
             course: { type: String, ref: 'Course' },
