@@ -148,6 +148,7 @@ const home = () => {
                             style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}
                             onPressIn={() => setPressedItem('calendar-remove')}
                             onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/attendancecourses' as any)}
                         >
                             <MaterialCommunityIcons
                                 name="calendar-remove"
