@@ -5,10 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/teacher.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/GenerateQRComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/GenerateQRComp.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useGenerateQR.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useGenerateQR.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -211,6 +210,9 @@
       <workItem from="1773658379969" duration="1864000" />
       <workItem from="1773662060598" duration="116000" />
       <workItem from="1773664589423" duration="1929000" />
+      <workItem from="1773669035282" duration="805000" />
+      <workItem from="1773679375787" duration="1925000" />
+      <workItem from="1773682026583" duration="1467000" />
     </task>
     <servers />
   </component>

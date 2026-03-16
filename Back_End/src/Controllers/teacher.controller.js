@@ -6,11 +6,6 @@ const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 
 const sendPushNotification = require('../utils/sendPushNotification');
-const Course = require('../models/Course');
-
-
-
-
 
 const updatePassword = async (req, res) => {
     try {
@@ -288,7 +283,6 @@ const getGroupAttendance = async (req, res) => {
     }
 };
 
-//======================
 const sendCourseNotification = async (req, res) => {
     try {
         const { courseId, groupIds, title, body } = req.body;
@@ -302,7 +296,6 @@ const sendCourseNotification = async (req, res) => {
 
         const Notification = require('../models/Notification');
 
-        // لو اختار جروب معين، بعت لطلاب الجروب ده بس — لو ALL بعت للكل
 const teacherGroups = teacher.courses
     .filter(c => c.course === courseId)
     .map(c => c.group);
