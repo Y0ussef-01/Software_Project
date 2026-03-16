@@ -9,7 +9,7 @@ export const useGenerateQR = () => {
   const [sessionNumber, setSessionNumber] = useState(1);
   const [qrToken, setQrToken] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(10);
 
   const timerRef = useRef(null);
   const intervalRef = useRef(null);
@@ -69,7 +69,7 @@ export const useGenerateQR = () => {
       });
 
       setQrToken(response.data.qrToken);
-      setTimeLeft(15);
+      setTimeLeft(10);
 
       if (isInitialCall) {
         toast.success("QR Code generated successfully!");
@@ -112,10 +112,10 @@ export const useGenerateQR = () => {
 
     intervalRef.current = setInterval(() => {
       fetchQRToken(false);
-    }, 15000);
+    }, 10000);
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 15));
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 10));
     }, 1000);
   };
 
