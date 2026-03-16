@@ -256,7 +256,7 @@ const generateAttendanceToken = async (req, res) => {
         const qrToken = jwt.sign(
             { groups: groups, sessionNumber: sessionNumber, teacherId: req.user.id },
             process.env.JWT_SECRET,
-            { expiresIn: "10s" }
+            { expiresIn: "5s" }
         );
 
         res.status(200).json({ qrToken });

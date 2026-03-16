@@ -178,6 +178,50 @@ Base URL: http://localhost:5000
   "message": "Attendance recorded successfully" 
 }
 
+[13] Request Swap
+- Endpoint: /student/swap-request
+- Method: POST
+- Description: Sends a group swap request to another student in the same course.
+- Request Body:
+{
+  "receiverId": "2327555",
+  "courseId": "CS101"
+}
+- Response (201 Created):
+{
+  "message": "Swap request sent successfully"
+}
+
+[14] Get Pending Swap Requests
+- Endpoint: /student/get_pending_requests
+- Method: GET
+- Description: Retrieves all pending swap requests received by the student.
+- Response (200 OK):
+[
+  {
+    "_id": "swapReq123",
+    "sender": { "_id": "2327443", "name": "Youssef", "profileImg": "..." },
+    "receiver": "2327555",
+    "courseId": { "_id": "CS101", "name": "Introduction to CS" },
+    "senderGroupName": "G1",
+    "receiverGroupName": "G2",
+    "status": "Pending"
+  }
+]
+
+[15] Respond To Swap Request
+- Endpoint: /student/swap-respond
+- Method: POST
+- Description: Accepts or Rejects a pending swap request. Validates time conflicts before accepting.
+- Request Body:
+{
+  "requestId": "swapReq123",
+  "action": "Accepted"
+}
+- Response (200 OK):
+{
+  "message": "Swap executed successfully"
+}
 
 --------------------------------------------------------------------
 3. Teacher Routes
@@ -214,7 +258,7 @@ Base URL: http://localhost:5000
   "oldPassword": "123",
   "newPassword": "456"
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "Password updated successfully" }
 
 [4] Upload Grades Excel
@@ -224,10 +268,27 @@ Base URL: http://localhost:5000
 - Request Body: (Form Data)
   - courseId: "CS101"
   - excelFile: <Attached Excel File>
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "Updated Successfully" }
 
-[5] Generate Attendance QR Token
+[5] Update Student Grade
+- Endpoint: /teacher/update-grade
+- Method: PUT
+- Description: Updates a specific grade for a student in a course taught by the teacher.
+- Request Body:
+{
+  "studentId": "2327443",
+  "courseId": "CS101",
+  "assessmentTitle": "Midterm",
+  "newScore": 25
+}
+- Response (200 OK):
+{
+  "message": "Grade updated successfully",
+  "student": { ... }
+}
+
+[6] Generate Attendance QR Token
 - Endpoint: /teacher/generate-qr
 - Method: POST
 - Description: Generates a temporary 15-second JWT token containing the groups and session number.
@@ -241,7 +302,7 @@ Base URL: http://localhost:5000
   "qrToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 
-[6] Get Group Attendance
+[7] Get Group Attendance
 - Endpoint: /teacher/attendance/:groupId
 - Method: GET
 - Description: Retrieves the attendance list for a specific group. Can optionally filter by date.
@@ -263,7 +324,6 @@ Base URL: http://localhost:5000
   }
 ]
 
-
 --------------------------------------------------------------------
 4. Admin Routes
 --------------------------------------------------------------------
@@ -278,7 +338,7 @@ Base URL: http://localhost:5000
   "name": "Ahmed",
   "password": "123"
 }
-- Response (201 Created): 
+- Response (201 Created):
 { "message": "added student successfully", "student": { ... } }
 
 [2] Get Student
@@ -297,14 +357,14 @@ Base URL: http://localhost:5000
   "GPA": 3.5,
   "maxHours": 18
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "updated successfully", "student": { ... } }
 
 [4] Delete Student
 - Endpoint: /admin/delete-student/:id
 - Method: DELETE
 - Request Params: id (Student ID in the URL)
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "Deleted student successfully", "student": { ... } }
 
 --- 4.B Teacher Management ---
@@ -320,7 +380,7 @@ Base URL: http://localhost:5000
   "password": "123",
   "department": "Math"
 }
-- Response (201 Created): 
+- Response (201 Created):
 { "message": "added Teacher Successfully", "teacher": { ... } }
 
 [2] Get Teacher
@@ -338,14 +398,14 @@ Base URL: http://localhost:5000
 {
   "profileImg": "new_pic.jpg"
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "Data updated Successfully", "teacher": { ... } }
 
 [4] Delete Teacher
 - Endpoint: /admin/delete-teacher/:id
 - Method: DELETE
 - Request Params: id (Teacher ID in the URL)
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "Deleted Teacher Successfully" }
 
 --- 4.C Admin Management ---
@@ -360,7 +420,7 @@ Base URL: http://localhost:5000
   "email": "omar@sci.cu.edu.eg",
   "password": "123"
 }
-- Response (201 Created): 
+- Response (201 Created):
 { "message": "Admin added successfully", "admin": { ... } }
 
 [2] Get Admin Profile
@@ -375,7 +435,7 @@ Base URL: http://localhost:5000
 {
   "profileImg": "new_admin_img.jpg"
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "The data was successfully updated", "admin": { ... } }
 
 [4] Update Admin Password
@@ -386,7 +446,7 @@ Base URL: http://localhost:5000
   "oldPassword": "123",
   "newPassword": "456"
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "The password updated successfully" }
 
 --- 4.D Course Management ---
@@ -409,7 +469,7 @@ Base URL: http://localhost:5000
 - Method: DELETE
 - Request Params: id (Course ID in the URL)
 - Response (200 OK):
-{ "message": "The Course and its Group has been deleted successfully" }
+{ "message": "The Course, its Groups, and student registrations have been deleted successfully" }
 
 [3] Get All Courses
 - Endpoint: /admin/courses
