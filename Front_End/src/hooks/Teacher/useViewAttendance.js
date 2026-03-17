@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
-
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -10,9 +9,7 @@ export const useViewAttendance = () => {
   const [teacherGroups, setTeacherGroups] = useState([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
   const [filterSessionNumber, setFilterSessionNumber] = useState("");
-  const [appliedSessionFilter, setAppliedSessionFilter] = useState("");
 
   const [attendanceList, setAttendanceList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,30 +23,28 @@ export const useViewAttendance = () => {
       setIsLoadingGroups(true);
       try {
         const response = await axiosInstance.get("/teacher/profile");
-
         const coursesData =
-          response.data?.courses || response.data?.Teacher?.courses || [];
+            response.data?.courses || response.data?.Teacher?.courses || [];
 
         const formattedGroups = coursesData
-          .filter((item) => item?.group?.type?.toLowerCase() === "lecture")
-          .map((item) => {
-            if (item?.group?._id && item?.course?.name) {
-              return {
-                id: String(item.group._id),
-                name: `${item.course.name} - ${item.group.groupName} (Lecture)`,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
+            .filter((item) => item?.group?.type?.toLowerCase() === "lecture")
+            .map((item) => {
+              if (item?.group?._id && item?.course?.name) {
+                return {
+                  id: String(item.group._id),
+                  name: `${item.course.name} - ${item.group.groupName} (Lecture)`,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
 
         const uniqueGroups = Array.from(
-          new Map(formattedGroups.map((item) => [item.id, item])).values(),
+            new Map(formattedGroups.map((item) => [item.id, item])).values()
         );
 
         setTeacherGroups(uniqueGroups);
       } catch (error) {
-        console.error("Profile Fetch Error:", error.response || error);
         toast.error("Failed to load your assigned courses.");
       } finally {
         setIsLoadingGroups(false);
@@ -65,39 +60,36 @@ export const useViewAttendance = () => {
       return;
     }
 
+    if (!filterSessionNumber || filterSessionNumber.trim() === "") {
+      toast.warning("Please enter a session number");
+      return;
+    }
+
     setLoading(true);
     try {
-      let url = `/teacher/attendance/${selectedGroup}`;
-      if (selectedDate) {
-        url += `?date=${selectedDate}`;
-      }
-
-      const response = await axiosInstance.get(url);
+      const response = await axiosInstance.get(
+          `/teacher/attendance/${selectedGroup}`,
+          { params: { sessionNumber: filterSessionNumber.trim() } }
+      );
 
       if (!response.data || response.data.length === 0) {
-        toast.info("No attendance records found for this date.");
+        toast.info("No attendance records found.");
         setAttendanceList([]);
       } else {
         setAttendanceList(response.data);
         toast.success("Records fetched successfully.");
       }
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        toast.info("No attendance records found for this date.");
-        setAttendanceList([]);
-      } else {
-        toast.error(
-          error.response?.data?.message || "Failed to fetch attendance data",
-        );
-        setAttendanceList([]);
-      }
+      toast.error(
+          error.response?.data?.message || "Failed to fetch attendance data"
+      );
+      setAttendanceList([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSearchClick = async () => {
-    setAppliedSessionFilter(filterSessionNumber);
     setPage(0);
     await fetchAttendance();
   };
@@ -108,118 +100,81 @@ export const useViewAttendance = () => {
       return;
     }
 
+    if (!filterSessionNumber || filterSessionNumber.trim() === "") {
+      toast.warning("Please enter a session number first.");
+      return;
+    }
+
     setLoadingSummary(true);
     try {
       const response = await axiosInstance.get(
-        `/teacher/attendance/${selectedGroup}`,
+          `/teacher/attendance/${selectedGroup}`,
+          { params: { sessionNumber: filterSessionNumber.trim() } }
       );
       const rawData = response.data || [];
 
       if (rawData.length === 0) {
-        toast.info("No attendance records found for this lecture.");
+        toast.info("No attendance records found for this session.");
         return;
       }
 
-      let maxSession = 0;
-      rawData.forEach((record) => {
-        if (record.sessionNumber > maxSession)
-          maxSession = record.sessionNumber;
-      });
-
-      const studentMap = {};
-      rawData.forEach((record) => {
-        const sId = record.student._id;
-        if (!studentMap[sId]) {
-          studentMap[sId] = { id: sId, name: record.student.name, attended: 0 };
-        }
-        studentMap[sId].attended += 1;
-      });
-
-      const summaryData = Object.values(studentMap).map((s) => {
-        const absenceCount = maxSession - s.attended;
-        const absencePercentage =
-          maxSession > 0 ? (absenceCount / maxSession) * 100 : 0;
-
-        return {
-          "Student Name": s.name,
-          "Student ID": s.id,
-          Attended: s.attended,
-          Absent: absenceCount,
-          "Absence %": `${absencePercentage.toFixed(1)}%`,
-          Status: absencePercentage > 30 ? "Deprived" : "Safe",
-        };
-      });
-
-      summaryData.sort((a, b) => {
-        if (a.Status === b.Status)
-          return a["Student Name"].localeCompare(b["Student Name"]);
-        return a.Status === "Deprived" ? -1 : 1;
-      });
+      const summaryData = rawData.map((record) => ({
+        "Student Name": record.student.name,
+        "Student ID": record.student._id,
+        "Session Number": record.sessionNumber,
+        "Time Logged": new Date(record.timestamp).toLocaleTimeString(),
+      }));
 
       if (type === "excel") {
         const worksheet = XLSX.utils.json_to_sheet(summaryData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
-        XLSX.writeFile(workbook, `Summary_${selectedGroup}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+        XLSX.writeFile(
+            workbook,
+            `Attendance_${selectedGroup}_Session${filterSessionNumber}.xlsx`
+        );
       } else if (type === "pdf") {
         const doc = new jsPDF();
-        doc.text(`Full Attendance Summary - ${selectedGroup}`, 14, 15);
-        doc.setFontSize(10);
-        doc.text(`Total Sessions Given: ${maxSession}`, 14, 22);
+        doc.text(`Attendance Report - Session ${filterSessionNumber}`, 14, 15);
 
         const tableColumn = [
           "Student Name",
           "Student ID",
-          "Attended",
-          "Absent",
-          "Absence %",
-          "Status",
+          "Session",
+          "Time Logged",
         ];
         const tableRows = summaryData.map((row) => [
           row["Student Name"],
           row["Student ID"],
-          row["Attended"],
-          row["Absent"],
-          row["Absence %"],
-          row["Status"],
+          row["Session Number"],
+          row["Time Logged"],
         ]);
 
         autoTable(doc, {
           head: [tableColumn],
           body: tableRows,
-          startY: 28,
+          startY: 25,
           theme: "grid",
           headStyles: { fillColor: [21, 43, 72] },
-          didParseCell: function (data) {
-            if (data.section === "body" && data.column.index === 5) {
-              if (data.cell.raw === "Deprived") {
-                data.cell.styles.textColor = [220, 38, 38];
-                data.cell.styles.fontStyle = "bold";
-              } else {
-                data.cell.styles.textColor = [22, 163, 74];
-              }
-            }
-          },
         });
-        doc.save(`Summary_${selectedGroup}.pdf`);
+        doc.save(
+            `Attendance_${selectedGroup}_Session${filterSessionNumber}.pdf`
+        );
       }
 
-      toast.success(`Summary exported as ${type.toUpperCase()} successfully!`);
+      toast.success(`Exported as ${type.toUpperCase()} successfully!`);
     } catch (error) {
-      toast.error("Failed to generate attendance summary.");
+      toast.error("Failed to generate attendance report.");
     } finally {
       setLoadingSummary(false);
     }
   };
 
-  const displayedAttendance = attendanceList.filter((row) => {
-    if (!appliedSessionFilter) return true;
-    return String(row.sessionNumber) === String(appliedSessionFilter);
-  });
+  const displayedAttendance = attendanceList;
 
   const paginatedAttendance = displayedAttendance.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage,
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
   );
 
   const handleChangePage = (event, newPage) => {
@@ -238,27 +193,20 @@ export const useViewAttendance = () => {
       "Student ID": row.student._id,
       "Session Number": row.sessionNumber,
       "Time Logged": new Date(row.timestamp).toLocaleTimeString(),
-      Date: new Date(row.timestamp).toLocaleDateString(),
     }));
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
     XLSX.writeFile(
-      workbook,
-      `Attendance_${selectedGroup}_Session${appliedSessionFilter || "All"}.xlsx`,
+        workbook,
+        `Attendance_${selectedGroup}_Session${filterSessionNumber}.xlsx`
     );
   };
 
   const handleExportPDF = () => {
     if (displayedAttendance.length === 0) return;
     const doc = new jsPDF();
-    doc.text(`Attendance Report - ${selectedGroup}`, 14, 15);
-    doc.setFontSize(10);
-    doc.text(
-      `Session: ${appliedSessionFilter || "All"} | Date: ${selectedDate || "All Time"}`,
-      14,
-      22,
-    );
+    doc.text(`Attendance Report - Session ${filterSessionNumber}`, 14, 15);
 
     const tableColumn = [
       "Student Name",
@@ -276,13 +224,11 @@ export const useViewAttendance = () => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 28,
+      startY: 25,
       theme: "grid",
       headStyles: { fillColor: [21, 43, 72] },
     });
-    doc.save(
-      `Attendance_${selectedGroup}_Session${appliedSessionFilter || "All"}.pdf`,
-    );
+    doc.save(`Attendance_${selectedGroup}_Session${filterSessionNumber}.pdf`);
   };
 
   return {
@@ -290,8 +236,6 @@ export const useViewAttendance = () => {
     isLoadingGroups,
     selectedGroup,
     setSelectedGroup,
-    selectedDate,
-    setSelectedDate,
     filterSessionNumber,
     setFilterSessionNumber,
     loading,

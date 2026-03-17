@@ -70,17 +70,19 @@ const TeacherAttendance = () => {
 
     const handleSearch = async () => {
         if (!selected) return;
+
+        if (sessionFilter.trim() === '') {
+            return;
+        }
+
         setSearching(true);
         setSearched(true);
         setCurrentPage(1);
         try {
-            const res = await API.get(`/teacher/attendance/${selected.groupId}`);
-            let data: AttendanceRecord[] = res.data || [];
-
-            if (sessionFilter.trim() !== '') {
-                data = data.filter(r => String(r.sessionNumber) === sessionFilter.trim());
-            }
-
+            const res = await API.get(`/teacher/attendance/${selected.groupId}`, {
+                params: { sessionNumber: sessionFilter.trim() }
+            });
+            const data: AttendanceRecord[] = res.data || [];
             setRecords(data);
         } catch (err) {
             console.log('Error fetching attendance:', err);
@@ -92,7 +94,10 @@ const TeacherAttendance = () => {
 
     const formatTime = (timestamp: string) => {
         if (!timestamp) return '-';
-        return new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        return new Date(timestamp).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
     };
 
     const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
@@ -146,9 +151,12 @@ const TeacherAttendance = () => {
                         />
 
                         <TouchableOpacity
-                            style={[styles.searchBtn, !selected && styles.searchBtnDisabled]}
+                            style={[
+                                styles.searchBtn,
+                                (!selected || sessionFilter.trim() === '') && styles.searchBtnDisabled,
+                            ]}
                             onPress={handleSearch}
-                            disabled={!selected || searching}
+                            disabled={!selected || searching || sessionFilter.trim() === ''}
                         >
                             {searching ? (
                                 <ActivityIndicator size="small" color="white" />
@@ -161,12 +169,13 @@ const TeacherAttendance = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* ✅ عدد الطلاب */}
+                    {/* عدد الطلاب */}
                     {searched && !searching && (
                         <View style={styles.countRow}>
                             <MaterialCommunityIcons name="account-group" size={20} color="rgb(23, 42, 70)" />
                             <Text style={styles.countText}>
-                                Total Attended: <Text style={styles.countNum}>{records.length} Students</Text>
+                                Total Attended:{' '}
+                                <Text style={styles.countNum}>{records.length} Students</Text>
                             </Text>
                         </View>
                     )}
@@ -197,14 +206,19 @@ const TeacherAttendance = () => {
                                 contentContainerStyle={{ paddingBottom: 10 }}
                                 renderItem={({ item, index }) => (
                                     <View style={[styles.row, index % 2 === 0 && styles.rowAlt]}>
-                                        <Text style={[styles.studentName, { flex: 1.5 }]} >
+                                        <Text style={[styles.studentName, { flex: 1.5 }]}>
                                             {item.student?.name || '-'}
                                         </Text>
-                                        <Text style={[styles.studentId, { flex: 1.2 }]} numberOfLines={1}>
+                                        <Text
+                                            style={[styles.studentId, { flex: 1.2 }]}
+                                            numberOfLines={1}
+                                        >
                                             {item.student?._id || ''}
                                         </Text>
                                         <View style={[styles.badge, { flex: 1.2 }]}>
-                                            <Text style={styles.badgeText}>session {item.sessionNumber}</Text>
+                                            <Text style={styles.badgeText}>
+                                                session {item.sessionNumber}
+                                            </Text>
                                         </View>
                                         <Text style={[styles.timeText, { flex: 1, textAlign: 'right' }]}>
                                             {formatTime(item.timestamp)}
@@ -216,19 +230,37 @@ const TeacherAttendance = () => {
                             {totalPages > 1 && (
                                 <View style={styles.pagination}>
                                     <TouchableOpacity
-                                        style={[styles.pageBtn, currentPage === 1 && styles.pageBtnDisabled]}
-                                        onPress={() => setCurrentPage(p => p - 1)}
+                                        style={[
+                                            styles.pageBtn,
+                                            currentPage === 1 && styles.pageBtnDisabled,
+                                        ]}
+                                        onPress={() => setCurrentPage((p) => p - 1)}
                                         disabled={currentPage === 1}
                                     >
-                                        <MaterialCommunityIcons name="chevron-left" size={20} color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'} />
+                                        <MaterialCommunityIcons
+                                            name="chevron-left"
+                                            size={20}
+                                            color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'}
+                                        />
                                     </TouchableOpacity>
-                                    <Text style={styles.pageText}>{currentPage} / {totalPages}</Text>
+                                    <Text style={styles.pageText}>
+                                        {currentPage} / {totalPages}
+                                    </Text>
                                     <TouchableOpacity
-                                        style={[styles.pageBtn, currentPage === totalPages && styles.pageBtnDisabled]}
-                                        onPress={() => setCurrentPage(p => p + 1)}
+                                        style={[
+                                            styles.pageBtn,
+                                            currentPage === totalPages && styles.pageBtnDisabled,
+                                        ]}
+                                        onPress={() => setCurrentPage((p) => p + 1)}
                                         disabled={currentPage === totalPages}
                                     >
-                                        <MaterialCommunityIcons name="chevron-right" size={20} color={currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'} />
+                                        <MaterialCommunityIcons
+                                            name="chevron-right"
+                                            size={20}
+                                            color={
+                                                currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'
+                                            }
+                                        />
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -250,7 +282,10 @@ const TeacherAttendance = () => {
                             {options.map((opt) => (
                                 <TouchableOpacity
                                     key={opt.groupId}
-                                    style={[styles.modalItem, selected?.groupId === opt.groupId && styles.modalItemActive]}
+                                    style={[
+                                        styles.modalItem,
+                                        selected?.groupId === opt.groupId && styles.modalItemActive,
+                                    ]}
                                     onPress={() => {
                                         setSelected(opt);
                                         setRecords([]);
@@ -258,7 +293,13 @@ const TeacherAttendance = () => {
                                         setModalVisible(false);
                                     }}
                                 >
-                                    <Text style={[styles.modalItemText, selected?.groupId === opt.groupId && styles.modalItemTextActive]}>
+                                    <Text
+                                        style={[
+                                            styles.modalItemText,
+                                            selected?.groupId === opt.groupId &&
+                                            styles.modalItemTextActive,
+                                        ]}
+                                    >
                                         {opt.label}
                                     </Text>
                                     {selected?.groupId === opt.groupId && (
@@ -399,11 +440,36 @@ const styles = StyleSheet.create({
     },
     pageBtnDisabled: { backgroundColor: '#f5f5f5' },
     pageText: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '65%', paddingBottom: 30 },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '65%',
+        paddingBottom: 30,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
     modalTitle: { fontSize: 17, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    modalItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+    modalItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f5f5f5',
+    },
     modalItemActive: { backgroundColor: 'rgb(23, 42, 70)' },
     modalItemText: { fontSize: 15, color: '#333', flex: 1 },
     modalItemTextActive: { color: 'white', fontWeight: 'bold' },
