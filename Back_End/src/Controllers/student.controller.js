@@ -6,6 +6,7 @@ const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const {isTimeConflict} = require('../utils/Test_Conflict');
+
 const registerAttendance = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -398,6 +399,7 @@ const switchGroup = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 const requestSwap = async (req, res) => {
     try {
         const senderId = req.user.id;

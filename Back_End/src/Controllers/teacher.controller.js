@@ -264,17 +264,15 @@ const generateAttendanceToken = async (req, res) => {
 const getGroupAttendance = async (req, res) => {
     try {
         const { groupId } = req.params;
-        const { date } = req.query;
+        const { sessionNumber } = req.query;
 
-        let queryDate = new Date();
-        if (date) {
-            queryDate = new Date(date);
+        if(!sessionNumber) {
+            return res.status(400).json({ message: "sessionNumber is required" });
         }
-        queryDate.setHours(0, 0, 0, 0);
 
         const attendanceList = await Attendance.find({
             group: groupId,
-            date: queryDate
+            sessionNumber: sessionNumber
         }).populate('student', '_id name');
 
         res.status(200).json(attendanceList);
