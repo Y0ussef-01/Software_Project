@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/ViewAttendanceComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AttendanceComp/ViewAttendanceComp.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useViewAttendance.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/hooks/Teacher/useViewAttendance.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Mobile/app/teacherattendance.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mobile/app/teacherattendance.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/app/hometeacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mobile/app/hometeacher.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -216,7 +214,7 @@
       <workItem from="1773682026583" duration="1467000" />
       <workItem from="1773684617994" duration="1279000" />
       <workItem from="1773698641660" duration="2894000" />
-      <workItem from="1773703829232" duration="2358000" />
+      <workItem from="1773703829232" duration="3489000" />
     </task>
     <servers />
   </component>

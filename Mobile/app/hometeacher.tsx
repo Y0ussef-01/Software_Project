@@ -76,7 +76,7 @@ const hometeacher = () => {
                 <View style={styles.gridContainer}>
                     <View style={styles.rowContainer}>
 
-                    
+                        {/* Attendance */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}
@@ -88,6 +88,7 @@ const hometeacher = () => {
                             <Text style={[styles.gridText, pressedItem === 'calendar-remove' && styles.gridTextActive]}>Attendance</Text>
                         </TouchableOpacity>
 
+                        {/* Schedule */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'calendar-month' && styles.gridItemActive]}
@@ -100,6 +101,7 @@ const hometeacher = () => {
                     </View>
 
                     <View style={styles.rowContainer}>
+                        {/* Evaluation */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'star-circle' && styles.gridItemActive]}
@@ -110,6 +112,7 @@ const hometeacher = () => {
                             <Text style={[styles.gridText, pressedItem === 'star-circle' && styles.gridTextActive]}>Evaluation</Text>
                         </TouchableOpacity>
 
+                        {/* Quizzes */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
@@ -123,16 +126,19 @@ const hometeacher = () => {
                     </View>
 
                     <View style={styles.rowContainer}>
+                        {/* Notifications */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'bell' && styles.gridItemActive]}
                             onPressIn={() => setPressedItem('bell')}
                             onPressOut={() => setPressedItem(null)}
+                            onPress={() => router.push('/sendnotification' as any)}
                         >
                             <MaterialCommunityIcons name="bell" size={35} color={pressedItem === 'bell' ? '#fff' : '#02013f'} />
                             <Text style={[styles.gridText, pressedItem === 'bell' && styles.gridTextActive]}>Notifications</Text>
                         </TouchableOpacity>
 
+                        {/* Final Grades */}
                         <TouchableOpacity
                             activeOpacity={1}
                             style={[styles.gridItem, pressedItem === 'clipboard-text' && styles.gridItemActive]}
@@ -153,6 +159,7 @@ const hometeacher = () => {
             {drawerOpen && (
                 <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerAnim }] }]}>
                     <View style={styles.drawerGroup}>
+
                         <TouchableOpacity style={styles.drawerItem} onPress={goToProfile}>
                             <View style={styles.imageContainerPRO}>
                                 <Image
@@ -175,6 +182,7 @@ const hometeacher = () => {
                             <MaterialCommunityIcons name="logout" size={22} color="red" />
                             <Text style={styles.logoutText}>Log Out</Text>
                         </TouchableOpacity>
+
                     </View>
                 </Animated.View>
             )}
