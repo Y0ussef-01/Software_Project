@@ -5,6 +5,7 @@ const Group = require('../models/Group');
 const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
+const SwapRequest = require('../models/SwapRequest');
 const {isTimeConflict} = require('../utils/Test_Conflict');
 
 const registerAttendance = async (req, res) => {
@@ -519,7 +520,6 @@ const respondToSwapRequest = async (req, res) => {
             }
         }
 
-
         const receiverOtherGroupIds = receiver.registeredCourses.filter(rc => rc.course !== swapRequest.courseId).map(rc => rc.group);
         const receiverOtherGroups = await Group.find({ _id: { $in: receiverOtherGroupIds } });
 
@@ -556,6 +556,18 @@ const respondToSwapRequest = async (req, res) => {
         await sender.save();
         await receiver.save();
 
+        await SwapRequest.deleteMany({
+            _id: { $ne: requestId },
+            courseId: swapRequest.courseId,
+            status: 'Pending',
+            $or: [
+                { sender: swapRequest.sender },
+                { sender: swapRequest.receiver },
+                { receiver: swapRequest.sender },
+                { receiver: swapRequest.receiver }
+            ]
+        });
+
         swapRequest.status = 'Accepted';
         await swapRequest.save();
 
@@ -565,7 +577,6 @@ const respondToSwapRequest = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
