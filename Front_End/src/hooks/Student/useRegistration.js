@@ -32,6 +32,19 @@ export default function useRegistration() {
     !studentProfile || availableCourses.length === 0,
   );
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [pendingSwapRequests, setPendingSwapRequests] = useState([]);
+
+  const fetchPendingSwaps = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/student/get_pending_requests",
+        getAuthHeaders(),
+      );
+      setPendingSwapRequests(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch pending swap requests", error);
+    }
+  };
 
   const fetchData = async (showPageLoader = true) => {
     if (showPageLoader && !studentProfile) setIsLoading(true);
@@ -52,6 +65,8 @@ export default function useRegistration() {
 
       sessionStorage.setItem("user_data", encodeData(profileData));
       sessionStorage.setItem("reg_courses", encodeData(coursesData));
+      
+      await fetchPendingSwaps();
     } catch (error) {
       if (!studentProfile) toast.error("Failed to load registration data.");
     } finally {
@@ -207,6 +222,44 @@ export default function useRegistration() {
     }
   };
 
+  const handleSwapRequest = async (courseId, receiverId) => {
+    if (!courseId || !receiverId) return;
+    setIsActionLoading(true);
+    try {
+      const payload = { courseId, receiverId };
+      const response = await axios.post(
+        "http://localhost:5000/student/swap-request",
+        payload,
+        getAuthHeaders(),
+      );
+      toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send swap request.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleSwapRespond = async (requestId, action) => {
+    if (!requestId || !action) return;
+    setIsActionLoading(true);
+    try {
+      const payload = { requestId, action };
+      const response = await axios.post(
+        "http://localhost:5000/student/swap-respond",
+        payload,
+        getAuthHeaders(),
+      );
+      
+      toast.success(response.data.message || `Swap request ${action.toLowerCase()}!`, { autoClose: 2000 });
+      fetchData(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || `Failed to ${action.toLowerCase()} swap request.`);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   return {
     isLoading,
     isActionLoading,
@@ -220,8 +273,12 @@ export default function useRegistration() {
     registeredHours,
     remainingHours,
     registeredCourses,
+    pendingSwapRequests,
     handleRegister,
     handleDropCourse,
     handleSwitchGroup,    
+    handleSwapRequest,
+    handleSwapRespond,
+    fetchPendingSwaps,
   };
 }
