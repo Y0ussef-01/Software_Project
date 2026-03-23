@@ -6,6 +6,7 @@ const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const SwapRequest = require('../models/SwapRequest');
+const sendPushNotification = require('../utils/sendPushNotification');
 const {isTimeConflict} = require('../utils/Test_Conflict');
 
 const registerAttendance = async (req, res) => {
@@ -404,58 +405,60 @@ const switchGroup = async (req, res) => {
 const requestSwap = async (req, res) => {
     try {
         const senderId = req.user.id;
-        const { receiverId, courseId } = req.body;
-
-        if (senderId === receiverId) {
-            return res.status(400).json({ message: 'You cannot send a swap request to yourself' });
-        }
+        const { courseId, targetGroupName } = req.body;
 
         const sender = await Student.findById(senderId).populate('registeredCourses.group');
-        const receiver = await Student.findById(receiverId).populate('registeredCourses.group');
-
-        if (!receiver) {
-            return res.status(404).json({ message: 'Receiver student not found' });
-        }
-
         const senderCourseGroups = sender.registeredCourses.filter(rc => rc.course === courseId);
-        const receiverCourseGroups = receiver.registeredCourses.filter(rc => rc.course === courseId);
 
         if (senderCourseGroups.length === 0) {
             return res.status(400).json({ message: 'You are not registered in this course' });
         }
-        if (receiverCourseGroups.length === 0) {
-            return res.status(400).json({ message: 'The receiver student is not registered in this course' });
-        }
 
         const senderGroupName = senderCourseGroups[0].group.groupName;
-        const receiverGroupName = receiverCourseGroups[0].group.groupName;
 
-        if (senderGroupName === receiverGroupName) {
-            return res.status(400).json({ message: 'You are both in the same group' });
+        if (senderGroupName === targetGroupName) {
+            return res.status(400).json({ message: 'You are already in this group' });
         }
 
         const existingRequest = await SwapRequest.findOne({
             sender: senderId,
-            receiver: receiverId,
             courseId: courseId,
             status: 'Pending'
         });
 
         if (existingRequest) {
-            return res.status(400).json({ message: 'A pending swap request already exists' });
+            return res.status(400).json({ message: 'You already have a pending swap request for this course' });
         }
 
-        const newSwapRequest = new SwapRequest({
+        const targetGroups = await Group.find({ course: courseId, groupName: targetGroupName });
+        if (targetGroups.length === 0) {
+            return res.status(404).json({ message: 'Target group not found' });
+        }
+
+
+        let targetStudentIds = [];
+        for (let group of targetGroups) {
+            targetStudentIds = targetStudentIds.concat(group.enrolledStudents);
+        }
+
+        targetStudentIds = [...new Set(targetStudentIds.map(id => id.toString()))];
+        targetStudentIds = targetStudentIds.filter(id => id !== senderId.toString());
+
+        if (targetStudentIds.length === 0) {
+            return res.status(400).json({ message: 'No students in the target group to swap with' });
+        }
+
+        const swapRequests = targetStudentIds.map(receiverId => ({
             sender: senderId,
             receiver: receiverId,
             courseId,
             senderGroupName,
-            receiverGroupName
-        });
+            receiverGroupName: targetGroupName
+        }));
 
-        await newSwapRequest.save();
+        await SwapRequest.insertMany(swapRequests);
 
-        res.status(201).json({ message: 'Swap request sent successfully' });
+        res.status(201).json({ message: 'Swap requests broadcasted successfully to all students in the group' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -505,6 +508,18 @@ const respondToSwapRequest = async (req, res) => {
 
         const sender = await Student.findById(swapRequest.sender);
         const receiver = await Student.findById(swapRequest.receiver);
+
+        const senderCurrentCourseGroup = sender.registeredCourses.find(rc => rc.course === swapRequest.courseId);
+        if (!senderCurrentCourseGroup) {
+            return res.status(400).json({ message: 'The sender is no longer registered in this course' });
+        }
+
+        const senderCurrentGroupObj = await Group.findById(senderCurrentCourseGroup.group);
+        if (senderCurrentGroupObj.groupName !== swapRequest.senderGroupName) {
+            swapRequest.status = 'Rejected';
+            await swapRequest.save();
+            return res.status(400).json({ message: 'Too late! Another student has already accepted this swap request.' });
+        }
 
         const senderGroupsToDrop = await Group.find({ course: swapRequest.courseId, groupName: swapRequest.senderGroupName });
         const receiverGroupsToDrop = await Group.find({ course: swapRequest.courseId, groupName: swapRequest.receiverGroupName });
@@ -571,7 +586,47 @@ const respondToSwapRequest = async (req, res) => {
         swapRequest.status = 'Accepted';
         await swapRequest.save();
 
+        const notifTitle = "Swap Request Accepted ✅";
+        const notifBody = `Your swap request for course ${swapRequest.courseId} was accepted by ${receiver.name}. You are now moved to group ${swapRequest.receiverGroupName}.`;
+
+        const newNotification = new Notification({
+            studentId: sender._id,
+            title: notifTitle,
+            body: notifBody
+        });
+        await newNotification.save();
+
+        if (sender.pushToken && sender.pushToken !== 'null') {
+            await sendPushNotification([sender.pushToken], notifTitle, notifBody);
+        }
+
         res.status(200).json({ message: 'Swap executed successfully' });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const cancelSwapRequest = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { courseId } = req.body;
+
+        if (!courseId) {
+            return res.status(400).json({ message: 'Please provide a course ID' });
+        }
+
+        const result = await SwapRequest.deleteMany({
+            sender: studentId,
+            courseId: courseId,
+            status: 'Pending'
+        });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'No pending swap requests found for this course' });
+        }
+
+        res.status(200).json({ message: 'Swap request cancelled successfully' });
 
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -592,5 +647,6 @@ module.exports = {
     switchGroup,
     getNotifications,
     markAllRead,
-    registerAttendance
+    registerAttendance,
+    cancelSwapRequest
 };

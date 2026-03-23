@@ -178,18 +178,18 @@ Base URL: http://localhost:5000
   "message": "Attendance recorded successfully" 
 }
 
-[13] Request Swap
+[13] Request Swap (Broadcast)
 - Endpoint: /student/swap-request
 - Method: POST
-- Description: Sends a group swap request to another student in the same course.
+- Description: Broadcasts a swap request to ALL students enrolled in a specific target group.
 - Request Body:
 {
-  "receiverId": "2327555",
-  "courseId": "CS101"
+  "courseId": "CS101",
+  "targetGroupName": "G2"
 }
 - Response (201 Created):
 {
-  "message": "Swap request sent successfully"
+  "message": "Swap requests broadcasted successfully to all students in the group"
 }
 
 [14] Get Pending Swap Requests
@@ -212,7 +212,7 @@ Base URL: http://localhost:5000
 [15] Respond To Swap Request
 - Endpoint: /student/swap-respond
 - Method: POST
-- Description: Accepts or Rejects a pending swap request. Validates time conflicts before accepting.
+- Description: Accepts or Rejects a pending swap request. If accepted, it checks for time conflicts, executes the swap, and automatically clears all other related pending requests. Prevents race conditions if multiple students try to accept simultaneously.
 - Request Body:
 {
   "requestId": "swapReq123",
@@ -221,6 +221,19 @@ Base URL: http://localhost:5000
 - Response (200 OK):
 {
   "message": "Swap executed successfully"
+}
+
+[16] Cancel Swap Request
+- Endpoint: /student/swap-cancel
+- Method: DELETE
+- Description: Cancels (deletes) all pending swap requests broadcasted by the student for a specific course.
+- Request Body:
+{
+  "courseId": "CS101"
+}
+- Response (200 OK):
+{
+  "message": "Swap request cancelled successfully"
 }
 
 --------------------------------------------------------------------
@@ -291,7 +304,7 @@ Base URL: http://localhost:5000
 [6] Generate Attendance QR Token
 - Endpoint: /teacher/generate-qr
 - Method: POST
-- Description: Generates a temporary 15-second JWT token containing the groups and session number.
+- Description: Generates a temporary 5-second JWT token containing the groups and session number.
 - Request Body:
 {
   "groups": ["CS101-G1-Lecture", "CS101-G2-Lecture"],
@@ -305,9 +318,9 @@ Base URL: http://localhost:5000
 [7] Get Group Attendance
 - Endpoint: /teacher/attendance/:groupId
 - Method: GET
-- Description: Retrieves the attendance list for a specific group. Can optionally filter by date.
+- Description: Retrieves the attendance list for a specific group for a given session.
 - Request Params: groupId (Format: courseId-groupName-type)
-- Query Params (Optional): ?date=YYYY-MM-DD (e.g., ?date=2026-03-14)
+- Query Params (Required): ?sessionNumber=X (e.g., ?sessionNumber=1)
 - Response (200 OK):
 [
   {
@@ -323,6 +336,36 @@ Base URL: http://localhost:5000
     "timestamp": "2026-03-14T10:05:00.000Z"
   }
 ]
+
+[8] Send Course Notification
+- Endpoint: /teacher/send-notification
+- Method: POST
+- Description: Sends a push notification to students registered in a course. Optionally filters by specific groups.
+- Request Body:
+{
+  "courseId": "CS101",
+  "groupIds": ["groupId1", "groupId2"], // Optional. If omitted, sends to all groups the teacher is assigned to for this course.
+  "title": "Lecture Canceled",
+  "body": "Tomorrow's lecture is canceled due to bad weather."
+}
+- Response (200 OK):
+{
+  "message": "Notifications sent successfully",
+  "count": 45
+}
+
+[9] Register Push Notification Token
+- Endpoint: /teacher/registerToken
+- Method: PUT
+- Description: Saves the Expo push token for the teacher to receive notifications.
+- Request Body:
+{
+  "pushToken": "ExponentPushToken[xxxxxx]"
+}
+- Response (200 OK):
+{
+  "message": "Token saved"
+}
 
 --------------------------------------------------------------------
 4. Admin Routes

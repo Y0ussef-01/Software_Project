@@ -28,5 +28,5 @@ router.post('/attend', studentAuth, controller.registerAttendance);
 router.post('/swap-request', studentAuth, controller.requestSwap);
 router.get('/get_pending_requests', studentAuth, controller.getPendingSwapRequests);
 router.post('/swap-respond', studentAuth, controller.respondToSwapRequest);
-
+router.delete('/swap-cancel', studentAuth, controller.cancelSwapRequest);
 module.exports = router;
