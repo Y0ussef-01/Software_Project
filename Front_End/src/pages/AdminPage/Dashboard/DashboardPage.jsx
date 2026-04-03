@@ -1,17 +1,11 @@
 import React from "react";
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
+import DashboardComp from "../../../components/AdminComp/HomeDashBoard/DashboardComp";
 
 export default function DashboardPage() {
-  const theme = useTheme();
-
   return (
-    <Box>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Dashboard Overview
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" mb={4}>
-        Welcome to your admin panel. Here is a summary of your system.
-      </Typography>
+    <Box sx={{ width: "100%", p: { xs: 2, md: 3, lg: 4 } }}>
+      <DashboardComp />
     </Box>
   );
 }
