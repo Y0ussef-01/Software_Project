@@ -1,9 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="dataSourceStorageLocal" created-in="WS-261.22158.274">
-    <data-source name="@mongdb.y7kdsau.mongodb.net" uuid="a755fb42-2169-4e45-ac2f-4bec3354194e">
+<DataSourcesHistory>
+  <DataSourceFromHistory isRemovedFromProject="false">
+    <data-source source="LOCAL" name="@mongdb.y7kdsau.mongodb.net" uuid="a755fb42-2169-4e45-ac2f-4bec3354194e">
       <database-info product="Mongo DB" version="8.0.20" jdbc-version="4.2" driver-name="MongoDB JDBC Driver" driver-version="1.20" dbms="MONGO" exact-version="8.0.20" exact-driver-version="1.20" />
       <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <driver-ref>mongo.4</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.dbschema.MongoJdbcDriver</jdbc-driver>
+      <jdbc-url>mongodb+srv://mongdb.y7kdsau.mongodb.net/</jdbc-url>
       <secret-storage>master_key</secret-storage>
       <user-name>Shefoo10100</user-name>
       <schema-mapping>
@@ -11,10 +14,17 @@
           <node kind="schema" negative="1" />
         </introspection-scope>
       </schema-mapping>
+      <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source name="@software-project.ukxubcm.mongodb.net" uuid="e8a46bc9-848d-41a8-9331-e5752bfc3605">
+  </DataSourceFromHistory>
+  <DataSourceFromHistory isRemovedFromProject="false">
+    <data-source source="LOCAL" name="@software-project.ukxubcm.mongodb.net" uuid="e8a46bc9-848d-41a8-9331-e5752bfc3605">
       <database-info product="Mongo DB" version="8.0.20" jdbc-version="4.2" driver-name="MongoDB JDBC Driver" driver-version="1.20" dbms="MONGO" exact-version="8.0.20" exact-driver-version="1.20" />
       <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <driver-ref>mongo.4</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.dbschema.MongoJdbcDriver</jdbc-driver>
+      <jdbc-url>mongodb+srv://software-project.ukxubcm.mongodb.net/</jdbc-url>
       <secret-storage>master_key</secret-storage>
       <user-name>Shefoo</user-name>
       <schema-mapping>
@@ -22,6 +32,7 @@
           <node kind="schema" negative="1" />
         </introspection-scope>
       </schema-mapping>
+      <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-  </component>
-</project>
+  </DataSourceFromHistory>
+</DataSourcesHistory>

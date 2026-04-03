@@ -373,6 +373,50 @@ const removeTeacherCourse = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const getDashboardStats = async (req, res) => {
+  try {
+    const [totalStudents, totalTeachers, totalCourses, gpaResult, studentsPerCourse] = await Promise.all([
+      Student.countDocuments(),
+      Teacher.countDocuments(),
+      Course.countDocuments(),
+
+      Student.aggregate([
+        { $group: { _id: null, averageGPA: { $avg: "$GPA" } } }
+      ]),
+
+      Student.aggregate([
+        { $unwind: "$registeredCourses" },
+        { $group: { _id: { studentId: "$_id", courseId: "$registeredCourses.course" } } },
+        { $group: { _id: "$_id.courseId", count: { $sum: 1 } } },
+        { $lookup: { from: "courses", localField: "_id", foreignField: "_id", as: "courseDetails" } },
+        { $unwind: "$courseDetails" },
+        { $project: {
+            courseId: "$_id",
+            courseName: "$courseDetails.name",
+            enrolledStudentsCount: "$count",
+            _id: 0
+          }},
+        { $sort: { enrolledStudentsCount: -1 } }
+      ])
+    ]);
+
+    const averageGPA = gpaResult.length > 0 ? parseFloat(gpaResult[0].averageGPA.toFixed(2)) : 0;
+
+    res.status(200).json({
+      message: "Dashboard statistics retrieved successfully",
+      stats: {
+        totalStudents,
+        totalTeachers,
+        totalCourses,
+        averageGPA,
+        studentsPerCourse
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   addStudent,
@@ -391,5 +435,6 @@ module.exports = {
   dropStudentCourse,
   assignTeacherCourse,
   removeTeacherCourse,
+  getDashboardStats
 };
 

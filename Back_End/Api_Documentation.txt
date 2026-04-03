@@ -21,7 +21,7 @@ Base URL: http://localhost:5000
     "email": "202327443@std.sci.cu.edu.eg",
     "profileImg": "default-student.jpg",
     "department": "Computer Science",
-    "grade": "المستوي الثالث",
+    "grade": "??????? ??????",
     "hours": 0
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
@@ -29,7 +29,7 @@ Base URL: http://localhost:5000
 }
 
 --------------------------------------------------------------------
-2. Student Routes 
+2. Student Routes
 --------------------------------------------------------------------
 [1] Get Student Profile
 - Endpoint: /student/Profile
@@ -58,7 +58,7 @@ Base URL: http://localhost:5000
   "oldPassword": "123",
   "newPassword": "456"
 }
-- Response (200 OK): 
+- Response (200 OK):
 { "message": "The password updated successfully" }
 
 [4] Get All Courses
@@ -76,10 +76,10 @@ Base URL: http://localhost:5000
   "courseId": "CS101",
   "groupName": "G1"
 }
-- Response (200 OK): 
-{ 
-  "message": "Course registered successfully in group G1", 
-  "hours": 3 
+- Response (200 OK):
+{
+  "message": "Course registered successfully in group G1",
+  "hours": 3
 }
 
 [6] Drop Course
@@ -89,17 +89,17 @@ Base URL: http://localhost:5000
 {
   "courseId": "CS101"
 }
-- Response (200 OK): 
-{ 
-  "message": "Course dropped successfully", 
-  "hours": 0 
+- Response (200 OK):
+{
+  "message": "Course dropped successfully",
+  "hours": 0
 }
 
 [7] Get My Grades
 - Endpoint: /student/grades
 - Method: GET
 - Request Body: None
-- Response (200 OK): 
+- Response (200 OK):
 {
   "message": "Degrees of Student",
   "grades": [
@@ -120,10 +120,10 @@ Base URL: http://localhost:5000
   "courseId": "CS101",
   "newGroupName": "G2"
 }
-- Response (200 OK): 
-{ 
-  "message": "Switched successfully to group G2", 
-  "registeredCourses": [ ... ] 
+- Response (200 OK):
+{
+  "message": "Switched successfully to group G2",
+  "registeredCourses": [ ... ]
 }
 
 [9] Register Push Notification Token
@@ -135,8 +135,8 @@ Base URL: http://localhost:5000
   "pushToken": "ExponentPushToken[xxxxxx]"
 }
 - Response (200 OK):
-{ 
-  "message": "Token saved" 
+{
+  "message": "Token saved"
 }
 
 [10] Get Notifications
@@ -160,8 +160,8 @@ Base URL: http://localhost:5000
 - Method: PUT
 - Description: Marks all notifications for the student as read.
 - Response (200 OK):
-{ 
-  "message": "All marked as read" 
+{
+  "message": "All marked as read"
 }
 
 [12] Register Attendance
@@ -174,8 +174,8 @@ Base URL: http://localhost:5000
   "deviceId": "device-uuid-123"
 }
 - Response (200 OK):
-{ 
-  "message": "Attendance recorded successfully" 
+{
+  "message": "Attendance recorded successfully"
 }
 
 [13] Request Swap (Broadcast)
@@ -607,3 +607,44 @@ Base URL: http://localhost:5000
 }
 - Response (200 OK):
 { "message": "Course removed from teacher successfully" }
+
+--- 4.G Dashboard & Statistics ---
+
+[1] Get Dashboard Statistics
+- Endpoint: /admin/dashboard-stats
+- Method: GET
+- Description: Retrieves comprehensive statistics for the admin dashboard including total counts and students per course.
+- Request Body: None
+- Response (200 OK):
+{
+  "message": "Dashboard statistics retrieved successfully",
+  "stats": {
+    "totalStudents": 1200,
+    "totalTeachers": 45,
+    "totalCourses": 30,
+    "averageGPA": 2.85,
+    "studentsPerCourse": [
+      {
+        "courseId": "CS101",
+        "courseName": "Introduction to Computer Science",
+        "enrolledStudentsCount": 150
+      },
+      {
+        "courseId": "MA101",
+        "courseName": "Calculus I",
+        "enrolledStudentsCount": 142
+      }
+    ]
+  }
+}
+
+[2] Get Overall Average GPA
+- Endpoint: /admin/average-gpa
+- Method: GET
+- Description: Retrieves only the overall average GPA of all students.
+- Request Body: None
+- Response (200 OK):
+{
+  "message": "Overall Average GPA calculated successfully",
+  "averageGPA": 2.85
+}

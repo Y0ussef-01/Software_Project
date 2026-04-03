@@ -8,5 +8,12 @@
       <jdbc-url>mongodb+srv://mongdb.y7kdsau.mongodb.net/</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="@software-project.ukxubcm.mongodb.net" uuid="e8a46bc9-848d-41a8-9331-e5752bfc3605">
+      <driver-ref>mongo.4</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.dbschema.MongoJdbcDriver</jdbc-driver>
+      <jdbc-url>mongodb+srv://software-project.ukxubcm.mongodb.net/</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

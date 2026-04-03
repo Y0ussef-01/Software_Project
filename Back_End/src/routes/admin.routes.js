@@ -31,4 +31,5 @@ router.delete('/drop-student-course', adminAuth, adminController.dropStudentCour
 
 router.post('/assign-teacher-course', adminAuth, adminController.assignTeacherCourse);
 router.delete('/remove-teacher-course', adminAuth, adminController.removeTeacherCourse);
+router.get('/dashboard-stats', adminAuth, adminController.getDashboardStats);
 module.exports = router;
