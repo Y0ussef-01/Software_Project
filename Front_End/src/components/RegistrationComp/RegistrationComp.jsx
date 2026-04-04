@@ -36,6 +36,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 
 import useRegistration from "../../hooks/Student/useRegistration";
 
@@ -1212,17 +1213,30 @@ export default function RegistrationComp() {
                       <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
                     </TableCell>
                     <TableCell align="right">
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        disabled={isActionLoading}
-                        onClick={() => handleSwapRespond(req._id, 'Accepted')}
-                        startIcon={<CheckCircleOutlineIcon />}
-                        sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
-                      >
-                        Accept Swap
-                      </Button>
+                      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          disabled={isActionLoading}
+                          onClick={() => handleSwapRespond(req._id, 'Rejected')}
+                          startIcon={<CancelOutlinedIcon />}
+                          sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          disabled={isActionLoading}
+                          onClick={() => handleSwapRespond(req._id, 'Accepted')}
+                          startIcon={<CheckCircleOutlineIcon />}
+                          sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                        >
+                          Accept Swap
+                        </Button>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
