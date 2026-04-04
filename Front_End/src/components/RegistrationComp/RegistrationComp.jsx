@@ -34,6 +34,8 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 import useRegistration from "../../hooks/Student/useRegistration";
 
@@ -74,6 +76,9 @@ export default function RegistrationComp() {
     handleRegister,
     handleDropCourse,
     handleSwitchGroup,
+    pendingSwapRequests,
+    handleSwapRequest,
+    handleSwapRespond,
   } = useRegistration();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -82,6 +87,29 @@ export default function RegistrationComp() {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [courseToUpdate, setCourseToUpdate] = useState(null);
   const [newSelectedGroup, setNewSelectedGroup] = useState("");
+
+  const [swapDialogOpen, setSwapDialogOpen] = useState(false);
+  const [courseToSwap, setCourseToSwap] = useState(null);
+  const [targetGroupSwap, setTargetGroupSwap] = useState("");
+
+  const handleOpenSwapDialog = (courseInfo) => {
+    setCourseToSwap(courseInfo);
+    setTargetGroupSwap("");
+    setSwapDialogOpen(true);
+  };
+
+  const handleCloseSwapDialog = () => {
+    setSwapDialogOpen(false);
+    setCourseToSwap(null);
+    setTargetGroupSwap("");
+  };
+
+  const handleConfirmSwap = async () => {
+    if (courseToSwap && targetGroupSwap) {
+      await handleSwapRequest(courseToSwap.courseId, targetGroupSwap);
+      handleCloseSwapDialog();
+    }
+  };
 
   const handleOpenDeleteDialog = (courseInfo) => {
     setCourseToDelete(courseInfo);
@@ -830,6 +858,35 @@ export default function RegistrationComp() {
 
                           <IconButton
                             onClick={() =>
+                              handleOpenSwapDialog({
+                                courseId: baseCourseCode,
+                                courseName: displayName,
+                                currentGroup: displayGroup,
+                                availableGroupsData:
+                                  matchedCourse?.groups ||
+                                  courseObj?.groups ||
+                                  [],
+                              })
+                            }
+                            disabled={isActionLoading}
+                            sx={{
+                              bgcolor: "#ffffff",
+                              color: "#1d4ed8",
+                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                              width: 40,
+                              height: 40,
+                              transition: "all 0.2s ease-in-out",
+                              "&:hover": {
+                                bgcolor: "#dbeafe",
+                                transform: "scale(1.05)",
+                              },
+                            }}
+                          >
+                            <SwapHorizIcon fontSize="small" />
+                          </IconButton>
+
+                          <IconButton
+                            onClick={() =>
                               handleOpenDeleteDialog({
                                 dropId,
                                 courseName: displayName,
@@ -1086,6 +1143,209 @@ export default function RegistrationComp() {
             }}
           >
             {isActionLoading ? "Updating..." : "Update Group"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* INCOMING PENDING SWAPS UI */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: "24px",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+          <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+            Incoming Swap Requests ({pendingSwapRequests?.length || 0})
+          </Typography>
+        </Box>
+
+        {pendingSwapRequests?.length === 0 || !pendingSwapRequests ? (
+          <Box
+            sx={{
+              textAlign: "center",
+              py: 5,
+              bgcolor: "#f8fafc",
+              borderRadius: "16px",
+            }}
+          >
+            <Typography variant="subtitle1" color="text.secondary">
+              No pending swap requests available.
+            </Typography>
+          </Box>
+        ) : (
+          <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+            <Table sx={{ minWidth: 600 }}>
+              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Requested By</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Course</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>From Group</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Target Group</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pendingSwapRequests.map((req) => (
+                  <TableRow key={req._id}>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <img 
+                          src={req.sender?.profileImg || "/default.jpg"} 
+                          alt="avatar" 
+                          style={{ width: 32, height: 32, borderRadius: "50%" }}
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {req.sender?.name || "Unknown"}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{req.courseId?.name || "Unknown"} ({req.courseId?._id})</TableCell>
+                    <TableCell>
+                      <Chip label={req.senderGroupName} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        disabled={isActionLoading}
+                        onClick={() => handleSwapRespond(req._id, 'Accepted')}
+                        startIcon={<CheckCircleOutlineIcon />}
+                        sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                      >
+                        Accept Swap
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
+
+      {/* SWAP DIALOG */}
+      <Dialog
+        open={swapDialogOpen}
+        onClose={handleCloseSwapDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            p: 1,
+            minWidth: { xs: "300px", sm: "450px" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            color: "#152b48",
+            fontWeight: "900",
+            pb: 1,
+          }}
+        >
+          <SwapHorizIcon fontSize="large" /> Broadcast Swap
+        </DialogTitle>
+        <DialogContent sx={{ pb: 1 }}>
+          <DialogContentText
+            sx={{
+              fontSize: "1rem",
+              color: "#152b48",
+              fontWeight: 500,
+              mb: 3,
+            }}
+          >
+            Broadcast a swap request for <strong>{courseToSwap?.courseName}</strong>.
+            <br />
+            <Typography variant="caption" color="text.secondary">
+              Current group: {courseToSwap?.currentGroup}
+            </Typography>
+          </DialogContentText>
+
+          <FormControl fullWidth variant="outlined">
+            <InputLabel shrink={true} id="swap-group-label">
+              Target Group
+            </InputLabel>
+            <Select
+              labelId="swap-group-label"
+              value={targetGroupSwap}
+              onChange={(e) => setTargetGroupSwap(e.target.value)}
+              displayEmpty
+              label="Target Group"
+              sx={{ borderRadius: "12px" }}
+              renderValue={(selected) =>
+                selected ? selected : <em>Choose target group</em>
+              }
+            >
+              <MenuItem disabled value="" sx={{ display: "none" }}>
+                <em>Choose target group</em>
+              </MenuItem>
+              {(() => {
+                const sGroupMap = {};
+                if (courseToSwap) {
+                  courseToSwap.availableGroupsData.forEach((g) => {
+                    const name = g.groupName || g.name || (typeof g === "string" ? g : "");
+                    if (name) {
+                      sGroupMap[name] = true;
+                    }
+                  });
+                }
+                const options = Object.keys(sGroupMap);
+
+                return options.map((grpName, index) => {
+                  const isCurrent = grpName === courseToSwap?.currentGroup;
+                  return (
+                    <MenuItem
+                      key={index}
+                      value={grpName}
+                      disabled={isCurrent}
+                      sx={{ p: 2, borderBottom: "1px solid #f1f5f9" }}
+                    >
+                      <Typography sx={{ fontWeight: 600 }}>{grpName} {isCurrent && "(Current)"}</Typography>
+                    </MenuItem>
+                  );
+                });
+              })()}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button
+            onClick={handleCloseSwapDialog}
+            disabled={isActionLoading}
+            sx={{
+              color: "text.secondary",
+              fontWeight: "bold",
+              textTransform: "none",
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmSwap}
+            disabled={isActionLoading || !targetGroupSwap}
+            variant="contained"
+            disableElevation
+            sx={{
+              borderRadius: "10px",
+              fontWeight: "bold",
+              px: 3,
+              backgroundColor: "#152b48",
+              textTransform: "none",
+              "&:hover": { backgroundColor: "#152b48" },
+            }}
+          >
+            {isActionLoading ? "Sending..." : "Request Swap"}
           </Button>
         </DialogActions>
       </Dialog>

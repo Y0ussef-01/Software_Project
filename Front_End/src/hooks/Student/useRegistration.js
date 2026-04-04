@@ -222,17 +222,18 @@ export default function useRegistration() {
     }
   };
 
-  const handleSwapRequest = async (courseId, receiverId) => {
-    if (!courseId || !receiverId) return;
+  const handleSwapRequest = async (courseId, targetGroupName) => {
+    if (!courseId || !targetGroupName) return;
     setIsActionLoading(true);
     try {
-      const payload = { courseId, receiverId };
+      const payload = { courseId, targetGroupName };
       const response = await axios.post(
         "http://localhost:5000/student/swap-request",
         payload,
         getAuthHeaders(),
       );
       toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
+      fetchData(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send swap request.");
     } finally {
@@ -254,7 +255,16 @@ export default function useRegistration() {
       toast.success(response.data.message || `Swap request ${action.toLowerCase()}!`, { autoClose: 2000 });
       fetchData(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to ${action.toLowerCase()} swap request.`);
+      const msg = error.response?.data?.message || "";
+      if (
+        (error.response?.status === 400 && msg.toLowerCase().includes("too late")) ||
+        error.response?.status === 404
+      ) {
+        toast.error("Too late! This request was already accepted by someone else.");
+      } else {
+        toast.error(msg || `Failed to ${action.toLowerCase()} swap request.`);
+      }
+      fetchPendingSwaps(); // Immediately refresh the list to omit the fulfilled request
     } finally {
       setIsActionLoading(false);
     }
