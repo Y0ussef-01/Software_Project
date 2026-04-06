@@ -274,7 +274,7 @@ export default function DashboardComp() {
                     <g>
                       <text
                         x={x}
-                        y={y - 50}
+                        y={y - 90}
                         textAnchor="middle"
                         fill={isDark ? "rgba(255,255,255,0.7)" : "#1e293b"}
                         fontSize={14}

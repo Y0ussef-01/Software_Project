@@ -5,12 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a755fb42-2169-4e45-ac2f-4bec3354194e.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Back_End/src/models/AcademicRecord.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Back_End/src/utils/gradeCalculator.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/admin.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/HomeDashBoard/DashboardComp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/HomeDashBoard/DashboardComp.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,11 +100,8 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Node.js.seedAdmin.js">
+  <component name="RunManager" selected="JavaScript Debug.localhost:5173">
     <configuration name="localhost:5173" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:5173/">
-      <method v="2" />
-    </configuration>
-    <configuration name="seedAdmin.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/Back_End/seedAdmin.js" working-dir="$PROJECT_DIR$/Back_End">
       <method v="2" />
     </configuration>
     <configuration name="server.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/Back_End/server.js" working-dir="$PROJECT_DIR$/Back_End">
@@ -114,7 +109,6 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Node.js.seedAdmin.js" />
         <item itemvalue="JavaScript Debug.localhost:5173" />
         <item itemvalue="Node.js.server.js" />
       </list>
@@ -244,7 +238,15 @@
       <workItem from="1774910889568" duration="213000" />
       <workItem from="1775213858518" duration="1472000" />
       <workItem from="1775226398825" duration="3056000" />
-      <workItem from="1775230597874" duration="708000" />
+      <workItem from="1775230597874" duration="1101000" />
+      <workItem from="1775239150250" duration="1314000" />
+      <workItem from="1775249929787" duration="1707000" />
+      <workItem from="1775263409795" duration="2217000" />
+      <workItem from="1775298997786" duration="1383000" />
+      <workItem from="1775303509203" duration="1084000" />
+      <workItem from="1775306151432" duration="114000" />
+      <workItem from="1775306330800" duration="952000" />
+      <workItem from="1775480215314" duration="1399000" />
     </task>
     <servers />
   </component>
