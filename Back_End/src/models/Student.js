@@ -10,6 +10,8 @@ const StudentSchema = new mongoose.Schema({
   department: { type: String, default: "عام" },
   grade: { type: String, default: "المستوي الاول" },
   GPA: { type: Number, default: 0 },
+  passedHours: { type: Number, default: 0 },
+  gpaHours: { type: Number, default: 0 },
   maxHours: { type: Number, default: 19 },
   pushToken: { type: String, default: null },
   expoPushToken: { type: String, default: null},

@@ -5,5 +5,9 @@ const getLetterGrade = (score) => {
     if (score < 85)  return 'Very Good';
     return 'Excellent';
 };
+const getCourseGPA = (score) => {
+    if (score < 60)  return 0;
+    return (score-50)/10;
+};
 
-module.exports = { getLetterGrade };
+module.exports = { getLetterGrade, getCourseGPA };

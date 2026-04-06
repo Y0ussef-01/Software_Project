@@ -6,6 +6,8 @@ const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const SwapRequest = require('../models/SwapRequest');
+const AcademicRecord = require('../models/AcademicRecord');
+const FinalResult    = require('../models/FinalResult');
 const sendPushNotification = require('../utils/sendPushNotification');
 const {isTimeConflict} = require('../utils/Test_Conflict');
 
@@ -632,6 +634,57 @@ const cancelSwapRequest = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+const getAcademicRecord = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+
+        const records = await AcademicRecord.find({ student: studentId })
+            .populate('course', 'name hours')
+            .sort({ uploadedAt: -1 });
+
+        res.status(200).json({
+            message: 'Academic record retrieved successfully',
+            totalCourses: records.length,
+            records: records.map(r => ({
+                courseId:   r.course._id,
+                courseName: r.course.name,
+                hours:      r.course.hours,
+                score:      r.score,
+                grade:      r.grade,
+                status:     r.status,
+                uploadedAt: r.uploadedAt
+            }))
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const getFinalResults = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+
+        const results = await FinalResult.find({ student: studentId })
+            .populate('course', 'name hours')
+            .sort({ expiresAt: -1 });
+
+        res.status(200).json({
+            message: 'Final results retrieved successfully',
+            results: results.map(r => ({
+                courseId:   r.course._id,
+                courseName: r.course.name,
+                hours:      r.course.hours,
+                score:      r.score,
+                grade:      r.grade,
+                status:     r.status,
+                expiresAt:  r.expiresAt
+            }))
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
@@ -648,5 +701,7 @@ module.exports = {
     getNotifications,
     markAllRead,
     registerAttendance,
-    cancelSwapRequest
+    cancelSwapRequest,
+    getAcademicRecord,   // جديد
+    getFinalResults      // جديد
 };

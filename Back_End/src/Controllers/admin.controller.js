@@ -1,7 +1,14 @@
 const Student = require("../models/Student");
 const Teacher = require("../models/Teacher");
 const Admin = require("../models/Admin");
+const Course = require("../models/Course");
+const Group = require("../models/Group");
+const AcademicRecord = require('../models/AcademicRecord');
+const FinalResult = require('../models/FinalResult');
+const Notification = require('../models/Notification');
+const { getLetterGrade, getCourseGPA } = require("../utils/gradeCalculator");const sendPushNotification = require('../utils/sendPushNotification');
 const bcrypt = require("bcrypt");
+const xlsx = require('xlsx');
 
 const addStudent = async (req, res) => {
   try {
@@ -21,8 +28,8 @@ const addStudent = async (req, res) => {
 
     await newStudent.save();
     res
-      .status(201)
-      .json({ message: "added student successfully", student: newStudent });
+        .status(201)
+        .json({ message: "added student successfully", student: newStudent });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -114,8 +121,8 @@ const addTeacher = async (req, res) => {
 
     await newTeacher.save();
     res
-      .status(201)
-      .json({ message: "added Teacher Successfully", teacher: newTeacher });
+        .status(201)
+        .json({ message: "added Teacher Successfully", teacher: newTeacher });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -198,8 +205,8 @@ const addAdmin = async (req, res) => {
 
     await newAdmin.save();
     res
-      .status(201)
-      .json({ message: "Admin added successfully", admin: newAdmin });
+        .status(201)
+        .json({ message: "Admin added successfully", admin: newAdmin });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -211,8 +218,8 @@ const updatePassword = async (req, res) => {
 
     if (!oldPassword || !newPassword) {
       return res
-        .status(400)
-        .json({ message: "Please enter old and new password" });
+          .status(400)
+          .json({ message: "Please enter old and new password" });
     }
 
     const admin = await Admin.findById(req.user.id).select("+password");
@@ -240,9 +247,9 @@ const updateProfileImg = async (req, res) => {
     const { profileImg } = req.body;
 
     const admin = await Admin.findByIdAndUpdate(
-      req.user.id,
-      { profileImg },
-      { new: true, runValidators: true },
+        req.user.id,
+        { profileImg },
+        { new: true, runValidators: true },
     );
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
@@ -263,8 +270,6 @@ const getAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-const Course = require("../models/Course");
-const Group = require("../models/Group");
 
 const assignStudentCourse = async (req, res) => {
   try {
@@ -302,6 +307,7 @@ const assignStudentCourse = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const dropStudentCourse = async (req, res) => {
   try {
     const { studentId, courseId } = req.body;
@@ -355,6 +361,7 @@ const assignTeacherCourse = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const removeTeacherCourse = async (req, res) => {
   try {
     const { teacherId, courseId, groupName } = req.body;
@@ -373,6 +380,7 @@ const removeTeacherCourse = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const getDashboardStats = async (req, res) => {
   try {
     const [totalStudents, totalTeachers, totalCourses, gpaResult, studentsPerCourse] = await Promise.all([
@@ -418,6 +426,268 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+const uploadFinalGrades = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    const file = req.file || (req.files && req.files[0]);
+
+    if (!file)     return res.status(400).json({ message: 'Please upload a file' });
+    if (!courseId) return res.status(400).json({ message: 'courseId is required' });
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+    const rows     = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+
+    if (!rows || rows.length === 0)
+      return res.status(400).json({ message: 'File is empty' });
+
+    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id'];
+    const scoreColumns    = ['final', 'final_grade', 'total', 'score', 'final score', 'final grade'];
+
+    const ONE_WEEK  = 7 * 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + ONE_WEEK);
+
+    const results       = [];
+    const notifStudents = [];
+
+    for (let row of rows) {
+      const rowKeys = Object.keys(row);
+
+      let studentId = null;
+      for (let key of rowKeys) {
+        if (idPossibleNames.includes(key.toLowerCase().trim())) {
+          studentId = String(row[key]).trim();
+          break;
+        }
+      }
+      if (!studentId || studentId === "") continue;
+
+      let score = null;
+      for (let key of rowKeys) {
+        if (scoreColumns.includes(key.toLowerCase().trim())) {
+          const parsed = parseFloat(row[key]);
+          if (!isNaN(parsed)) { score = parsed; break; }
+        }
+      }
+      if (score === null) {
+        for (let key of rowKeys) {
+          if (idPossibleNames.includes(key.toLowerCase().trim())) continue;
+          const parsed = parseFloat(row[key]);
+          if (!isNaN(parsed)) { score = parsed; break; }
+        }
+      }
+      if (score === null) continue;
+
+      const grade  = getLetterGrade(score);
+      const status = grade === 'Fail' ? 'Failed' : 'Passed';
+
+      const student = await Student.findById(studentId);
+      if (!student) continue;
+
+      const previousFail = await AcademicRecord.findOne({
+        student: studentId,
+        course:  courseId,
+        status:  'Failed'
+      });
+
+      const alreadyPassedInRecord = await AcademicRecord.findOne({
+        student: studentId,
+        course:  courseId,
+        status:  'Passed'
+      });
+
+      if (!alreadyPassedInRecord) {
+        await AcademicRecord.create({
+          student: studentId,
+          course: courseId,
+          score,
+          grade,
+          status,
+          uploadedAt: new Date()
+        });
+      }
+
+      await FinalResult.findOneAndUpdate(
+          { student: studentId, course: courseId },
+          { score, grade, status, expiresAt },
+          { upsert: true, new: true }
+      );
+
+      const courseGPA = getCourseGPA(score);
+      const currentCoursePoints = courseGPA * course.hours;
+
+      const oldTotalPoints = (student.GPA || 0) * (student.gpaHours || 0);
+
+      if (status === 'Passed') {
+        const alreadyPassed = student.passedCourses.some(pc => pc.course === courseId);
+        if (!alreadyPassed) {
+          let newGpaHours = student.gpaHours || 0;
+
+          if (previousFail) {
+            student.passedHours = (student.passedHours || 0) + course.hours;
+          } else {
+            newGpaHours += course.hours;
+            student.passedHours = (student.passedHours || 0) + course.hours;
+          }
+
+          const newTotalPoints = oldTotalPoints + currentCoursePoints;
+          student.GPA = parseFloat((newTotalPoints / newGpaHours).toFixed(2));
+          student.gpaHours = newGpaHours;
+
+          student.passedCourses.push({ course: courseId, degree: grade });
+        }
+      } else if (status === 'Failed') {
+        if (!previousFail) {
+          const newGpaHours = (student.gpaHours || 0) + course.hours;
+          const newTotalPoints = oldTotalPoints;
+
+          student.GPA = parseFloat((newTotalPoints / newGpaHours).toFixed(2));
+          student.gpaHours = newGpaHours;
+        }
+      }
+
+      const wasRegistered = student.registeredCourses.some(rc => rc.course === courseId);
+      if (wasRegistered) {
+        const groupsToDrop = student.registeredCourses
+            .filter(rc => rc.course === courseId)
+            .map(rc => rc.group);
+
+        await Group.updateMany(
+            { _id: { $in: groupsToDrop } },
+            { $pull: { enrolledStudents: studentId } }
+        );
+
+        student.registeredCourses = student.registeredCourses.filter(rc => rc.course !== courseId);
+        student.hours -= course.hours;
+      }
+
+      await student.save();
+
+      notifStudents.push({ id: studentId, pushToken: student.pushToken });
+      results.push({ studentId, score, grade, status });
+    }
+
+    if (notifStudents.length > 0) {
+      const notifDocs = notifStudents.map(s => ({
+        studentId: s.id,
+        title: '🔔 Final Results Published',
+        body:  `Your final result for ${course.name} has been posted. Check your results now!`
+      }));
+      await Notification.insertMany(notifDocs);
+
+      const tokens = notifStudents
+          .map(s => s.pushToken)
+          .filter(t => t && t !== 'null');
+
+      if (tokens.length > 0) {
+        await sendPushNotification(
+            tokens,
+            '🔔 Final Results Published',
+            `Your final result for ${course.name} has been posted!`
+        );
+      }
+    }
+
+    res.status(200).json({
+      message:   'Final grades uploaded successfully',
+      processed: results.length,
+      results
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const uploadStudentsExcel = async (req, res) => {
+  try {
+    const file = req.file || (req.files && req.files[0]);
+    if (!file) return res.status(400).json({ message: 'Please upload an Excel file' });
+
+    const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = xlsx.utils.sheet_to_json(sheet, { defval: "" });
+
+    if (!rows || rows.length === 0) {
+      return res.status(400).json({ message: 'File is empty' });
+    }
+
+    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'الكود', 'رقم الجلوس'];
+    const namePossibleNames = ['name', 'student_name', 'student name', 'الاسم', 'اسم الطالب'];
+    const passPossibleNames = ['password', 'pass', 'الرقم السري', 'الباسورد'];
+
+    const bulkOps = [];
+
+    for (let row of rows) {
+      const rowKeys = Object.keys(row);
+
+      let studentId = null;
+      let name = "Unknown Student";
+      let password = null;
+
+      for (let key of rowKeys) {
+        if (idPossibleNames.includes(key.toLowerCase().trim())) {
+          studentId = String(row[key]).trim();
+          break;
+        }
+      }
+      if (!studentId || studentId === "") continue; // لو مفيش ID نتجاهل الصف ده
+
+      for (let key of rowKeys) {
+        if (namePossibleNames.includes(key.toLowerCase().trim())) {
+          name = String(row[key]).trim();
+          break;
+        }
+      }
+
+      for (let key of rowKeys) {
+        if (passPossibleNames.includes(key.toLowerCase().trim())) {
+          password = String(row[key]).trim();
+          break;
+        }
+      }
+
+      if (!password || password === "") {
+        password = studentId;
+      }
+
+      const email = `20${studentId}@std.sci.cu.edu.eg`;
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: studentId },
+          update: {
+            $setOnInsert: {
+              _id: studentId,
+              name: name,
+              email: email,
+              password: hashedPassword,
+            }
+          },
+          upsert: true
+        }
+      });
+    }
+
+    if (bulkOps.length === 0) {
+      return res.status(400).json({ message: 'No valid student data found in the file' });
+    }
+
+    await Student.bulkWrite(bulkOps);
+
+    res.status(200).json({
+      message: 'Students uploaded successfully',
+      processedCount: bulkOps.length
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   addStudent,
   deleteStudent,
@@ -435,6 +705,7 @@ module.exports = {
   dropStudentCourse,
   assignTeacherCourse,
   removeTeacherCourse,
-  getDashboardStats
+  getDashboardStats,
+  uploadFinalGrades,
+  uploadStudentsExcel
 };
-
