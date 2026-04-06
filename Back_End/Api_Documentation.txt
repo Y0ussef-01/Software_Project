@@ -22,7 +22,10 @@ Base URL: http://localhost:5000
     "profileImg": "default-student.jpg",
     "department": "Computer Science",
     "grade": "??????? ??????",
-    "hours": 0
+    "hours": 0,
+    "GPA": 0,
+    "passedHours": 0,
+    "gpaHours": 0
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
   "role": "student"
@@ -95,7 +98,7 @@ Base URL: http://localhost:5000
   "hours": 0
 }
 
-[7] Get My Grades
+[7] Get My Grades (Current Term Degrees)
 - Endpoint: /student/grades
 - Method: GET
 - Request Body: None
@@ -212,7 +215,7 @@ Base URL: http://localhost:5000
 [15] Respond To Swap Request
 - Endpoint: /student/swap-respond
 - Method: POST
-- Description: Accepts or Rejects a pending swap request. If accepted, it checks for time conflicts, executes the swap, and automatically clears all other related pending requests. Prevents race conditions if multiple students try to accept simultaneously.
+- Description: Accepts or Rejects a pending swap request. Overrides capacities but checks for time conflicts.
 - Request Body:
 {
   "requestId": "swapReq123",
@@ -234,6 +237,67 @@ Base URL: http://localhost:5000
 - Response (200 OK):
 {
   "message": "Swap request cancelled successfully"
+}
+
+[17] Get Academic Record (Permanent)
+- Endpoint: /student/academic-record
+- Method: GET
+- Description: Retrieves the permanent academic record of the student (courses passed/failed).
+- Response (200 OK):
+{
+  "message": "Academic record retrieved successfully",
+  "totalCourses": 1,
+  "records": [
+    {
+      "courseId": "CS101",
+      "courseName": "Intro to CS",
+      "hours": 3,
+      "score": 85,
+      "grade": "Very Good",
+      "status": "Passed",
+      "uploadedAt": "2026-06-15T..."
+    }
+  ]
+}
+
+[18] Get Final Results (Temporary)
+- Endpoint: /student/final-results
+- Method: GET
+- Description: Retrieves the temporary final results (expires 1 week after upload).
+- Response (200 OK):
+{
+  "message": "Final results retrieved successfully",
+  "results": [
+    {
+      "courseId": "CS101",
+      "courseName": "Intro to CS",
+      "hours": 3,
+      "score": 85,
+      "grade": "Very Good",
+      "status": "Passed",
+      "expiresAt": "2026-06-22T..."
+    }
+  ]
+}
+
+[19] Generate Schedules
+- Endpoint: /student/generate-schedules
+- Method: POST
+- Description: Generates valid schedule combinations without time conflicts for an array of courses. Filters out full groups.
+- Request Body:
+{
+  "courseIds": ["CS101", "MA101"]
+}
+- Response (200 OK):
+{
+  "message": "Schedules generated successfully",
+  "totalValidSchedules": 4,
+  "schedules": [
+    [
+      { "courseId": "CS101", "groupName": "G1", "details": [...] },
+      { "courseId": "MA101", "groupName": "G3", "details": [...] }
+    ]
+  ]
 }
 
 --------------------------------------------------------------------
@@ -274,13 +338,13 @@ Base URL: http://localhost:5000
 - Response (200 OK):
 { "message": "Password updated successfully" }
 
-[4] Upload Grades Excel
+[4] Upload Term Grades Excel
 - Endpoint: /teacher/upload-grades-excel
 - Method: POST
 - Content-Type: multipart/form-data
 - Request Body: (Form Data)
   - courseId: "CS101"
-  - excelFile: <Attached Excel File>
+  - file: <Attached Excel File>
 - Response (200 OK):
 { "message": "Updated Successfully" }
 
@@ -322,20 +386,7 @@ Base URL: http://localhost:5000
 - Request Params: groupId (Format: courseId-groupName-type)
 - Query Params (Required): ?sessionNumber=X (e.g., ?sessionNumber=1)
 - Response (200 OK):
-[
-  {
-    "_id": "att123",
-    "group": "CS101-G1-Lecture",
-    "student": {
-      "_id": "2327443",
-      "name": "Youssef Ashraf Mahmoud"
-    },
-    "deviceId": "device-uuid-123",
-    "sessionNumber": 1,
-    "date": "2026-03-14T00:00:00.000Z",
-    "timestamp": "2026-03-14T10:05:00.000Z"
-  }
-]
+[ ... ]
 
 [8] Send Course Notification
 - Endpoint: /teacher/send-notification
@@ -344,7 +395,7 @@ Base URL: http://localhost:5000
 - Request Body:
 {
   "courseId": "CS101",
-  "groupIds": ["groupId1", "groupId2"], // Optional. If omitted, sends to all groups the teacher is assigned to for this course.
+  "groupIds": ["groupId1", "groupId2"],
   "title": "Lecture Canceled",
   "body": "Tomorrow's lecture is canceled due to bad weather."
 }
@@ -372,7 +423,7 @@ Base URL: http://localhost:5000
 --------------------------------------------------------------------
 --- 4.A Student Management ---
 
-[1] Add Student
+[1] Add Single Student
 - Endpoint: /admin/add-student
 - Method: POST
 - Request Body:
@@ -384,13 +435,26 @@ Base URL: http://localhost:5000
 - Response (201 Created):
 { "message": "added student successfully", "student": { ... } }
 
-[2] Get Student
+[2] Bulk Upload Students (Excel)
+- Endpoint: /admin/upload-students
+- Method: POST
+- Content-Type: multipart/form-data
+- Description: Uploads multiple students via Excel. Handles missing passwords by defaulting to the student ID.
+- Request Body: (Form Data)
+  - file: <Attached Excel File>
+- Response (200 OK):
+{
+  "message": "Students uploaded successfully",
+  "processedCount": 150
+}
+
+[3] Get Student
 - Endpoint: /admin/student/:id
 - Method: GET
 - Request Params: id (Student ID in the URL)
 - Response (200 OK): Returns student data along with their courses.
 
-[3] Update Student
+[4] Update Student
 - Endpoint: /admin/update-student/:id
 - Method: PUT
 - Request Params: id (Student ID in the URL)
@@ -403,7 +467,7 @@ Base URL: http://localhost:5000
 - Response (200 OK):
 { "message": "updated successfully", "student": { ... } }
 
-[4] Delete Student
+[5] Delete Student
 - Endpoint: /admin/delete-student/:id
 - Method: DELETE
 - Request Params: id (Student ID in the URL)
@@ -530,8 +594,7 @@ Base URL: http://localhost:5000
 [1] Add Group
 - Endpoint: /admin/add-group
 - Method: POST
-- Description: Adds a new group. Validates time conflicts for different types (Lecture vs Lab) in the same course.
-- Note: Time accepts 12-hour format (AM/PM) and Day is preferred to be lowercase.
+- Description: Adds a new group. Validates time conflicts.
 - Request Body:
 {
   "courseId": "CS101",
@@ -551,7 +614,7 @@ Base URL: http://localhost:5000
 [2] Delete Group
 - Endpoint: /admin/delete-group/:id
 - Method: DELETE
-- Request Params: id (Group ID in the URL - Format: courseId-groupName-type)
+- Request Params: id (Group ID in the URL)
 - Response (200 OK):
 { "message": "The Group has been deleted successfully" }
 
@@ -560,7 +623,7 @@ Base URL: http://localhost:5000
 [1] Assign Course to Student
 - Endpoint: /admin/assign-student-course
 - Method: POST
-- Description: Allows Admin to forcefully assign a course to a student, bypassing max hours and time conflicts.
+- Description: Allows Admin to forcefully assign a course to a student.
 - Request Body:
 {
   "studentId": "2327443",
@@ -585,7 +648,6 @@ Base URL: http://localhost:5000
 [3] Assign Course/Group to Teacher
 - Endpoint: /admin/assign-teacher-course
 - Method: POST
-- Description: Allows Admin to assign a specific group of a course to a teacher.
 - Request Body:
 {
   "teacherId": "T-1",
@@ -598,7 +660,6 @@ Base URL: http://localhost:5000
 [4] Remove Course/Group from Teacher
 - Endpoint: /admin/remove-teacher-course
 - Method: DELETE
-- Description: Allows Admin to remove a specific group of a course from a teacher's schedule.
 - Request Body:
 {
   "teacherId": "T-1",
@@ -608,12 +669,12 @@ Base URL: http://localhost:5000
 - Response (200 OK):
 { "message": "Course removed from teacher successfully" }
 
---- 4.G Dashboard & Statistics ---
+--- 4.G Dashboard & Final Results ---
 
 [1] Get Dashboard Statistics
 - Endpoint: /admin/dashboard-stats
 - Method: GET
-- Description: Retrieves comprehensive statistics for the admin dashboard including total counts and students per course.
+- Description: Retrieves comprehensive statistics for the admin dashboard.
 - Request Body: None
 - Response (200 OK):
 {
@@ -623,28 +684,21 @@ Base URL: http://localhost:5000
     "totalTeachers": 45,
     "totalCourses": 30,
     "averageGPA": 2.85,
-    "studentsPerCourse": [
-      {
-        "courseId": "CS101",
-        "courseName": "Introduction to Computer Science",
-        "enrolledStudentsCount": 150
-      },
-      {
-        "courseId": "MA101",
-        "courseName": "Calculus I",
-        "enrolledStudentsCount": 142
-      }
-    ]
+    "studentsPerCourse": [ ... ]
   }
 }
 
-[2] Get Overall Average GPA
-- Endpoint: /admin/average-gpa
-- Method: GET
-- Description: Retrieves only the overall average GPA of all students.
-- Request Body: None
+[2] Upload Final Grades (Excel)
+- Endpoint: /admin/upload-final-grades
+- Method: POST
+- Content-Type: multipart/form-data
+- Description: Uploads final grades, updates Academic Records, calculates dynamic GPA (accounting for fails/retakes), and sends push notifications.
+- Request Body: (Form Data)
+  - courseId: "CS101"
+  - file: <Attached Excel File>
 - Response (200 OK):
 {
-  "message": "Overall Average GPA calculated successfully",
-  "averageGPA": 2.85
+  "message": "Final grades uploaded successfully",
+  "processed": 120,
+  "results": [ ... ]
 }

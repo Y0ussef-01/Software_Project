@@ -685,6 +685,111 @@ const getFinalResults = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+const generateSchedules = async (req, res) => {
+    try {
+        const { courseIds } = req.body;
+
+        if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0) {
+            return res.status(400).json({ message: 'Please provide an array of courseIds' });
+        }
+
+        const allGroups = await Group.find({ course: { $in: courseIds } });
+
+        const courseGroups = {};
+        for (let courseId of courseIds) {
+            courseGroups[courseId] = {};
+        }
+
+        for (let group of allGroups) {
+            if (group.enrolledStudents.length >= group.capacity) continue;
+
+            if (!courseGroups[group.course][group.groupName]) {
+                courseGroups[group.course][group.groupName] = [];
+            }
+            courseGroups[group.course][group.groupName].push(group);
+        }
+
+        const courseOptions = [];
+        for (let courseId of courseIds) {
+            const options = Object.keys(courseGroups[courseId]);
+            if (options.length === 0) {
+                return res.status(400).json({ message: `No available groups with free spots found for course ${courseId}` });
+            }
+            courseOptions.push(
+                options.map(groupName => ({
+                    courseId,
+                    groupName,
+                    docs: courseGroups[courseId][groupName]
+                }))
+            );
+        }
+
+        const validSchedules = [];
+
+        const backtrack = (courseIndex, currentSchedule, currentAppointments) => {
+            if (courseIndex === courseOptions.length) {
+                validSchedules.push([...currentSchedule]);
+                return;
+            }
+
+            const optionsForCurrentCourse = courseOptions[courseIndex];
+
+            for (let option of optionsForCurrentCourse) {
+                let hasConflict = false;
+                const optionAppointments = option.docs.map(doc => doc.appointment);
+
+                for (let newApp of optionAppointments) {
+                    for (let existApp of currentAppointments) {
+                        if (isTimeConflict(newApp, existApp)) {
+                            hasConflict = true;
+                            break;
+                        }
+                    }
+                    if (hasConflict) break;
+                }
+
+                if (!hasConflict) {
+                    const scheduleChoice = {
+                        courseId: option.courseId,
+                        groupName: option.groupName,
+                        details: option.docs.map(d => ({
+                            type: d.type,
+                            Room: d.Room,
+                            day: d.appointment.day,
+                            startTime: d.appointment.startTime,
+                            endTime: d.appointment.endTime
+                        }))
+                    };
+
+                    currentSchedule.push(scheduleChoice);
+                    for (let app of optionAppointments) {
+                        currentAppointments.push(app);
+                    }
+
+                    backtrack(courseIndex + 1, currentSchedule, currentAppointments);
+
+                    currentSchedule.pop();
+                    for (let i = 0; i < optionAppointments.length; i++) {
+                        currentAppointments.pop();
+                    }
+                }
+            }
+        };
+
+        backtrack(0, [], []);
+
+        res.status(200).json({
+            message: 'Schedules generated successfully',
+            totalValidSchedules: validSchedules.length,
+            schedules: validSchedules
+        });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
