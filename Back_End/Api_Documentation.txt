@@ -280,10 +280,10 @@ Base URL: http://localhost:5000
   ]
 }
 
-[19] Generate Schedules
+[19] Generate Schedules (Schedule Tool)
 - Endpoint: /student/generate-schedules
 - Method: POST
-- Description: Generates valid schedule combinations without time conflicts for an array of courses. Filters out full groups.
+- Description: Generates valid schedule combinations without time conflicts for an array of courses. Filters out full groups. Acts purely as a calculator tool.
 - Request Body:
 {
   "courseIds": ["CS101", "MA101"]
@@ -297,6 +297,43 @@ Base URL: http://localhost:5000
       { "courseId": "CS101", "groupName": "G1", "details": [...] },
       { "courseId": "MA101", "groupName": "G3", "details": [...] }
     ]
+  ]
+}
+
+[20] Get Student Course Analytics (For AI Integration)
+- Endpoint: /student/analytics/:courseId
+- Method: GET
+- Description: Generates the specific JSON payload required by the AI model for performance evaluation. Extracts "outOf" grades dynamically using Regex from assessment titles (e.g., "Quiz 1 / 10"). Computes absolute attendance history based on group sessions.
+- Request Params: courseId (Course ID in the URL)
+- Response (200 OK):
+{
+  "student": {
+    "id": "2327443",
+    "name": "Youssef Ashraf Mahmoud"
+  },
+  "course": {
+    "id": "CS101",
+    "name": "Introduction to CS",
+    "totalSessions": 20
+  },
+  "attendance": {
+    "attended": 16,
+    "absent": 4,
+    "percentage": 80,
+    "history": [
+      { "date": "2026-03-01", "status": "present" },
+      { "date": "2026-03-08", "status": "absent" }
+    ]
+  },
+  "grades": {
+    "midterm": { "score": 35, "outOf": 40 },
+    "final": { "score": null, "outOf": 60 },
+    "assignments": { "score": 18, "outOf": 20 },
+    "total": { "score": 53, "outOf": 100 }
+  },
+  "quizzes": [
+    { "name": "Quiz 1", "score": 8, "outOf": 10, "date": "2024-03-01" },
+    { "name": "Quiz 2", "score": 6, "outOf": 10, "date": "2024-03-01" }
   ]
 }
 
@@ -439,13 +476,14 @@ Base URL: http://localhost:5000
 - Endpoint: /admin/upload-students
 - Method: POST
 - Content-Type: multipart/form-data
-- Description: Uploads multiple students via Excel. Handles missing passwords by defaulting to the student ID.
+- Description: Uploads multiple students via Excel. Handles missing passwords by defaulting to the student ID. Sends welcome emails asynchronously.
 - Request Body: (Form Data)
   - file: <Attached Excel File>
 - Response (200 OK):
 {
-  "message": "Students uploaded successfully",
-  "processedCount": 150
+  "message": "Students uploaded successfully. Emails are being sent in the background.",
+  "totalProcessed": 150,
+  "newStudentsAdded": 150
 }
 
 [3] Get Student

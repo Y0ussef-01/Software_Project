@@ -1,3 +1,6 @@
+// =========================================
+// File: ./src/Controllers/student.controller.js
+// =========================================
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
 const Course = require('../models/Course');
@@ -355,7 +358,6 @@ const switchGroup = async (req, res) => {
             }
         }
 
-
         const otherGroupIds = student.registeredCourses
             .filter(rc => rc.course !== courseId)
             .map(rc => rc.group);
@@ -588,7 +590,7 @@ const respondToSwapRequest = async (req, res) => {
         swapRequest.status = 'Accepted';
         await swapRequest.save();
 
-        const notifTitle = "Swap Request Accepted ✅";
+        const notifTitle = "Swap Request Accepted ?";
         const notifBody = `Your swap request for course ${swapRequest.courseId} was accepted by ${receiver.name}. You are now moved to group ${swapRequest.receiverGroupName}.`;
 
         const newNotification = new Notification({
@@ -790,6 +792,142 @@ const generateSchedules = async (req, res) => {
     }
 };
 
+const getStudentCourseAnalytics = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { courseId } = req.params;
+
+        const student = await Student.findById(studentId).populate('registeredCourses.course');
+        const course = await Course.findById(courseId);
+
+        if (!student || !course) {
+            return res.status(404).json({ message: "Student or Course not found" });
+        }
+
+        const registeredCourse = student.registeredCourses.find(rc =>
+            rc.course && rc.course._id.toString() === courseId
+        );
+
+        if (!registeredCourse) {
+            return res.status(400).json({ message: "You are not registered in this course" });
+        }
+
+        const groupId = registeredCourse.group;
+
+        const allGroupAttendances = await Attendance.find({ group: groupId }).sort({ sessionNumber: 1 });
+
+        const sessionMap = new Map();
+        allGroupAttendances.forEach(att => {
+            if (!sessionMap.has(att.sessionNumber)) {
+                sessionMap.set(att.sessionNumber, att.date.toISOString().split('T')[0]);
+            }
+        });
+
+        const totalSessions = sessionMap.size;
+
+        const studentAttendances = await Attendance.find({ student: studentId, group: groupId });
+        const attendedSessionNumbers = new Set(studentAttendances.map(a => a.sessionNumber));
+
+        const attended = studentAttendances.length;
+        const absent = totalSessions - attended;
+        const percentage = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : 0;
+
+        const history = [];
+        for (let [sessionNum, date] of sessionMap.entries()) {
+            history.push({
+                date: date,
+                status: attendedSessionNumbers.has(sessionNum) ? "present" : "absent"
+            });
+        }
+
+        const degrees = registeredCourse.Degrees || [];
+
+        let grades = {
+            midterm: { score: null, outOf: 40 },
+            final: { score: null, outOf: 60 },
+            assignments: { score: null, outOf: 20 },
+            total: { score: null, outOf: 100 }
+        };
+        let quizzes = [];
+        let calculatedTotal = 0;
+
+        degrees.forEach(deg => {
+            let actualTitle = deg.title.trim();
+            let outOfValue = 10;
+
+            const regexMatch = actualTitle.match(/([_\/\-\|\s\(]+)(\d+)\s*\)?$/);
+
+            if (regexMatch) {
+                const extractedOutOf = parseInt(regexMatch[2], 10);
+
+                if (extractedOutOf >= deg.score && extractedOutOf !== 0) {
+                    outOfValue = extractedOutOf;
+                    actualTitle = actualTitle.substring(0, regexMatch.index).trim();
+                }
+            }
+
+            const titleLower = actualTitle.toLowerCase();
+
+            if (titleLower.includes('midterm') || titleLower.includes('ميد')) {
+                grades.midterm.score = deg.score;
+                grades.midterm.outOf = outOfValue;
+                calculatedTotal += deg.score;
+            }
+            else if (titleLower.includes('final') || titleLower.includes('فاينل') || titleLower.includes('نهائي')) {
+                grades.final.score = deg.score;
+                grades.final.outOf = outOfValue;
+                calculatedTotal += deg.score;
+            }
+            else if (titleLower.includes('assignment') || titleLower.includes('task') || titleLower.includes('تاسك')) {
+                grades.assignments.score = (grades.assignments.score || 0) + deg.score;
+                grades.assignments.outOf = outOfValue;
+                calculatedTotal += deg.score;
+            }
+            else if (titleLower.includes('quiz') || titleLower.includes('كويز')) {
+                quizzes.push({
+                    name: actualTitle,
+                    score: deg.score,
+                    outOf: outOfValue,
+                    date: "2024-03-01"
+                });
+                calculatedTotal += deg.score;
+            }
+        });
+
+        const finalResultDoc = await FinalResult.findOne({ student: studentId, course: courseId });
+        if (finalResultDoc) {
+            grades.total.score = finalResultDoc.score;
+        } else {
+            grades.total.score = calculatedTotal > 0 ? calculatedTotal : null;
+        }
+
+        const responsePayload = {
+            student: {
+                id: student._id,
+                name: student.name
+            },
+            course: {
+                id: course._id,
+                name: course.name,
+                totalSessions: totalSessions
+            },
+            attendance: {
+                attended,
+                absent,
+                percentage,
+                history
+            },
+            grades,
+            quizzes
+        };
+
+        res.status(200).json(responsePayload);
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
@@ -807,6 +945,8 @@ module.exports = {
     markAllRead,
     registerAttendance,
     cancelSwapRequest,
-    getAcademicRecord,   // جديد
-    getFinalResults      // جديد
+    getAcademicRecord,
+    getFinalResults,
+    generateSchedules,
+    getStudentCourseAnalytics
 };

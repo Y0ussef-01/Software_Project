@@ -35,4 +35,5 @@ router.delete('/swap-cancel',      studentAuth, controller.cancelSwapRequest);
 router.get('/academic-record', studentAuth, controller.getAcademicRecord);
 router.get('/final-results',   studentAuth, controller.getFinalResults);
 router.post('/generate-schedules', studentAuth, controller.generateSchedules);
+router.get('/analytics/:courseId', studentAuth, controller.getStudentCourseAnalytics);
 module.exports = router;
