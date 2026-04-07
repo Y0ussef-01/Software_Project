@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    FlatList, ActivityIndicator, StatusBar
+    FlatList, ActivityIndicator, StatusBar, RefreshControl
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { Stack } from 'expo-router';
-import API from '../api/axiosConfig';
+import { router, Stack } from 'expo-router';
+// استيراد الدالة المحسنة بالكاش
+import { getStudentProfile } from '../api/studentApi'; 
 
 interface Course {
     courseId: string;
@@ -16,20 +16,26 @@ interface Course {
 
 const AttendanceCourses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
+    // لو في بيانات متكاشة، مفيش داعي للـ Loading من أول ثانية
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        fetchCourses();
+        loadData();
     }, []);
 
-    const fetchCourses = async () => {
+    const loadData = async (isRefresh = false) => {
+        if (isRefresh) setRefreshing(true);
+        
         try {
-            const res = await API.get('/student/Profile');
-            const registeredCourses = res.data?.registeredCourses || [];
+            // نستخدم الدالة اللي فيها الـ Cache اللي عملناها سوا
+            const profileData = await getStudentProfile();
+            const registeredCourses = profileData?.registeredCourses || [];
 
             const lectureGroups: Course[] = [];
             const seen = new Set<string>();
 
+            // منطق الفلترة بتاعك (محاضرات فقط)
             registeredCourses.forEach((rc: any) => {
                 const courseId = rc.course?._id || rc.course || '';
                 const courseName = rc.course?.name || courseId;
@@ -41,37 +47,26 @@ const AttendanceCourses = () => {
                 }
             });
 
-            if (lectureGroups.length === 0) {
-                const allCourses: Course[] = [];
-                const seenAll = new Set<string>();
-                registeredCourses.forEach((rc: any) => {
-                    const courseId = rc.course?._id || rc.course || '';
-                    const courseName = rc.course?.name || courseId;
-                    const groupName = rc.group?.groupName || rc.group?.name || rc.groupName || '';
-                    if (!seenAll.has(courseId)) {
-                        seenAll.add(courseId);
-                        allCourses.push({ courseId, courseName, groupName });
-                    }
-                });
-                setCourses(allCourses);
-            } else {
-                setCourses(lectureGroups);
-            }
+            const finalData = lectureGroups.length > 0 ? lectureGroups : 
+                registeredCourses.map((rc: any) => ({
+                    courseId: rc.course?._id || rc.course || '',
+                    courseName: rc.course?.name || '',
+                    groupName: rc.group?.groupName || ''
+                }));
+
+            setCourses(finalData);
         } catch (err) {
-            console.log('Error fetching courses:', err);
+            console.log('Error loading courses:', err);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
     const handleCoursePress = (course: Course) => {
         router.push({
             pathname: '/scanqr' as any,
-            params: {
-                courseId: course.courseId,
-                courseName: course.courseName,
-                groupName: course.groupName,
-            }
+            params: { ...course }
         });
     };
 
@@ -80,7 +75,6 @@ const AttendanceCourses = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
@@ -92,30 +86,25 @@ const AttendanceCourses = () => {
             <View style={styles.content}>
                 <Text style={styles.subtitle}>Select a course to scan QR</Text>
 
-                {loading ? (
+                {loading && courses.length === 0 ? (
                     <ActivityIndicator size="large" color="rgb(23, 42, 70)" style={{ marginTop: 40 }} />
-                ) : courses.length === 0 ? (
-                    <View style={styles.emptyContainer}>
-                        <MaterialCommunityIcons name="book-off-outline" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>No courses registered</Text>
-                    </View>
                 ) : (
                     <FlatList
                         data={courses}
-                        keyExtractor={(item) => item.courseId}
+                        keyExtractor={(item, index) => item.courseId + index}
                         contentContainerStyle={{ paddingBottom: 30 }}
+                        // إضافة ميزة شد الشاشة للتحديث
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />
+                        }
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.courseCard}
                                 onPress={() => handleCoursePress(item)}
-                                activeOpacity={0.85}
+                                activeOpacity={0.7}
                             >
                                 <View style={styles.courseIconContainer}>
-                                    <MaterialCommunityIcons
-                                        name="qrcode-scan"
-                                        size={30}
-                                        color="rgb(23, 42, 70)"
-                                    />
+                                    <MaterialCommunityIcons name="qrcode-scan" size={28} color="rgb(23, 42, 70)" />
                                 </View>
                                 <View style={styles.courseInfo}>
                                     <Text style={styles.courseName}>{item.courseName}</Text>
@@ -124,6 +113,12 @@ const AttendanceCourses = () => {
                                 <MaterialCommunityIcons name="chevron-right" size={24} color="#ccc" />
                             </TouchableOpacity>
                         )}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <MaterialCommunityIcons name="book-off-outline" size={60} color="#ccc" />
+                                <Text style={styles.emptyText}>No courses found</Text>
+                            </View>
+                        }
                     />
                 )}
             </View>
