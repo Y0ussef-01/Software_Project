@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import API from '../api/axiosConfig';
-import { saveCache, getCache } from '../api/storage'; // استدعاء الدوال اللي أنت بعتها
+import { saveCache, getCache } from '../api/storage'; 
 
 interface Degree {
     title: string;
@@ -29,7 +29,6 @@ interface Course {
     Degrees: Degree[];
 }
 
-// مفتاح ثابت للكاش الخاص بهذه الصفحة
 const GRADES_CACHE_KEY = 'student_grades_cache';
 
 const StudentGrades = () => {
@@ -39,7 +38,6 @@ const StudentGrades = () => {
 
     const fetchGrades = async (isFirstLoad = false) => {
         try {
-            // 1. محاولة جلب البيانات من الكاش باستخدام الدالة العامة اللي عملتها
             if (isFirstLoad) {
                 const cachedData = await getCache(GRADES_CACHE_KEY);
                 if (cachedData) {
@@ -48,11 +46,9 @@ const StudentGrades = () => {
                 }
             }
 
-            // 2. طلب البيانات من السيرفر
             const res = await API.get('/student/grades');
             const rawGrades: Course[] = res.data?.grades || [];
 
-            // تجميع الدرجات لكل كورس (لو متكرر)
             const seen = new Map<string, Course>();
             rawGrades.forEach((c) => {
                 if (seen.has(c.courseId)) {
@@ -65,7 +61,6 @@ const StudentGrades = () => {
 
             const finalData = Array.from(seen.values());
 
-            // 3. تحديث الواجهة وحفظ الكاش الجديد
             setCourses(finalData);
             await saveCache(GRADES_CACHE_KEY, finalData);
 
