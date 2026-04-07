@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, FlatList,
-    ActivityIndicator, StatusBar, TextInput, ScrollView, Modal
+    ActivityIndicator, StatusBar, TextInput, ScrollView, Modal, Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { Stack } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import API from '../api/axiosConfig';
+// استيراد دالة الكاش الموحدة للمدرس
 import { getTeacherProfile } from '../api/teacherApi';
 
 interface AttendanceRecord {
@@ -35,13 +35,19 @@ const TeacherAttendance = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        fetchOptions();
-    }, []);
+    // --- التحديث عند دخول الشاشة باستخدام الكاش ---
+    useFocusEffect(
+        useCallback(() => {
+            fetchOptions();
+        }, [])
+    );
 
     const fetchOptions = async () => {
         try {
+            // جلب بيانات المدرس (سواء من الـ RAM أو التخزين المحلي أو السيرفر)
             const data = await getTeacherProfile();
+            
+            // معالجة البيانات للتأكد من الوصول للمواد والمجموعات بشكل صحيح
             const rawCourses = data?.user?.courses || data?.courses || [];
 
             const list: GroupOption[] = [];
@@ -51,7 +57,7 @@ const TeacherAttendance = () => {
                 const groupId = c.group?._id || '';
                 const groupNum = c.group?.groupName || '';
                 const groupType = c.group?.type || '';
-                const courseName = c.course?.name || c.course?._id || '';
+                const courseName = c.course?.name || c.course?._id || 'Unknown Course';
 
                 if (!groupId || seen.has(groupId)) return;
                 seen.add(groupId);
@@ -62,30 +68,26 @@ const TeacherAttendance = () => {
 
             setOptions(list);
         } catch (err) {
-            console.log('Error fetching options:', err);
+            console.log('❌ Error fetching attendance options:', err);
         } finally {
             setLoading(false);
         }
     };
 
     const handleSearch = async () => {
-        if (!selected) return;
-
-        if (sessionFilter.trim() === '') {
-            return;
-        }
+        if (!selected || sessionFilter.trim() === '') return;
 
         setSearching(true);
         setSearched(true);
         setCurrentPage(1);
         try {
+            // البحث عن سجلات الحضور (دائماً من السيرفر لضمان الدقة اللحظية)
             const res = await API.get(`/teacher/attendance/${selected.groupId}`, {
                 params: { sessionNumber: sessionFilter.trim() }
             });
-            const data: AttendanceRecord[] = res.data || [];
-            setRecords(data);
+            setRecords(res.data || []);
         } catch (err) {
-            console.log('Error fetching attendance:', err);
+            console.log('❌ Error fetching attendance records:', err);
             setRecords([]);
         } finally {
             setSearching(false);
@@ -100,6 +102,7 @@ const TeacherAttendance = () => {
         });
     };
 
+    // --- Pagination Logic ---
     const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
     const paginatedRecords = records.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
@@ -111,22 +114,25 @@ const TeacherAttendance = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <MaterialCommunityIcons name="arrow-left" size={28} color="white" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Attendance</Text>
-                <View style={{ width: 26 }} />
+                <Text style={styles.headerTitle}>Attendance Tracking</Text>
+                <View style={{ width: 45 }} />
             </View>
 
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
+                    <Text style={{ marginTop: 10, color: '#666' }}>Loading Groups...</Text>
                 </View>
             ) : (
                 <View style={{ flex: 1 }}>
+                    {/* Filter Card */}
                     <View style={styles.filtersCard}>
-                        <Text style={styles.label}>Select Lecture</Text>
+                        <Text style={styles.label}>Select Group / Lecture</Text>
                         <TouchableOpacity
                             style={styles.dropdown}
                             onPress={() => setModalVisible(true)}
@@ -135,15 +141,15 @@ const TeacherAttendance = () => {
                                 style={selected ? styles.dropdownSelected : styles.dropdownPlaceholder}
                                 numberOfLines={1}
                             >
-                                {selected ? selected.label : 'Select a lecture...'}
+                                {selected ? selected.label : 'Choose a group...'}
                             </Text>
-                            <MaterialCommunityIcons name="chevron-down" size={22} color="#888" />
+                            <MaterialCommunityIcons name="chevron-down" size={24} color="#888" />
                         </TouchableOpacity>
 
-                        <Text style={[styles.label, { marginTop: 14 }]}>Session Number</Text>
+                        <Text style={[styles.label, { marginTop: 15 }]}>Session Number</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. 1"
+                            placeholder="e.g. 1, 2, 3..."
                             placeholderTextColor="#aaa"
                             keyboardType="numeric"
                             value={sessionFilter}
@@ -162,63 +168,58 @@ const TeacherAttendance = () => {
                                 <ActivityIndicator size="small" color="white" />
                             ) : (
                                 <>
-                                    <MaterialCommunityIcons name="magnify" size={20} color="white" />
-                                    <Text style={styles.searchBtnText}>Search</Text>
+                                    <MaterialCommunityIcons name="magnify" size={22} color="white" />
+                                    <Text style={styles.searchBtnText}>Show Attendance</Text>
                                 </>
                             )}
                         </TouchableOpacity>
                     </View>
 
-                    {/* عدد الطلاب */}
+                    {/* Stats Row */}
                     {searched && !searching && (
                         <View style={styles.countRow}>
-                            <MaterialCommunityIcons name="account-group" size={20} color="rgb(23, 42, 70)" />
+                            <MaterialCommunityIcons name="account-check-outline" size={22} color="rgb(23, 42, 70)" />
                             <Text style={styles.countText}>
-                                Total Attended:{' '}
-                                <Text style={styles.countNum}>{records.length} Students</Text>
+                                Total Present: <Text style={styles.countNum}>{records.length}</Text>
                             </Text>
                         </View>
                     )}
 
+                    {/* Table Header */}
                     {searched && !searching && records.length > 0 && (
                         <View style={styles.tableHeader}>
-                            <Text style={[styles.thText, { flex: 1.5 }]}>Name</Text>
-                            <Text style={[styles.thText, { flex: 1.2 }]}>ID</Text>
+                            <Text style={[styles.thText, { flex: 2 }]}>Student Name</Text>
                             <Text style={[styles.thText, { flex: 1.2, textAlign: 'center' }]}>Session</Text>
                             <Text style={[styles.thText, { flex: 1, textAlign: 'right' }]}>Time</Text>
                         </View>
                     )}
 
+                    {/* Results List */}
                     {searching ? (
                         <View style={styles.centerContainer}>
                             <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
                         </View>
                     ) : searched && records.length === 0 ? (
                         <View style={styles.centerContainer}>
-                            <MaterialCommunityIcons name="clipboard-text-off-outline" size={55} color="#ccc" />
-                            <Text style={styles.emptyText}>No attendance records found</Text>
+                            <MaterialCommunityIcons name="clipboard-text-off-outline" size={70} color="#cbd5e0" />
+                            <Text style={styles.emptyText}>No attendance found for this session</Text>
                         </View>
                     ) : (
                         <View style={{ flex: 1 }}>
                             <FlatList
                                 data={paginatedRecords}
                                 keyExtractor={(item) => item._id}
-                                contentContainerStyle={{ paddingBottom: 10 }}
+                                contentContainerStyle={{ paddingBottom: 20 }}
                                 renderItem={({ item, index }) => (
                                     <View style={[styles.row, index % 2 === 0 && styles.rowAlt]}>
-                                        <Text style={[styles.studentName, { flex: 1.5 }]}>
-                                            {item.student?.name || '-'}
-                                        </Text>
-                                        <Text
-                                            style={[styles.studentId, { flex: 1.2 }]}
-                                            numberOfLines={1}
-                                        >
-                                            {item.student?._id || ''}
-                                        </Text>
-                                        <View style={[styles.badge, { flex: 1.2 }]}>
-                                            <Text style={styles.badgeText}>
-                                                session {item.sessionNumber}
+                                        <View style={{ flex: 2 }}>
+                                            <Text style={styles.studentName} numberOfLines={1}>
+                                                {item.student?.name || 'Unknown'}
                                             </Text>
+                                            <Text style={styles.studentId}>{item.student?._id}</Text>
+                                        </View>
+                                        <View style={[styles.badge, { flex: 1.2 }]}>
+                                            <Text style={styles.badgeText}>S-{item.sessionNumber}</Text>
                                         </View>
                                         <Text style={[styles.timeText, { flex: 1, textAlign: 'right' }]}>
                                             {formatTime(item.timestamp)}
@@ -227,40 +228,23 @@ const TeacherAttendance = () => {
                                 )}
                             />
 
+                            {/* Pagination Controls */}
                             {totalPages > 1 && (
                                 <View style={styles.pagination}>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.pageBtn,
-                                            currentPage === 1 && styles.pageBtnDisabled,
-                                        ]}
+                                        style={[styles.pageBtn, currentPage === 1 && styles.pageBtnDisabled]}
                                         onPress={() => setCurrentPage((p) => p - 1)}
                                         disabled={currentPage === 1}
                                     >
-                                        <MaterialCommunityIcons
-                                            name="chevron-left"
-                                            size={20}
-                                            color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'}
-                                        />
+                                        <MaterialCommunityIcons name="chevron-left" size={24} color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'} />
                                     </TouchableOpacity>
-                                    <Text style={styles.pageText}>
-                                        {currentPage} / {totalPages}
-                                    </Text>
+                                    <Text style={styles.pageText}>{currentPage} / {totalPages}</Text>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.pageBtn,
-                                            currentPage === totalPages && styles.pageBtnDisabled,
-                                        ]}
+                                        style={[styles.pageBtn, currentPage === totalPages && styles.pageBtnDisabled]}
                                         onPress={() => setCurrentPage((p) => p + 1)}
                                         disabled={currentPage === totalPages}
                                     >
-                                        <MaterialCommunityIcons
-                                            name="chevron-right"
-                                            size={20}
-                                            color={
-                                                currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'
-                                            }
-                                        />
+                                        <MaterialCommunityIcons name="chevron-right" size={24} color={currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'} />
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -269,16 +253,17 @@ const TeacherAttendance = () => {
                 </View>
             )}
 
+            {/* Selection Modal */}
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Lecture</Text>
+                            <Text style={styles.modalTitle}>Choose Group</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <MaterialCommunityIcons name="close" size={24} color="#333" />
+                                <MaterialCommunityIcons name="close-circle" size={28} color="#666" />
                             </TouchableOpacity>
                         </View>
-                        <ScrollView>
+                        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
                             {options.map((opt) => (
                                 <TouchableOpacity
                                     key={opt.groupId}
@@ -293,17 +278,22 @@ const TeacherAttendance = () => {
                                         setModalVisible(false);
                                     }}
                                 >
+                                    <MaterialCommunityIcons 
+                                        name="account-group" 
+                                        size={22} 
+                                        color={selected?.groupId === opt.groupId ? 'white' : 'rgb(23, 42, 70)'} 
+                                        style={{ marginRight: 12 }}
+                                    />
                                     <Text
                                         style={[
                                             styles.modalItemText,
-                                            selected?.groupId === opt.groupId &&
-                                            styles.modalItemTextActive,
+                                            selected?.groupId === opt.groupId && styles.modalItemTextActive,
                                         ]}
                                     >
                                         {opt.label}
                                     </Text>
                                     {selected?.groupId === opt.groupId && (
-                                        <MaterialCommunityIcons name="check" size={20} color="white" />
+                                        <MaterialCommunityIcons name="check-circle" size={22} color="white" />
                                     )}
                                 </TouchableOpacity>
                             ))}
@@ -318,159 +308,170 @@ const TeacherAttendance = () => {
 export default TeacherAttendance;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f4ff' },
+    container: { flex: 1, backgroundColor: '#f4f7ff' },
     header: {
         backgroundColor: 'rgb(23, 42, 70)',
-        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
+        paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40),
         paddingBottom: 20,
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        elevation: 10,
+        elevation: 12,
     },
-    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    emptyText: { fontSize: 15, color: '#aaa', marginTop: 12 },
+    backBtn: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
+    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+    emptyText: { fontSize: 16, color: '#94a3b8', marginTop: 15, textAlign: 'center', fontWeight: '500' },
+    
     filtersCard: {
         backgroundColor: '#fff',
         margin: 15,
-        borderRadius: 15,
-        padding: 16,
-        elevation: 4,
-        shadowColor: 'rgb(23, 42, 70)',
+        borderRadius: 20,
+        padding: 20,
+        elevation: 5,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 10,
     },
-    label: { fontSize: 13, fontWeight: '600', color: 'rgb(23, 42, 70)', marginBottom: 6 },
+    label: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginBottom: 8, marginLeft: 2 },
     dropdown: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 1.5,
-        borderColor: '#dde3f0',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        backgroundColor: '#f8faff',
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 14,
+        backgroundColor: '#f8fafc',
     },
-    dropdownPlaceholder: { color: '#aaa', fontSize: 14, flex: 1 },
-    dropdownSelected: { color: 'rgb(23, 42, 70)', fontSize: 14, fontWeight: '600', flex: 1 },
+    dropdownPlaceholder: { color: '#94a3b8', fontSize: 15 },
+    dropdownSelected: { color: 'rgb(23, 42, 70)', fontSize: 15, fontWeight: '700' },
     input: {
         borderWidth: 1.5,
-        borderColor: '#dde3f0',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        fontSize: 14,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+        fontSize: 16,
         color: 'rgb(23, 42, 70)',
-        backgroundColor: '#f8faff',
+        backgroundColor: '#f8fafc',
+        fontWeight: '600'
     },
     searchBtn: {
         backgroundColor: 'rgb(23, 42, 70)',
-        borderRadius: 10,
-        paddingVertical: 14,
+        borderRadius: 12,
+        paddingVertical: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        marginTop: 15,
+        gap: 10,
+        marginTop: 20,
     },
-    searchBtnDisabled: { opacity: 0.45 },
-    searchBtnText: { color: 'white', fontWeight: 'bold', fontSize: 15 },
+    searchBtnDisabled: { backgroundColor: '#94a3b8' },
+    searchBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
     countRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 10,
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        backgroundColor: '#e8f0fe',
+        paddingVertical: 12,
+        backgroundColor: '#dbeafe',
         marginHorizontal: 15,
-        borderRadius: 10,
-        marginBottom: 5,
+        borderRadius: 12,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#bfdbfe'
     },
-    countText: { fontSize: 14, color: 'rgb(23, 42, 70)' },
-    countNum: { fontWeight: 'bold', fontSize: 15 },
+    countText: { fontSize: 15, color: '#1e3a8a', fontWeight: '500' },
+    countNum: { fontWeight: '800', fontSize: 17 },
+
     tableHeader: {
         flexDirection: 'row',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         paddingVertical: 12,
         backgroundColor: 'rgb(23, 42, 70)',
+        marginHorizontal: 15,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
     },
-    thText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 'bold' },
+    thText: { color: '#cbd5e1', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
+
     row: {
         flexDirection: 'row',
-        paddingHorizontal: 15,
-        paddingVertical: 14,
+        paddingHorizontal: 20,
+        paddingVertical: 15,
         alignItems: 'center',
         backgroundColor: '#fff',
+        marginHorizontal: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    rowAlt: { backgroundColor: '#f8faff' },
-    studentName: { fontSize: 13, fontWeight: '600', color: 'rgb(23, 42, 70)' },
-    studentId: { fontSize: 12, color: '#888' },
+    rowAlt: { backgroundColor: '#f8fafc' },
+    studentName: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+    studentId: { fontSize: 11, color: '#64748b', marginTop: 2 },
     badge: {
-        backgroundColor: '#e8f0fe',
-        borderRadius: 12,
-        paddingHorizontal: 8,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 8,
         paddingVertical: 4,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
     },
-    badgeText: { fontSize: 12, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    timeText: { fontSize: 13, color: '#555', fontWeight: '500' },
+    badgeText: { fontSize: 11, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    timeText: { fontSize: 13, color: '#475569', fontWeight: '600' },
+
     pagination: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
-        gap: 20,
+        paddingVertical: 15,
+        gap: 25,
         backgroundColor: '#fff',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: '#e2e8f0',
     },
     pageBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#f0f4ff',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
         alignItems: 'center',
         justifyContent: 'center',
+        elevation: 2
     },
-    pageBtnDisabled: { backgroundColor: '#f5f5f5' },
-    pageText: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
-    },
+    pageBtnDisabled: { opacity: 0.5 },
+    pageText: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
     modalContent: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '65%',
-        paddingBottom: 30,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        maxHeight: '70%',
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
+        padding: 25,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    modalTitle: { fontSize: 17, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    modalTitle: { fontSize: 18, fontWeight: '800', color: 'rgb(23, 42, 70)' },
     modalItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: 25,
+        paddingVertical: 18,
         borderBottomWidth: 1,
-        borderBottomColor: '#f5f5f5',
+        borderBottomColor: '#f8fafc',
     },
     modalItemActive: { backgroundColor: 'rgb(23, 42, 70)' },
-    modalItemText: { fontSize: 15, color: '#333', flex: 1 },
+    modalItemText: { fontSize: 15, color: '#334155', flex: 1, fontWeight: '500' },
     modalItemTextActive: { color: 'white', fontWeight: 'bold' },
 });
