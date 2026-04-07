@@ -35,10 +35,11 @@ import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 
 import useRegistration from "../../hooks/Student/useRegistration";
+import { useLanguage } from "../../context/LanguageContext";
+import { REGISTRATION_TRANS } from "../../utils/studentTranslations";
 
 const daysOrder = {
   saturday: 1,
@@ -83,6 +84,9 @@ export default function RegistrationComp() {
     sentSwapRequests,
     handleCancelSwapRequest,
   } = useRegistration();
+
+  const { language } = useLanguage();
+  const t = REGISTRATION_TRANS[language] || REGISTRATION_TRANS["en"];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
@@ -330,13 +334,13 @@ export default function RegistrationComp() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1.5 }}>
           <AccessTimeIcon sx={{ color: "#152b48", fontSize: 30 }} />
           <Typography variant="h5" sx={{ fontWeight: 800, color: "#152b48" }}>
-            Hours Tracker
+            {t.hoursTracker}
           </Typography>
         </Box>
         <Typography variant="body1" sx={{ color: "text.secondary", mb: 3 }}>
-          You have registered <strong>{registeredHours}</strong> hours. You can
-          register up to <strong>{remainingHours}</strong> more hours out of
-          your <strong>{maxHours}</strong> total allowed hours.
+          {t.youHaveReg} <strong>{registeredHours}</strong> {t.hoursReg}
+          <strong>{remainingHours}</strong> {t.moreHoursOut}
+          <strong>{maxHours}</strong> {t.totalAllowed}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ width: "100%", mr: 1 }}>
@@ -380,7 +384,7 @@ export default function RegistrationComp() {
           variant="h6"
           sx={{ fontWeight: 800, mb: 3, color: "#152b48" }}
         >
-          Register New Course
+          {t.regNewCourse}
         </Typography>
         <Box
           sx={{
@@ -394,14 +398,14 @@ export default function RegistrationComp() {
             variant="outlined"
             sx={{ width: { xs: "100%", md: "450px" } }}
           >
-            <InputLabel shrink={true}>Select Course</InputLabel>
+            <InputLabel shrink={true}>{t.selectCourse}</InputLabel>
             <Select
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
                 setSelectedGroup("");
               }}
-              label="Select Course"
+              label={t.selectCourse}
               displayEmpty
               sx={{ borderRadius: "12px", height: "56px" }}
               MenuProps={{
@@ -417,7 +421,7 @@ export default function RegistrationComp() {
               }}
             >
               <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>Choose a course</em>
+                <em>{t.chooseCourse}</em>
               </MenuItem>
               {availableCourses.map((course) => {
                 const cId = course._id || course.courseId;
@@ -451,17 +455,17 @@ export default function RegistrationComp() {
             sx={{ width: { xs: "100%", md: "250px" } }}
           >
             <InputLabel shrink={true} id="select-group-label">
-              Select Group
+              {t.selectGroup}
             </InputLabel>
             <Select
               labelId="select-group-label"
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              label="Select Group"
+              label={t.selectGroup}
               displayEmpty
               sx={{ borderRadius: "12px", height: "56px" }}
               renderValue={(selected) =>
-                selected ? selected : <em>Choose a group</em>
+                selected ? selected : <em>{t.chooseGroup}</em>
               }
               MenuProps={{
                 PaperProps: {
@@ -476,7 +480,7 @@ export default function RegistrationComp() {
               }}
             >
               <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>Choose a group</em>
+                <em>{t.chooseGroup}</em>
               </MenuItem>
               {uniqueGroups.map((grp, index) => {
                 const isFull = grp.capacity <= 0;
@@ -585,7 +589,7 @@ export default function RegistrationComp() {
               "&:hover": { backgroundColor: "#0f1e33" },
             }}
           >
-            {isActionLoading ? "Registering..." : "REGISTER"}
+            {isActionLoading ? t.registering : t.register}
           </Button>
         </Box>
       </Paper>
@@ -602,7 +606,7 @@ export default function RegistrationComp() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
           <MenuBookIcon sx={{ color: "#152b48", fontSize: 30 }} />
           <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            My Schedule
+            {t.mySchedule}
           </Typography>
         </Box>
 
@@ -616,7 +620,7 @@ export default function RegistrationComp() {
             }}
           >
             <Typography variant="subtitle1" color="text.secondary">
-              You haven't registered for any courses yet.
+              {t.noCoursesReg}
             </Typography>
           </Box>
         ) : (
@@ -627,25 +631,25 @@ export default function RegistrationComp() {
               <TableHead sx={{ backgroundColor: "#f8fafc" }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    Course Info
+                    {t.courseInfo}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    Schedule
+                    {t.schedule}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    Location & Type
+                    {t.locationType}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ fontWeight: "bold", color: "#152b48" }}
                   >
-                    Hours
+                    {t.hours}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}
                   >
-                    Actions
+                    {t.actions}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -943,13 +947,13 @@ export default function RegistrationComp() {
             pb: 1,
           }}
         >
-          <WarningRoundedIcon fontSize="large" /> Drop Course
+          <WarningRoundedIcon fontSize="large" /> {t.dropCourse}
         </DialogTitle>
         <DialogContent>
           <DialogContentText
             sx={{ fontSize: "1.1rem", color: "text.primary", fontWeight: 500 }}
           >
-            Are you sure you want to drop{" "}
+            {t.dropConfirm1}{" "}
             <strong>{courseToDelete?.courseName}</strong>?
           </DialogContentText>
         </DialogContent>
@@ -963,7 +967,7 @@ export default function RegistrationComp() {
               textTransform: "none",
             }}
           >
-            Cancel
+            {t.cancel}
           </Button>
           <Button
             onClick={handleConfirmDelete}
@@ -979,7 +983,7 @@ export default function RegistrationComp() {
               "&:hover": { backgroundColor: "#be123c" },
             }}
           >
-            {isActionLoading ? "Dropping..." : "Yes, Drop Course"}
+            {isActionLoading ? t.dropping : t.yesDrop}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1005,7 +1009,7 @@ export default function RegistrationComp() {
             pb: 1,
           }}
         >
-          <SyncIcon fontSize="large" /> Switch Group
+          <SyncIcon fontSize="large" /> {t.switchGroup}
         </DialogTitle>
         <DialogContent sx={{ pb: 1 }}>
           <DialogContentText
@@ -1016,31 +1020,31 @@ export default function RegistrationComp() {
               mb: 3,
             }}
           >
-            Select a new group for <strong>{courseToUpdate?.courseName}</strong>
+            {t.selectNewGroup} <strong>{courseToUpdate?.courseName}</strong>
             .
             <br />
             <Typography variant="caption" color="text.secondary">
-              Current group: {courseToUpdate?.currentGroup}
+              {t.currentGroup} {courseToUpdate?.currentGroup}
             </Typography>
           </DialogContentText>
 
           <FormControl fullWidth variant="outlined">
             <InputLabel shrink={true} id="switch-group-label">
-              New Group
+              {t.newGroup}
             </InputLabel>
             <Select
               labelId="switch-group-label"
               value={newSelectedGroup}
               onChange={(e) => setNewSelectedGroup(e.target.value)}
               displayEmpty
-              label="New Group"
+              label={t.newGroup}
               sx={{ borderRadius: "12px" }}
               renderValue={(selected) =>
-                selected ? selected : <em>Choose new group</em>
+                selected ? selected : <em>{t.chooseNewGroup}</em>
               }
             >
               <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>Choose new group</em>
+                <em>{t.chooseNewGroup}</em>
               </MenuItem>
               {updateGroupOptions.map((grp, index) => {
                 const isFull = grp.capacity <= 0;
@@ -1129,7 +1133,7 @@ export default function RegistrationComp() {
               textTransform: "none",
             }}
           >
-            Cancel
+            {t.cancel}
           </Button>
           <Button
             onClick={handleConfirmUpdate}
@@ -1145,7 +1149,7 @@ export default function RegistrationComp() {
               "&:hover": { backgroundColor: "#152b48" },
             }}
           >
-            {isActionLoading ? "Updating..." : "Update Group"}
+            {isActionLoading ? t.updating : t.updateGroup}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1163,7 +1167,7 @@ export default function RegistrationComp() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
           <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
           <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            Incoming Swap Requests ({pendingSwapRequests?.length || 0})
+            {t.incomingSwaps} ({pendingSwapRequests?.length || 0})
           </Typography>
         </Box>
 
@@ -1177,7 +1181,7 @@ export default function RegistrationComp() {
             }}
           >
             <Typography variant="subtitle1" color="text.secondary">
-              No pending swap requests available.
+              {t.noIncomingSwaps}
             </Typography>
           </Box>
         ) : (
@@ -1185,11 +1189,11 @@ export default function RegistrationComp() {
             <Table sx={{ minWidth: 600 }}>
               <TableHead sx={{ backgroundColor: "#f8fafc" }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Requested By</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Course</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>From Group</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Target Group</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.reqBy}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -1225,7 +1229,7 @@ export default function RegistrationComp() {
                           startIcon={<CancelOutlinedIcon />}
                           sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
                         >
-                          Reject
+                          {t.reject}
                         </Button>
                         <Button
                           variant="contained"
@@ -1236,7 +1240,7 @@ export default function RegistrationComp() {
                           startIcon={<CheckCircleOutlineIcon />}
                           sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
                         >
-                          Accept Swap
+                          {t.acceptSwap}
                         </Button>
                       </Box>
                     </TableCell>
@@ -1261,7 +1265,7 @@ export default function RegistrationComp() {
         <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
           <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
           <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            Sent Swap Requests ({sentSwapRequests?.length || 0})
+            {t.sentSwapReqs} ({sentSwapRequests?.length || 0})
           </Typography>
         </Box>
 
@@ -1275,7 +1279,7 @@ export default function RegistrationComp() {
             }}
           >
             <Typography variant="subtitle1" color="text.secondary">
-              No sent swap requests available.
+              {t.noSentSwaps}
             </Typography>
           </Box>
         ) : (
@@ -1283,11 +1287,11 @@ export default function RegistrationComp() {
             <Table sx={{ minWidth: 600 }}>
               <TableHead sx={{ backgroundColor: "#f8fafc" }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Course</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>From Group</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Target Group</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Status</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.status}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -1325,7 +1329,7 @@ export default function RegistrationComp() {
                             startIcon={<DeleteOutlineIcon />}
                             sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
                           >
-                            Cancel Request
+                            {t.cancelReq}
                           </Button>
                         </Box>
                       )}
@@ -1360,7 +1364,7 @@ export default function RegistrationComp() {
             pb: 1,
           }}
         >
-          <SwapHorizIcon fontSize="large" /> Broadcast Swap
+          <SwapHorizIcon fontSize="large" /> {t.broadSwap}
         </DialogTitle>
         <DialogContent sx={{ pb: 1 }}>
           <DialogContentText
@@ -1371,30 +1375,30 @@ export default function RegistrationComp() {
               mb: 3,
             }}
           >
-            Broadcast a swap request for <strong>{courseToSwap?.courseName}</strong>.
+            {t.broadSwapReq} <strong>{courseToSwap?.courseName}</strong>.
             <br />
             <Typography variant="caption" color="text.secondary">
-              Current group: {courseToSwap?.currentGroup}
+              {t.currentGroup} {courseToSwap?.currentGroup}
             </Typography>
           </DialogContentText>
 
           <FormControl fullWidth variant="outlined">
             <InputLabel shrink={true} id="swap-group-label">
-              Target Group
+              {t.targetGroup}
             </InputLabel>
             <Select
               labelId="swap-group-label"
               value={targetGroupSwap}
               onChange={(e) => setTargetGroupSwap(e.target.value)}
               displayEmpty
-              label="Target Group"
+              label={t.targetGroup}
               sx={{ borderRadius: "12px" }}
               renderValue={(selected) =>
-                selected ? selected : <em>Choose target group</em>
+                selected ? selected : <em>{t.chooseNewGroup}</em>
               }
             >
               <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>Choose target group</em>
+                <em>{t.chooseNewGroup}</em>
               </MenuItem>
               {(() => {
                 const sGroupMap = {};
@@ -1435,7 +1439,7 @@ export default function RegistrationComp() {
               textTransform: "none",
             }}
           >
-            Cancel
+            {t.cancel}
           </Button>
           <Button
             onClick={handleConfirmSwap}
@@ -1451,7 +1455,7 @@ export default function RegistrationComp() {
               "&:hover": { backgroundColor: "#152b48" },
             }}
           >
-            {isActionLoading ? "Sending..." : "Request Swap"}
+            {isActionLoading ? t.sending : t.reqSwap}
           </Button>
         </DialogActions>
       </Dialog>

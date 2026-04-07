@@ -3,10 +3,14 @@ import { Box, Container } from "@mui/material";
 import Header from "../../components/HeaderComp/Header.jsx";
 import Footer from "../../components/FooterComp/Footer.jsx";
 import ResetPasswordComp from "../../components/RestStudentPassword/RestStudentPasswordComp.jsx";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function ResetStudentPasswordPage() {
+  const { language } = useLanguage();
+
   return (
     <Box
+      dir={language === "ar" ? "rtl" : "ltr"}
       sx={{
         display: "flex",
         flexDirection: "column",

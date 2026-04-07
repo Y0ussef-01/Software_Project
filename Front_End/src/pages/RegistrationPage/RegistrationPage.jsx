@@ -5,10 +5,14 @@ import Header from "../../components/HeaderComp/Header";
 import Footer from "../../components/FooterComp/Footer.jsx";
 
 import RegistrationComp from "../../components/RegistrationComp/RegistrationComp";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function RegistrationPage() {
+  const { language } = useLanguage();
+
   return (
     <Box
+      dir={language === "ar" ? "rtl" : "ltr"}
       sx={{
         display: "flex",
         flexDirection: "column",

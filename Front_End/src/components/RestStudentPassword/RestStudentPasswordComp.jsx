@@ -16,11 +16,15 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 
 import { useResetPassword } from "../../hooks/Student/useStudentResetPassword";
+import { useLanguage } from "../../context/LanguageContext";
+import { REST_PASSWORD_TRANS } from "../../utils/studentTranslations";
 
 export default function ResetPasswordComp() {
   const navigate = useNavigate();
 
   const { resetPassword, isLoading } = useResetPassword();
+  const { language } = useLanguage();
+  const t = REST_PASSWORD_TRANS[language] || REST_PASSWORD_TRANS["en"];
 
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -76,7 +80,7 @@ export default function ResetPasswordComp() {
           "&:hover": { backgroundColor: "transparent", color: "#152b48" },
         }}
       >
-        Back to Profile
+        {t.backToProfile}
       </Button>
 
       <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
@@ -95,7 +99,7 @@ export default function ResetPasswordComp() {
           <LockResetIcon sx={{ fontSize: 30, color: "#152b48" }} />
         </Box>
         <Typography variant="h5" sx={{ fontWeight: "900", color: "#152b48" }}>
-          Reset Password
+          {t.resetPassword}
         </Typography>
       </Box>
 
@@ -104,7 +108,7 @@ export default function ResetPasswordComp() {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           <TextField
             fullWidth
-            label="Old Password"
+            label={t.oldPassword}
             variant="outlined"
             type={showOldPassword ? "text" : "password"}
             value={oldPassword}
@@ -137,7 +141,7 @@ export default function ResetPasswordComp() {
 
           <TextField
             fullWidth
-            label="New Password"
+            label={t.newPassword}
             variant="outlined"
             type={showNewPassword ? "text" : "password"}
             value={newPassword}
@@ -190,7 +194,7 @@ export default function ResetPasswordComp() {
             {isLoading ? (
               <CircularProgress size={26} color="inherit" />
             ) : (
-              "Update Password"
+              t.updatePassword
             )}
           </Button>
         </Box>

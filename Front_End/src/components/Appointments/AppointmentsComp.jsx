@@ -18,10 +18,15 @@ import ScienceIcon from "@mui/icons-material/Science";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import useAppointments from "../../hooks/Student/useAppointments";
+import { useLanguage } from "../../context/LanguageContext";
+import { APPOINTMENTS_TRANS } from "../../utils/studentTranslations";
 
 export default function AppointmentsComp() {
   const theme = useTheme();
   const { courses, isLoading } = useAppointments();
+  
+  const { language } = useLanguage();
+  const t = APPOINTMENTS_TRANS[language] || APPOINTMENTS_TRANS["en"];
 
   const [expandedCourses, setExpandedCourses] = useState({});
 
@@ -101,7 +106,7 @@ export default function AppointmentsComp() {
             fontSize: { xs: "1.75rem", sm: "2rem", md: "2.125rem" },
           }}
         >
-          Courses Schedule
+          {t.title}
         </Typography>
         <Typography
           variant="body1"
@@ -110,8 +115,7 @@ export default function AppointmentsComp() {
             fontSize: { xs: "0.875rem", sm: "1rem" },
           }}
         >
-          View all available courses, their specific groups, and detailed
-          lecture/lab schedules.
+          {t.desc}
         </Typography>
       </Box>
 
@@ -131,7 +135,7 @@ export default function AppointmentsComp() {
             color="text.secondary"
             sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
           >
-            No courses available at the moment.
+            {t.noCourses}
           </Typography>
         </Paper>
       ) : (
@@ -234,7 +238,7 @@ export default function AppointmentsComp() {
                           fontSize: { xs: "0.75rem", sm: "0.875rem" },
                         }}
                       >
-                        Code: {course._id}
+                        {t.code} {course._id}
                       </Typography>
                     </Box>
                   </Box>
@@ -247,7 +251,7 @@ export default function AppointmentsComp() {
                     }}
                   >
                     <Chip
-                      label={`${course.hours} Credit Hours`}
+                      label={`${course.hours} ${t.creditHours}`}
                       sx={{
                         fontWeight: "900",
                         bgcolor: "#e0f2fe",
@@ -283,7 +287,7 @@ export default function AppointmentsComp() {
                           fontSize: { xs: "0.8rem", sm: "0.875rem" },
                         }}
                       >
-                        No groups assigned yet.
+                        {t.noGroups}
                       </Typography>
                     ) : (
                       <Box
@@ -348,14 +352,14 @@ export default function AppointmentsComp() {
                                       fontSize: { xs: "0.9rem", sm: "1rem" },
                                     }}
                                   >
-                                    Group {group.groupName}
+                                    {t.group} {group.groupName}
                                   </Typography>
                                 </Box>
                                 <Chip
                                   label={
                                     isFull
-                                      ? "Full"
-                                      : `${group.availableSeats} Left`
+                                      ? t.full
+                                      : `${group.availableSeats} ${t.left}`
                                   }
                                   size="small"
                                   sx={{
@@ -435,7 +439,7 @@ export default function AppointmentsComp() {
                                             },
                                           }}
                                         >
-                                          {isLecture ? "LEC" : "LAB"}
+                                          {isLecture ? t.lec : t.lab}
                                         </Typography>
                                       </Box>
 
@@ -530,7 +534,7 @@ export default function AppointmentsComp() {
                                               },
                                             }}
                                           >
-                                            Room: {session.Room || "TBA"}
+                                            {t.room} {session.Room || "TBA"}
                                           </Typography>
                                         </Box>
                                       </Box>

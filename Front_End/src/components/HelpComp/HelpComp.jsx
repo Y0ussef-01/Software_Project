@@ -15,6 +15,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useHelp } from "./useHelp";
+import { useLanguage } from "../../context/LanguageContext";
+import { HELP_TRANS } from "../../utils/studentTranslations";
 
 const getYouTubeEmbedUrl = (url) => {
   if (!url) return "";
@@ -29,6 +31,8 @@ const getYouTubeEmbedUrl = (url) => {
 
 const HelpComp = () => {
   const { helpData } = useHelp();
+  const { language } = useLanguage();
+  const t = HELP_TRANS[language] || HELP_TRANS["en"];
   const [selectedItem, setSelectedItem] = useState(null);
 
   const handleOpen = (item) => {
@@ -56,7 +60,7 @@ const HelpComp = () => {
           variant="h4"
           sx={{ mb: 3, fontWeight: "bold", color: "#333" }}
         >
-          Help
+          {t.title}
         </Typography>
 
         <Paper
@@ -105,7 +109,7 @@ const HelpComp = () => {
                       boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
-                    Show Video
+                    {t.showVideo}
                   </Button>
                 </ListItem>
 
@@ -137,7 +141,7 @@ const HelpComp = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-            {selectedItem?.title || "Video Tutorial"}
+            {selectedItem?.title || t.videoTutorial}
           </Typography>
 
           <IconButton

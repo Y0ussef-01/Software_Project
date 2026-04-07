@@ -5,10 +5,14 @@ import Header from "../../components/HeaderComp/Header";
 import Footer from "../../components/FooterComp/Footer.jsx";
 
 import AppointmentsComp from "../../components/Appointments/AppointmentsComp";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function AppointmentsPage() {
+  const { language } = useLanguage();
+
   return (
     <Box
+      dir={language === "ar" ? "rtl" : "ltr"}
       sx={{
         display: "flex",
         flexDirection: "column",
