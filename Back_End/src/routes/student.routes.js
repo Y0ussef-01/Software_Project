@@ -31,6 +31,8 @@ router.post('/swap-request',       studentAuth, controller.requestSwap);
 router.get ('/get_pending_requests',studentAuth, controller.getPendingSwapRequests);
 router.post('/swap-respond',       studentAuth, controller.respondToSwapRequest);
 router.delete('/swap-cancel',      studentAuth, controller.cancelSwapRequest);
+router.get ('/sent-swap-requests',   studentAuth, controller.getSentSwapRequests);
+router.delete('/cancel-swap-request/:id', studentAuth, controller.cancelSwapRequest);
 
 router.get('/academic-record', studentAuth, controller.getAcademicRecord);
 router.get('/final-results',   studentAuth, controller.getFinalResults);

@@ -611,24 +611,42 @@ const respondToSwapRequest = async (req, res) => {
     }
 };
 
+const getSentSwapRequests = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const requests = await SwapRequest.find({ sender: studentId })
+            .populate('receiver', 'name _id profileImg')
+            .populate('courseId', 'name _id');
+
+        res.status(200).json(requests);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const cancelSwapRequest = async (req, res) => {
     try {
         const studentId = req.user.id;
-        const { courseId } = req.body;
+        const requestId = req.params.id || req.body.requestId;
 
-        if (!courseId) {
-            return res.status(400).json({ message: 'Please provide a course ID' });
+        if (!requestId) {
+            return res.status(400).json({ message: 'Please provide a request ID' });
         }
 
-        const result = await SwapRequest.deleteMany({
-            sender: studentId,
-            courseId: courseId,
-            status: 'Pending'
-        });
-
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'No pending swap requests found for this course' });
+        const swapRequest = await SwapRequest.findById(requestId);
+        if (!swapRequest) {
+            return res.status(404).json({ message: 'Swap request not found' });
         }
+
+        if (swapRequest.sender.toString() !== studentId) {
+            return res.status(403).json({ message: 'Not authorized to cancel this request' });
+        }
+
+        if (swapRequest.status !== 'Pending') {
+            return res.status(400).json({ message: 'Can only cancel pending requests' });
+        }
+
+        await SwapRequest.findByIdAndDelete(requestId);
 
         res.status(200).json({ message: 'Swap request cancelled successfully' });
 
@@ -945,6 +963,7 @@ module.exports = {
     markAllRead,
     registerAttendance,
     cancelSwapRequest,
+    getSentSwapRequests,
     getAcademicRecord,
     getFinalResults,
     generateSchedules,

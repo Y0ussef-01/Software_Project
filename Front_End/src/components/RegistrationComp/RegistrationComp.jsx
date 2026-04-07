@@ -1321,7 +1321,7 @@ export default function RegistrationComp() {
                             color="error"
                             size="small"
                             disabled={isActionLoading}
-                            onClick={() => handleCancelSwapRequest(req._id)}
+                            onClick={() => handleCancelSwapRequest(req.relatedIds)}
                             startIcon={<DeleteOutlineIcon />}
                             sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
                           >

@@ -50,10 +50,26 @@ export default function useRegistration() {
   const fetchSentSwaps = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/student/get_sent_requests",
+        "http://localhost:5000/student/sent-swap-requests",
         getAuthHeaders(),
       );
-      setSentSwapRequests(response.data || []);
+      console.log("Sent Swaps Data:", response.data);
+      const rawData = response.data?.requests || response.data?.data || response.data || [];
+      
+      const grouped = rawData.reduce((acc, curr) => {
+        const courseId = curr.courseId?._id || curr.courseId;
+        const targetGroupName = curr.receiverGroupName || curr.targetGroupName;
+        const groupKey = `${courseId}_${targetGroupName}`;
+        
+        if (!acc[groupKey]) {
+          acc[groupKey] = { ...curr, relatedIds: [curr._id] };
+        } else {
+          acc[groupKey].relatedIds.push(curr._id);
+        }
+        return acc;
+      }, {});
+      
+      setSentSwapRequests(Object.values(grouped));
     } catch (error) {
       console.error("Failed to fetch sent swap requests", error);
     }
@@ -246,6 +262,7 @@ export default function useRegistration() {
         getAuthHeaders(),
       );
       toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
+      fetchSentSwaps();
       fetchData(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send swap request.");
@@ -283,17 +300,17 @@ export default function useRegistration() {
     }
   };
 
-  const handleCancelSwapRequest = async (requestId) => {
-    if (!requestId) return;
+  const handleCancelSwapRequest = async (relatedIds) => {
+    if (!relatedIds || relatedIds.length === 0) return;
     setIsActionLoading(true);
     try {
-      const targetReq = sentSwapRequests.find((r) => r._id === requestId);
-      const courseId = targetReq?.courseId?._id || targetReq?.courseId || requestId;
-      
-      await axios.delete("http://localhost:5000/student/swap-cancel", {
-        headers: getAuthHeaders().headers,
-        data: { courseId },
-      });
+      await Promise.all(
+        relatedIds.map((id) =>
+          axios.delete(`http://localhost:5000/student/cancel-swap-request/${id}`, {
+            headers: getAuthHeaders().headers,
+          })
+        )
+      );
       
       toast.success("Swap request cancelled successfully!", { autoClose: 2000 });
       fetchSentSwaps();
