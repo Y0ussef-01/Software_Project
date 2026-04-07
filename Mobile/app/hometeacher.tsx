@@ -1,17 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { StatusBar } from "react-native";
-import { Animated, View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { Animated, View, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ScrollView, Dimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Stack, router } from "expo-router";
-import { getTeacherProfile } from '../api/teacherApi';
+import { Stack, router, useFocusEffect } from "expo-router";
+import { getTeacherProfile, clearTeacherCache } from '../api/teacherApi'; 
+import { clearProfileCache } from '../api/studentApi';                    
 import { clearStorage } from '@/api/storage';
 
-const hometeacher = () => {
+const { width } = Dimensions.get('window');
+
+const HomeTeacher = () => {
+   
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [pressedItem, setPressedItem] = useState<string | null>(null);
-    const [profileImg, setProfileImg] = useState(null);
+    const [teacherData, setTeacherData] = useState({
+        name: '',
+        img: null as string | null,
+    });
 
-    const drawerAnim = useRef(new Animated.Value(-250)).current;
+    
+    const drawerAnim = useRef(new Animated.Value(-300)).current;
 
     const openDrawer = () => {
         setDrawerOpen(true);
@@ -19,203 +27,195 @@ const hometeacher = () => {
     };
 
     const closeDrawer = () => {
-        Animated.timing(drawerAnim, { toValue: -250, duration: 300, useNativeDriver: true }).start(() => setDrawerOpen(false));
+        Animated.timing(drawerAnim, { toValue: -300, duration: 300, useNativeDriver: true }).start(() => setDrawerOpen(false));
     };
 
-    const toggleDrawer = () => drawerOpen ? closeDrawer() : openDrawer();
+   
+    useFocusEffect(
+        useCallback(() => {
+            let isMounted = true;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const data = await getTeacherProfile();
-                if (data.profileImg && data.profileImg !== 'default-teacher.jpg') {
-                    setProfileImg(data.profileImg);
+            setTeacherData({ name: '', img: null });
+
+            const syncTeacherProfile = async () => {
+                try {
+                    const data = await getTeacherProfile();
+                    if (isMounted) {
+                        setTeacherData({
+                            name: data.name || 'Professor',
+                            img: (data.profileImg && !data.profileImg.includes('default')) ? data.profileImg : null
+                        });
+                    }
+                } catch (err) {
+                    console.log('❌ Sync Error:', err);
                 }
-            } catch (err) {
-                console.log('Error fetching profile img:', err);
-            }
-        };
-        fetchData();
-    }, []);
+            };
+            syncTeacherProfile();
+            return () => { isMounted = false; };
+        }, [])
+    );
 
-    const goToProfile = () => {
-        closeDrawer();
-        setTimeout(() => router.push('/techprofile'), 300);
-    };
-
-    const goToChangePassword = () => {
-        closeDrawer();
-        setTimeout(() => router.push('/password'), 300);
-    };
-
+  
     const handleLogout = () => {
-        Alert.alert('Log Out', 'Are you sure you want to log out?', [
-            { text: 'Cancel', style: 'cancel' },
+        Alert.alert('Log Out', 'Are you sure you want to log out from your academic account?', [
+            { text: 'Stay', style: 'cancel' },
             {
                 text: 'Log Out', style: 'destructive',
                 onPress: async () => {
                     await clearStorage();
+
+                    await clearTeacherCache();
+                    await clearProfileCache();
+
+                    setTeacherData({ name: '', img: null });
+
                     router.replace('/');
                 },
             },
         ]);
     };
 
+    const navigateTo = (path: string) => {
+        if (drawerOpen) closeDrawer();
+        router.push(path as any);
+    };
+
+    const menuItems = [
+        { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/teacherattendance' },
+        { id: 'schedule', title: 'Schedule', icon: 'calendar-clock', path: '/teacherschedule' },
+        { id: 'eval', title: 'Evaluation', icon: 'star-check-outline', path: '/teacherevaluation' },
+        { id: 'quizzes', title: 'Quizzes', icon: 'file-document-edit-outline', path: '/quizzes' },
+        { id: 'notif', title: 'Broadcast', icon: 'bullhorn-outline', path: '/sendnotification' },
+        { id: 'grades', title: 'Final Grades', icon: 'clipboard-list-outline', path: '/teachergrades' },
+    ];
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar barStyle="light-content" backgroundColor="rgb(23, 42, 70)" />
 
-            <View style={styles.HeaderStyle}>
-                <TouchableOpacity onPress={toggleDrawer}>
-                    <MaterialCommunityIcons name="menu" size={24} color="white" />
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={openDrawer} style={styles.iconBtn}>
+                    <MaterialCommunityIcons name="menu" size={28} color="white" />
                 </TouchableOpacity>
-                <Image source={require('../assets/images/logo(1).png')} style={styles.imageStyle} />
+                <Image source={require('../assets/images/logo(1).png')} style={styles.logo} />
+                <TouchableOpacity onPress={() => navigateTo('/sendnotification')} style={styles.iconBtn}>
+                    <MaterialCommunityIcons name="bell-outline" size={26} color="white" />
+                </TouchableOpacity>
             </View>
 
-            <View style={{ flex: 1 }}>
-                <View style={styles.gridContainer}>
-                    <View style={styles.rowContainer}>
-
-                        {/* Attendance */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'calendar-remove' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('calendar-remove')}
-                            onPressOut={() => setPressedItem(null)}
-                            onPress={() => router.push('/teacherattendance' as any)}
-                        >
-                            <MaterialCommunityIcons name="calendar-remove" size={35} color={pressedItem === 'calendar-remove' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'calendar-remove' && styles.gridTextActive]}>Attendance</Text>
-                        </TouchableOpacity>
-
-                        {/* Schedule */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'calendar-month' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('calendar-month')}
-                            onPressOut={() => setPressedItem(null)}
-                        >
-                            <MaterialCommunityIcons name="calendar-month" size={35} color={pressedItem === 'calendar-month' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'calendar-month' && styles.gridTextActive]}>Schedule</Text>
-                        </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+                {/* Welcome Card */}
+                <View style={styles.welcomeCard}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.welcomeSubText}>Good Day, Dr. {teacherData.name.split(' ')[0]}</Text>
+                        <Text style={styles.welcomeMainText}>Inspiring the next generation{"\n"}of leaders today.</Text>
                     </View>
-
-                    <View style={styles.rowContainer}>
-                        {/* Evaluation */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'star-circle' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('star-circle')}
-                            onPressOut={() => setPressedItem(null)}
-                        >
-                            <MaterialCommunityIcons name="star-circle" size={35} color={pressedItem === 'star-circle' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'star-circle' && styles.gridTextActive]}>Evaluation</Text>
-                        </TouchableOpacity>
-
-                        {/* Quizzes */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'pencil-box-multiple' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('pencil-box-multiple')}
-                            onPressOut={() => setPressedItem(null)}
-                            onPress={() => router.push('/quizzes' as any)}
-                        >
-                            <MaterialCommunityIcons name="pencil-box-multiple" size={35} color={pressedItem === 'pencil-box-multiple' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'pencil-box-multiple' && styles.gridTextActive]}>Quizzes</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.rowContainer}>
-                        {/* Notifications */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'bell' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('bell')}
-                            onPressOut={() => setPressedItem(null)}
-                            onPress={() => router.push('/sendnotification' as any)}
-                        >
-                            <MaterialCommunityIcons name="bell" size={35} color={pressedItem === 'bell' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'bell' && styles.gridTextActive]}>Notifications</Text>
-                        </TouchableOpacity>
-
-                        {/* Final Grades */}
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            style={[styles.gridItem, pressedItem === 'clipboard-text' && styles.gridItemActive]}
-                            onPressIn={() => setPressedItem('clipboard-text')}
-                            onPressOut={() => setPressedItem(null)}
-                        >
-                            <MaterialCommunityIcons name="clipboard-text" size={35} color={pressedItem === 'clipboard-text' ? '#fff' : '#02013f'} />
-                            <Text style={[styles.gridText, pressedItem === 'clipboard-text' && styles.gridTextActive]}>Final Grades</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <MaterialCommunityIcons name="school-outline" size={60} color="rgba(255,255,255,0.15)" />
                 </View>
-            </View>
 
-            {drawerOpen && (
-                <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeDrawer} />
-            )}
+                <Text style={styles.sectionTitle}>Academic Management</Text>
 
-            {drawerOpen && (
-                <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerAnim }] }]}>
-                    <View style={styles.drawerGroup}>
-
-                        <TouchableOpacity style={styles.drawerItem} onPress={goToProfile}>
-                            <View style={styles.imageContainerPRO}>
-                                <Image
-                                    source={profileImg && profileImg !== 'default-teacher.jpg' ? { uri: profileImg } : require('../assets/images/11.png')}
-                                    style={styles.imagePROStyle}
+                <View style={styles.gridContainer}>
+                    {menuItems.map((item) => (
+                        <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === item.id && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem(item.id)}
+                            onPressOut={() => setPressedItem(null)}
+                            onPress={() => navigateTo(item.path)}
+                        >
+                            <View style={[styles.iconBox, pressedItem === item.id && styles.iconBoxActive]}>
+                                <MaterialCommunityIcons
+                                    name={item.icon as any}
+                                    size={30}
+                                    color={pressedItem === item.id ? '#fff' : 'rgb(23, 42, 70)'}
                                 />
                             </View>
-                            <View>
-                                <Text style={styles.drawerText}>Profile Page</Text>
-                                <Text style={styles.roleText}>👨‍🏫 Teacher</Text>
-                            </View>
+                            <Text style={[styles.gridLabel, pressedItem === item.id && { color: '#fff' }]}>{item.title}</Text>
                         </TouchableOpacity>
+                    ))}
+                </View>
+            </ScrollView>
 
-                        <TouchableOpacity style={styles.drawerItem} onPress={goToChangePassword}>
-                            <MaterialCommunityIcons name="lock-reset" size={22} color="rgb(23, 42, 70)" />
-                            <Text style={styles.drawerText}>Reset Password</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
-                            <MaterialCommunityIcons name="logout" size={22} color="red" />
-                            <Text style={styles.logoutText}>Log Out</Text>
-                        </TouchableOpacity>
-
+            {/* Sidebar Drawer */}
+            {drawerOpen && <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeDrawer} />}
+            <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerAnim }] }]}>
+                <View style={styles.drawerTop}>
+                    <View style={styles.drawerAvatarWrapper}>
+                        <Image
+                            source={teacherData.img ? { uri: teacherData.img } : require('../assets/images/11.png')}
+                            style={styles.drawerAvatar}
+                        />
                     </View>
-                </Animated.View>
-            )}
+                    <Text style={styles.drawerNameText}>Dr. {teacherData.name}</Text>
+                    <Text style={styles.drawerSubText}>Faculty Member</Text>
+                </View>
+
+                <View style={styles.drawerMenu}>
+                    <DrawerItem icon="account-circle-outline" label="My Profile" onPress={() => navigateTo('/techprofile')} />
+                    <DrawerItem icon="lock-reset" label="Reset Password" onPress={() => navigateTo('/password')} />
+                    <View style={styles.divider} />
+                    <TouchableOpacity style={styles.logoutBtnNew} onPress={handleLogout}>
+                        <MaterialCommunityIcons name="logout" size={22} color="#ef5350" />
+                        <Text style={styles.logoutTextNew}>Log Out</Text>
+                    </TouchableOpacity>
+                </View>
+            </Animated.View>
         </View>
     );
 };
 
-export default hometeacher;
+const DrawerItem = ({ icon, label, onPress }: any) => (
+    <TouchableOpacity style={styles.drawerItem} onPress={onPress}>
+        <MaterialCommunityIcons name={icon} size={24} color="rgb(23, 42, 70)" />
+        <Text style={styles.drawerItemText}>{label}</Text>
+    </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f4ff' },
-    HeaderStyle: {
-        width: '100%', height: 120, backgroundColor: "rgb(23, 42, 70)",
-        elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5, shadowRadius: 10, paddingHorizontal: 20,
-        paddingTop: StatusBar.currentHeight, flexDirection: 'row',
-        alignItems: 'center', justifyContent: 'space-between',
+    container: { flex: 1, backgroundColor: '#f8faff' },
+    header: {
+        width: '100%', height: 110, backgroundColor: "rgb(23, 42, 70)",
+        paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 45 : 35,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        elevation: 5, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 5,
     },
-    imageStyle: { height: 50, width: '40%', resizeMode: 'contain' },
-    imagePROStyle: { height: '100%', width: '100%', resizeMode: 'cover' },
-    imageContainerPRO: { width: 40, height: 40, borderRadius: 50, overflow: 'hidden', borderWidth: 1, borderColor: '#cccccc' },
-    overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', zIndex: 998 },
-    drawer: { position: 'absolute', top: 120, left: 0, width: 250, height: '100%', backgroundColor: '#fff', elevation: 20, padding: 20, zIndex: 999 },
-    drawerGroup: { borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-    drawerItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 15 },
-    drawerText: { fontSize: 16, color: '#02013f', fontWeight: 'bold' },
-    roleText: { fontSize: 12, color: 'gray', marginTop: 2 },
-    logoutItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 15 },
-    logoutText: { fontSize: 16, color: 'red', fontWeight: 'bold' },
-    gridContainer: { paddingHorizontal: 15, marginTop: 20 },
-    rowContainer: { flexDirection: 'row', justifyContent: 'center', gap: 20, paddingHorizontal: 15, marginTop: 20 },
-    gridItem: { width: '45%', backgroundColor: '#fff', borderRadius: 15, padding: 20, alignItems: 'center', justifyContent: 'center', elevation: 5, shadowColor: "rgb(23, 42, 70)", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 5, height: 120 },
-    gridText: { fontSize: 14, fontWeight: 'bold', color: "rgb(23, 42, 70)", marginTop: 10 },
+    iconBtn: { padding: 5 },
+    logo: { height: 35, width: 100, resizeMode: 'contain' },
+    welcomeCard: {
+        backgroundColor: 'rgb(23, 42, 70)', margin: 20, borderRadius: 25, padding: 25,
+        flexDirection: 'row', alignItems: 'center', elevation: 8, shadowColor: 'rgb(23, 42, 70)',
+        shadowOpacity: 0.3, shadowRadius: 10,
+    },
+    welcomeSubText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 5 },
+    welcomeMainText: { color: '#fff', fontSize: 19, fontWeight: 'bold', lineHeight: 26 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: 'rgb(23, 42, 70)', marginLeft: 20, marginBottom: 15 },
+    gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20 },
+    gridItem: {
+        width: '47%', backgroundColor: '#fff', borderRadius: 22, height: 135,
+        alignItems: 'center', justifyContent: 'center', marginBottom: 15,
+        elevation: 3, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5
+    },
     gridItemActive: { backgroundColor: "rgb(23, 42, 70)" },
-    gridTextActive: { color: '#fff' },
+    iconBox: { backgroundColor: '#f0f4ff', borderRadius: 18, padding: 12, marginBottom: 10 },
+    iconBoxActive: { backgroundColor: 'rgba(255,255,255,0.2)' },
+    gridLabel: { fontSize: 14, fontWeight: 'bold', color: "rgb(23, 42, 70)" },
+    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 998 },
+    drawer: { position: 'absolute', top: 0, left: 0, width: 290, height: '100%', backgroundColor: '#fff', zIndex: 999 },
+    drawerTop: { backgroundColor: "rgb(23, 42, 70)", padding: 30, paddingTop: 60, alignItems: 'center', borderBottomRightRadius: 40 },
+    drawerAvatarWrapper: { width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: '#fff', overflow: 'hidden', marginBottom: 10 },
+    drawerAvatar: { width: '100%', height: '100%' },
+    drawerNameText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    drawerSubText: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
+    drawerMenu: { padding: 20, flex: 1 },
+    drawerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, gap: 15 },
+    drawerItemText: { fontSize: 16, color: '#1e293b', fontWeight: '600' },
+    divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 15 },
+    logoutBtnNew: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 15, backgroundColor: '#fff5f5' },
+    logoutTextNew: { color: '#ef5350', fontWeight: 'bold', marginLeft: 10 }
 });
+
+export default HomeTeacher;
