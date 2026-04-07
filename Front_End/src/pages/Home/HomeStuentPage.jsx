@@ -6,10 +6,14 @@ import Footer from "../../components/FooterComp/Footer.jsx";
 import FeaturesComp from "../../components/FeatureComp/FeatureComp.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function HomePage() {
+  const { language } = useLanguage();
+
   return (
     <Box
+      dir={language === "ar" ? "rtl" : "ltr"}
       sx={{
         display: "flex",
         flexDirection: "column",

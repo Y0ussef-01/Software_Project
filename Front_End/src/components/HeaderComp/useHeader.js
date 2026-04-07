@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export const useHeader = () => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [language, setLanguage] = useState("En");
+  const { language, toggleLanguage } = useLanguage();
 
   const open = Boolean(anchorEl);
 
@@ -15,9 +16,11 @@ export const useHeader = () => {
   };
 
   const handleSelectLanguage = (lang) => {
-    setLanguage(lang);
+    toggleLanguage(lang);
     handleClose();
   };
+
+  const displayLanguage = language === "ar" ? "Ar" : "En";
 
   const interactiveStyles = {
     transition: "all 0.3s ease-in-out",
@@ -30,7 +33,7 @@ export const useHeader = () => {
   return {
     anchorEl,
     open,
-    language,
+    displayLanguage,
     handleLanguageClick,
     handleClose,
     handleSelectLanguage,

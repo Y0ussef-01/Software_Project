@@ -5,31 +5,50 @@ import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import SchoolIcon from "@mui/icons-material/School";
+import { useLanguage } from "../../context/LanguageContext";
+
+const TRANSLATIONS = {
+  en: {
+    registration: "Registration",
+    appointments: "Appointments",
+    grades: "Grades",
+    profile: "Profile"
+  },
+  ar: {
+    registration: "التسجيل",
+    appointments: "المواعيد",
+    grades: "الدرجات",
+    profile: "الملف الشخصي"
+  }
+};
 
 export default function FeaturesComp() {
+  const { language } = useLanguage();
+  const t = TRANSLATIONS[language] || TRANSLATIONS["en"];
+
   const features = [
     {
       id: 1,
-      title: "Registration",
+      title: t.registration,
       icon: <AppRegistrationIcon fontSize="inherit" />,
       active: true,
       path: "/register-course",
     },
     {
       id: 2,
-      title: "Appointments",
+      title: t.appointments,
       icon: <CalendarMonthIcon fontSize="inherit" />,
       path: "/appointments",
     },
     {
       id: 3,
-      title: "Grades",
+      title: t.grades,
       icon: <WorkspacePremiumIcon fontSize="inherit" />,
       path: "/grades",
     },
     {
       id: 5,
-      title: "Profile",
+      title: t.profile,
       icon: <SchoolIcon fontSize="inherit" />,
       path: "/profile",
     },

@@ -16,8 +16,31 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-
 import { useLoginForm } from "../../hooks/useLoginForm.js";
+import { useLanguage } from "../../context/LanguageContext.jsx";
+
+const TRANSLATIONS = {
+  en: {
+    location: "🇪🇬 Cairo - Egypt",
+    welcome: "Welcome to Cairo university",
+    subtitle: "Sign in to your account",
+    userIdLabel: "User ID",
+    userIdPlaceholder: "Enter your userID",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Password",
+    loginBtn: "Login",
+  },
+  ar: {
+    location: "مصر - القاهرة 🇪🇬",
+    welcome: "مرحباً بكم في جامعة القاهرة",
+    subtitle: "سجل الدخول إلى حسابك",
+    userIdLabel: "رقم المستخدم",
+    userIdPlaceholder: "أدخل رقم المستخدم الخاص بك",
+    passwordLabel: "كلمة المرور",
+    passwordPlaceholder: "كلمة المرور",
+    loginBtn: "تسجيل الدخول",
+  }
+};
 
 export default function LoginForm() {
   const {
@@ -31,6 +54,9 @@ export default function LoginForm() {
   } = useLoginForm();
 
   const [showPassword, setShowPassword] = useState(false);
+  const { language } = useLanguage();
+
+  const t = TRANSLATIONS[language] || TRANSLATIONS["en"];
 
   const isSubmitDisabled =
     userId.trim() === "" || password.trim() === "" || loading;
@@ -44,6 +70,7 @@ export default function LoginForm() {
       elevation={3}
       component="form" 
       onSubmit={handleLogin} 
+      dir={language === "ar" ? "rtl" : "ltr"}
       sx={{
         p: { xs: 3, sm: 4, md: 5 },
         borderRadius: "16px",
@@ -51,9 +78,10 @@ export default function LoginForm() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
+        position: "relative",
       }}
     >
-      <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
+      <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 }, mt: 2 }}>
         <Typography
           variant="subtitle1"
           sx={{
@@ -63,7 +91,7 @@ export default function LoginForm() {
             fontSize: { xs: "0.875rem", md: "1rem" },
           }}
         >
-          🇪🇬 Cairo - Egypt
+          {t.location}
         </Typography>
         <Typography
           variant="h4"
@@ -74,14 +102,14 @@ export default function LoginForm() {
             fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.125rem" },
           }}
         >
-          Welcome to Cairo university
+          {t.welcome}
         </Typography>
         <Typography
           variant="body1"
           color="text.secondary"
           sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
         >
-          Sign in to your account
+          {t.subtitle}
         </Typography>
       </Box>
 
@@ -102,11 +130,11 @@ export default function LoginForm() {
               fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
-            User ID
+            {t.userIdLabel}
           </Typography>
           <OutlinedInput
             fullWidth
-            placeholder="Enter your userID"
+            placeholder={t.userIdPlaceholder}
             value={userId} 
             onChange={(e) => setUserId(e.target.value)} 
             disabled={loading} 
@@ -128,12 +156,12 @@ export default function LoginForm() {
               fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
-            Password
+            {t.passwordLabel}
           </Typography>
           <OutlinedInput
             fullWidth
             type={showPassword ? "text" : "password"}
-            placeholder="Password"
+            placeholder={t.passwordPlaceholder}
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
             disabled={loading}      
@@ -173,7 +201,7 @@ export default function LoginForm() {
             "&:hover": { backgroundColor: "#0f1f35" },
           }}
         >
-          {loading ? <CircularProgress size={26} color="inherit" /> : "Login"}
+          {loading ? <CircularProgress size={26} color="inherit" /> : t.loginBtn}
         </Button>
       </Box>
     </Paper>

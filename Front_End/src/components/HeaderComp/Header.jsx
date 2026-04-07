@@ -25,7 +25,7 @@ const Header = () => {
   const {
     anchorEl,
     open,
-    language,
+    displayLanguage,
     handleLanguageClick,
     handleClose,
     handleSelectLanguage,
@@ -114,7 +114,7 @@ const Header = () => {
                 ...interactiveStyles,
               }}
             >
-              {language}
+              {displayLanguage}
             </Button>
 
             <Menu

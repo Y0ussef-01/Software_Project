@@ -19,6 +19,34 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../hooks/Student/useStudentProfile";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useLanguage } from "../../context/LanguageContext";
+
+const TRANSLATIONS = {
+  en: {
+    noProfile: "No Profile Data Found.",
+    profileTitle: "Student Profile",
+    resetBtn: "Reset Password",
+    studentId: "Student ID",
+    email: "Email",
+    department: "Department",
+    level: "Level",
+    gpa: "Cumulative GPA",
+    regHours: "Registration hours",
+    maxHours: "Credit Hours"
+  },
+  ar: {
+    noProfile: "لم يتم العثور على بيانات الملف الشخصي.",
+    profileTitle: "الملف الشخصي للطالب",
+    resetBtn: "إعادة تعيين كلمة المرور",
+    studentId: "الرقم الجامعي",
+    email: "البريد الإلكتروني",
+    department: "القسم",
+    level: "المستوى",
+    gpa: "المعدل التراكمي (GPA)",
+    regHours: "الساعات المسجلة",
+    maxHours: "الساعات المعتمدة"
+  }
+};
 
 export default function ProfileComp() {
   const {
@@ -32,6 +60,8 @@ export default function ProfileComp() {
   } = useProfile();
 
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = TRANSLATIONS[language] || TRANSLATIONS["en"];
 
   if (loading) {
     return (
@@ -51,19 +81,19 @@ export default function ProfileComp() {
   if (!studentData) {
     return (
       <Typography color="error" align="center" variant="h6" sx={{ mt: 5 }}>
-        No Profile Data Found.
+        {t.noProfile}
       </Typography>
     );
   }
 
   const details = [
-    { label: "Student ID", value: studentData._id },
-    { label: "Email", value: studentData.email },
-    { label: "Department", value: studentData.department },
-    { label: "Level", value: studentData.grade },
-    { label: "Cumulative GPA", value: studentData.GPA },
-    { label: "Registration hours", value: studentData.hours },
-    { label: "Credit Hours", value: studentData.maxHours },
+    { label: t.studentId, value: studentData._id },
+    { label: t.email, value: studentData.email },
+    { label: t.department, value: studentData.department },
+    { label: t.level, value: studentData.grade },
+    { label: t.gpa, value: studentData.GPA },
+    { label: t.regHours, value: studentData.hours },
+    { label: t.maxHours, value: studentData.maxHours },
   ];
 
   const hasCustomImage =
@@ -138,7 +168,7 @@ export default function ProfileComp() {
                     letterSpacing: "0.5px",
                   }}
                 >
-                  Student Profile
+                  {t.profileTitle}
                 </Typography>
               </Box>
 
@@ -158,7 +188,7 @@ export default function ProfileComp() {
                   },
                 }}
               >
-                Reset Password
+                {t.resetBtn}
               </Button>
             </Box>
 

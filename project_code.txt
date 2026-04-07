@@ -11869,6 +11869,8 @@ export default function RegistrationComp() {
     pendingSwapRequests,
     handleSwapRequest,
     handleSwapRespond,
+    sentSwapRequests,
+    handleCancelSwapRequest,
   } = useRegistration();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -13026,6 +13028,96 @@ export default function RegistrationComp() {
                           Accept Swap
                         </Button>
                       </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
+
+      {/* SENT SWAP REQUESTS UI */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: "24px",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+          <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+            Sent Swap Requests ({sentSwapRequests?.length || 0})
+          </Typography>
+        </Box>
+
+        {sentSwapRequests?.length === 0 || !sentSwapRequests ? (
+          <Box
+            sx={{
+              textAlign: "center",
+              py: 5,
+              bgcolor: "#f8fafc",
+              borderRadius: "16px",
+            }}
+          >
+            <Typography variant="subtitle1" color="text.secondary">
+              No sent swap requests available.
+            </Typography>
+          </Box>
+        ) : (
+          <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+            <Table sx={{ minWidth: 600 }}>
+              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Course</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>From Group</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Target Group</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sentSwapRequests.map((req) => (
+                  <TableRow key={req._id}>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {req.courseId?.name || "Unknown"} ({req.courseId?._id || req.courseId || "Unknown"})
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={req.senderGroupName} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
+                    </TableCell>
+                    <TableCell>
+                      <Typography 
+                        variant="body2" 
+                        fontWeight="bold" 
+                        color={req.status === 'Pending' ? "warning.main" : req.status === 'Accepted' ? "success.main" : "error.main"}
+                      >
+                        {req.status}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      {req.status === 'Pending' && (
+                        <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            disabled={isActionLoading}
+                            onClick={() => handleCancelSwapRequest(req.relatedIds)}
+                            startIcon={<DeleteOutlineIcon />}
+                            sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                          >
+                            Cancel Request
+                          </Button>
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -20568,6 +20660,7 @@ export default function useRegistration() {
   );
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [pendingSwapRequests, setPendingSwapRequests] = useState([]);
+  const [sentSwapRequests, setSentSwapRequests] = useState([]);
 
   const fetchPendingSwaps = async () => {
     try {
@@ -20578,6 +20671,34 @@ export default function useRegistration() {
       setPendingSwapRequests(response.data || []);
     } catch (error) {
       console.error("Failed to fetch pending swap requests", error);
+    }
+  };
+
+  const fetchSentSwaps = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/student/sent-swap-requests",
+        getAuthHeaders(),
+      );
+      console.log("Sent Swaps Data:", response.data);
+      const rawData = response.data?.requests || response.data?.data || response.data || [];
+      
+      const grouped = rawData.reduce((acc, curr) => {
+        const courseId = curr.courseId?._id || curr.courseId;
+        const targetGroupName = curr.receiverGroupName || curr.targetGroupName;
+        const groupKey = `${courseId}_${targetGroupName}`;
+        
+        if (!acc[groupKey]) {
+          acc[groupKey] = { ...curr, relatedIds: [curr._id] };
+        } else {
+          acc[groupKey].relatedIds.push(curr._id);
+        }
+        return acc;
+      }, {});
+      
+      setSentSwapRequests(Object.values(grouped));
+    } catch (error) {
+      console.error("Failed to fetch sent swap requests", error);
     }
   };
 
@@ -20601,7 +20722,7 @@ export default function useRegistration() {
       sessionStorage.setItem("user_data", encodeData(profileData));
       sessionStorage.setItem("reg_courses", encodeData(coursesData));
       
-      await fetchPendingSwaps();
+      await Promise.all([fetchPendingSwaps(), fetchSentSwaps()]);
     } catch (error) {
       if (!studentProfile) toast.error("Failed to load registration data.");
     } finally {
@@ -20768,6 +20889,7 @@ export default function useRegistration() {
         getAuthHeaders(),
       );
       toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
+      fetchSentSwaps();
       fetchData(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send swap request.");
@@ -20805,6 +20927,27 @@ export default function useRegistration() {
     }
   };
 
+  const handleCancelSwapRequest = async (relatedIds) => {
+    if (!relatedIds || relatedIds.length === 0) return;
+    setIsActionLoading(true);
+    try {
+      await Promise.all(
+        relatedIds.map((id) =>
+          axios.delete(`http://localhost:5000/student/cancel-swap-request/${id}`, {
+            headers: getAuthHeaders().headers,
+          })
+        )
+      );
+      
+      toast.success("Swap request cancelled successfully!", { autoClose: 2000 });
+      fetchSentSwaps();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to cancel swap request.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   return {
     isLoading,
     isActionLoading,
@@ -20819,12 +20962,15 @@ export default function useRegistration() {
     remainingHours,
     registeredCourses,
     pendingSwapRequests,
+    sentSwapRequests,
     handleRegister,
     handleDropCourse,
     handleSwitchGroup,    
     handleSwapRequest,
     handleSwapRespond,
+    handleCancelSwapRequest,
     fetchPendingSwaps,
+    fetchSentSwaps,
   };
 }
 -e 
@@ -67378,7 +67524,7 @@ const styles = StyleSheet.create({
 === File: ./Mobile/app/uploadgrades.tsx ===
 import Entypo from '@expo/vector-icons/Entypo';
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -67389,6 +67535,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -67402,52 +67549,70 @@ interface UploadedFile {
 }
 
 const UploadGrades = () => {
+    // استقبال بيانات المادة من الشاشة السابقة
     const { courseId, courseName } = useLocalSearchParams();
     const [file, setFile] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
+    // دالة اختيار ملف الإكسيل
     const pickFile = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                type: [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel' // .xls
+                ],
+                copyToCacheDirectory: true
             });
+
             if (!result.canceled) {
-                setFile(result.assets[0]);
+                const selectedFile = result.assets[0];
+                // التأكد من امتداد الملف يدوياً لزيادة الأمان
+                if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
+                    setFile(selectedFile);
+                } else {
+                    Alert.alert('⚠️ Invalid File', 'Please select a valid Excel file (.xlsx or .xls)');
+                }
             }
         } catch (err) {
             Alert.alert('❌ Error', 'Failed to pick file');
         }
     };
 
+    // دالة لفتح الملف بعد رفعه (للمعاينة)
     const openFile = async (uri: string) => {
         try {
-            await Sharing.shareAsync(uri, {
-                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                dialogTitle: 'Open with...',
-            });
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (isAvailable) {
+                await Sharing.shareAsync(uri);
+            } else {
+                Alert.alert('❌', 'Sharing is not available on this device');
+            }
         } catch (err) {
             Alert.alert('❌', 'Failed to open file');
         }
     };
 
+    // حذف ملف من قائمة "التم رفعهم مؤخراً"
     const removeUploadedFile = (index: number) => {
         Alert.alert(
-            'Remove File',
-            'Are you sure you want to remove this file?',
+            'Remove Record',
+            'Remove this file from recent history?',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Remove',
                     style: 'destructive',
                     onPress: () => {
-                        setUploadedFiles((prev: UploadedFile[]) => prev.filter((_, i) => i !== index));
+                        setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
                     },
                 },
             ]
         );
     };
 
+    // دالة الرفع للسيرفر
     const handleUpload = async () => {
         if (!file) {
             Alert.alert('⚠️', 'Please select an Excel file first');
@@ -67459,24 +67624,35 @@ const UploadGrades = () => {
 
             const formData = new FormData();
             formData.append('courseId', courseId as string);
-            formData.append('excelFile', {
-                uri: file.uri,
+            
+            // تجهيز الملف للرفع
+            const fileToUpload = {
+                uri: Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri,
                 name: file.name,
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            } as any);
+            };
+
+            formData.append('excelFile', fileToUpload as any);
 
             await API.post('/teacher/upload-grades-excel', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                },
+                // إضافة timeout لأن ملفات الإكسيل قد تأخذ وقتاً في المعالجة بالسيرفر
+                timeout: 30000 
             });
 
+            // إضافة الملف لقائمة التاريخ (History)
             const now = new Date();
-            const uploadedAt = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-            setUploadedFiles((prev: UploadedFile[]) => [{ name: file.name, uploadedAt, uri: file.uri }, ...prev]);
-            setFile(null);
+            const timestamp = `${now.toLocaleDateString()} at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            
+            setUploadedFiles((prev) => [{ name: file.name, uploadedAt: timestamp, uri: file.uri }, ...prev]);
+            setFile(null); // تفريغ الملف المختار بعد النجاح
 
-            Alert.alert('✅ Success', 'Grades uploaded successfully!');
+            Alert.alert('✅ Success', 'Grades have been processed and uploaded successfully!');
         } catch (err: any) {
-            Alert.alert('❌ Error', err.response?.data?.message || 'Failed to upload grades');
+            console.log("Upload Error:", err.response?.data || err.message);
+            Alert.alert('❌ Upload Failed', err.response?.data?.message || 'Server error during processing');
         } finally {
             setLoading(false);
         }
@@ -67485,51 +67661,71 @@ const UploadGrades = () => {
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
+            {/* Header */}
             <View style={styles.HeaderStyle}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Entypo name="chevron-with-circle-left" size={24} color="white" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Entypo name="chevron-with-circle-left" size={28} color="white" />
                 </TouchableOpacity>
                 <Image source={require('../assets/images/logo(1).png')} style={styles.imageStyle} />
+                <View style={{ width: 45 }} />
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                
+                {/* Course Info Section */}
                 <View style={styles.courseCard}>
-                    <MaterialCommunityIcons name="book-open-variant" size={28} color="white" />
-                    <View>
-                        <Text style={styles.courseId}>{courseId}</Text>
-                        <Text style={styles.courseName}>{courseName}</Text>
+                    <View style={styles.courseIconCircle}>
+                        <MaterialCommunityIcons name="table-edit" size={30} color="white" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.courseIdLabel}>COURSE ID</Text>
+                        <Text style={styles.courseIdText}>{courseId}</Text>
+                        <Text style={styles.courseNameText}>{courseName}</Text>
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.uploadBox} onPress={pickFile}>
-                    <MaterialCommunityIcons
-                        name="file-excel"
-                        size={32}
-                        color={file ? 'green' : 'rgb(23, 42, 70)'}
-                    />
+                <Text style={styles.sectionTitle}>Upload New Grades</Text>
+                
+                {/* Upload Zone */}
+                <TouchableOpacity 
+                    style={[styles.uploadBox, file && styles.uploadBoxActive]} 
+                    onPress={pickFile}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.excelIconCircle, file && { backgroundColor: '#e8f5e9' }]}>
+                        <MaterialCommunityIcons
+                            name={file ? "file-check" : "file-excel-outline"}
+                            size={40}
+                            color={file ? '#2e7d32' : 'rgb(23, 42, 70)'}
+                        />
+                    </View>
+                    
                     <View style={{ flex: 1 }}>
                         {file ? (
-                            <Text style={styles.fileName} numberOfLines={1}>✅ {file.name}</Text>
+                            <View>
+                                <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                                <Text style={styles.fileSize}>Ready to upload</Text>
+                            </View>
                         ) : (
-                            <>
-                                <Text style={styles.uploadText}>Tap to select Excel file</Text>
-                                <Text style={styles.uploadSubText}>.xlsx files only</Text>
-                            </>
+                            <View>
+                                <Text style={styles.uploadText}>Select Excel Sheet</Text>
+                                <Text style={styles.uploadSubText}>Make sure it follows the template</Text>
+                            </View>
                         )}
                     </View>
-                    {file ? (
-                        <TouchableOpacity onPress={() => setFile(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                            <MaterialCommunityIcons name="close-circle" size={22} color="red" />
+
+                    {file && (
+                        <TouchableOpacity onPress={() => setFile(null)} style={styles.clearBtn}>
+                            <MaterialCommunityIcons name="close-circle" size={24} color="#ef5350" />
                         </TouchableOpacity>
-                    ) : (
-                        <MaterialCommunityIcons name="chevron-right" size={20} color="gray" />
                     )}
                 </TouchableOpacity>
 
+                {/* Upload Action Button */}
                 <TouchableOpacity
-                    style={[styles.button, !file && styles.buttonDisabled]}
+                    style={[styles.button, (!file || loading) && styles.buttonDisabled]}
                     onPress={handleUpload}
                     disabled={loading || !file}
                 >
@@ -67537,34 +67733,45 @@ const UploadGrades = () => {
                         <ActivityIndicator color="white" />
                     ) : (
                         <>
-                            <MaterialCommunityIcons name="upload" size={20} color="white" />
-                            <Text style={styles.buttonText}>Upload Grades</Text>
+                            <MaterialCommunityIcons name="cloud-upload" size={22} color="white" />
+                            <Text style={styles.buttonText}>Confirm & Process Upload</Text>
                         </>
                     )}
                 </TouchableOpacity>
 
+                {/* History Section */}
                 {uploadedFiles.length > 0 && (
                     <View style={styles.historyContainer}>
-                        <Text style={styles.historyTitle}>Uploaded Grades</Text>
+                        <View style={styles.historyHeader}>
+                            <MaterialCommunityIcons name="history" size={20} color="rgb(23, 42, 70)" />
+                            <Text style={styles.historyTitle}>Recently Uploaded</Text>
+                        </View>
+                        
                         {uploadedFiles.map((f, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.historyItem}
-                                onPress={() => openFile(f.uri)}
-                            >
-                                <MaterialCommunityIcons name="file-excel" size={22} color="green" />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.historyFileName} numberOfLines={1}>{f.name}</Text>
-                                    <Text style={styles.historyDate}>{f.uploadedAt}</Text>
-                                </View>
-                                <TouchableOpacity onPress={() => removeUploadedFile(index)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                    <MaterialCommunityIcons name="close-circle" size={20} color="red" />
+                            <View key={index} style={styles.historyItem}>
+                                <TouchableOpacity 
+                                    style={styles.historyItemContent} 
+                                    onPress={() => openFile(f.uri)}
+                                >
+                                    <View style={styles.smallExcelIcon}>
+                                        <MaterialCommunityIcons name="file-excel" size={20} color="#2e7d32" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.historyFileName} numberOfLines={1}>{f.name}</Text>
+                                        <Text style={styles.historyDate}>{f.uploadedAt}</Text>
+                                    </View>
                                 </TouchableOpacity>
-                            </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    onPress={() => removeUploadedFile(index)} 
+                                    style={styles.itemRemoveBtn}
+                                >
+                                    <MaterialCommunityIcons name="trash-can-outline" size={20} color="#b0bec5" />
+                                </TouchableOpacity>
+                            </View>
                         ))}
                     </View>
                 )}
-
             </ScrollView>
         </View>
     );
@@ -67573,134 +67780,123 @@ const UploadGrades = () => {
 export default UploadGrades;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f4ff',
-    },
+    container: { flex: 1, backgroundColor: '#f4f7ff' },
     HeaderStyle: {
         width: '100%',
-        height: 120,
+        height: Platform.OS === 'ios' ? 120 : 100,
         backgroundColor: 'rgb(23, 42, 70)',
-        elevation: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
         paddingHorizontal: 20,
-        paddingTop: StatusBar.currentHeight,
+        paddingTop: Platform.OS === 'ios' ? 40 : StatusBar.currentHeight,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        elevation: 10,
     },
-    imageStyle: {
-        height: 50,
-        width: '40%',
-        resizeMode: 'contain',
-    },
-    content: {
-        flex: 1,
-        padding: 20,
-    },
+    backBtn: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+    imageStyle: { height: 40, width: 140, resizeMode: 'contain' },
+    content: { flex: 1, padding: 20 },
+    
     courseCard: {
         backgroundColor: 'rgb(23, 42, 70)',
-        borderRadius: 15,
+        borderRadius: 20,
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 15,
-        marginBottom: 20,
-        elevation: 5,
+        marginBottom: 30,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
     },
-    courseId: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
+    courseIconCircle: {
+        width: 55,
+        height: 55,
+        borderRadius: 15,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15
     },
-    courseName: {
-        fontSize: 13,
-        color: 'rgba(255,255,255,0.7)',
-        marginTop: 3,
-    },
+    courseIdLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold', letterSpacing: 1 },
+    courseIdText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+    courseNameText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#334155', marginBottom: 15, marginLeft: 5 },
+    
     uploadBox: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 15,
+        borderRadius: 18,
+        padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
         borderWidth: 2,
-        borderColor: 'rgb(23, 42, 70)',
+        borderColor: '#cbd5e1',
         borderStyle: 'dashed',
-        marginBottom: 15,
+        marginBottom: 20,
     },
-    uploadText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
+    uploadBoxActive: { borderColor: '#2e7d32', backgroundColor: '#f1f8e9', borderStyle: 'solid' },
+    excelIconCircle: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#f1f5f9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15
     },
-    uploadSubText: {
-        fontSize: 11,
-        color: 'gray',
-        marginTop: 2,
-    },
-    fileName: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: 'green',
-    },
+    uploadText: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    uploadSubText: { fontSize: 12, color: '#64748b', marginTop: 3 },
+    fileName: { fontSize: 15, fontWeight: 'bold', color: '#2e7d32' },
+    fileSize: { fontSize: 12, color: '#689f38' },
+    clearBtn: { padding: 5 },
+
     button: {
         backgroundColor: 'rgb(23, 42, 70)',
-        padding: 15,
-        borderRadius: 12,
+        paddingVertical: 16,
+        borderRadius: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
-        marginBottom: 25,
+        gap: 12,
+        elevation: 4,
+        marginBottom: 30,
     },
-    buttonDisabled: {
-        opacity: 0.5,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    buttonDisabled: { backgroundColor: '#94a3b8', elevation: 0 },
+    buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
     historyContainer: {
         backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 15,
+        borderRadius: 20,
+        padding: 20,
         elevation: 3,
-        shadowColor: 'rgb(23, 42, 70)',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        marginBottom: 20,
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
     },
-    historyTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
-        marginBottom: 12,
-    },
+    historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+    historyTitle: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
     historyItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    historyFileName: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: '#333',
+    historyItemContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+    smallExcelIcon: { 
+        width: 35, 
+        height: 35, 
+        backgroundColor: '#e8f5e9', 
+        borderRadius: 10, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        marginRight: 12
     },
-    historyDate: {
-        fontSize: 11,
-        color: 'gray',
-        marginTop: 2,
-    },
+    historyFileName: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
+    historyDate: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+    itemRemoveBtn: { padding: 8 }
 });-e 
 
 === File: ./Mobile/app/scanqr.tsx ===
@@ -67934,7 +68130,7 @@ const styles = StyleSheet.create({
 === File: ./Mobile/app/studentgrades.tsx ===
 import Entypo from '@expo/vector-icons/Entypo';
 import { Stack, router } from "expo-router";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -67944,9 +68140,12 @@ import {
     Text,
     TouchableOpacity,
     View,
+    RefreshControl,
+    Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import API from '../api/axiosConfig';
+import { saveCache, getCache } from '../api/storage'; 
 
 interface Degree {
     title: string;
@@ -67960,35 +68159,55 @@ interface Course {
     Degrees: Degree[];
 }
 
+const GRADES_CACHE_KEY = 'student_grades_cache';
+
 const StudentGrades = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchGrades = async (isFirstLoad = false) => {
+        try {
+            if (isFirstLoad) {
+                const cachedData = await getCache(GRADES_CACHE_KEY);
+                if (cachedData) {
+                    setCourses(cachedData);
+                    setLoading(false);
+                }
+            }
+
+            const res = await API.get('/student/grades');
+            const rawGrades: Course[] = res.data?.grades || [];
+
+            const seen = new Map<string, Course>();
+            rawGrades.forEach((c) => {
+                if (seen.has(c.courseId)) {
+                    const existing = seen.get(c.courseId)!;
+                    existing.Degrees = [...existing.Degrees, ...c.Degrees];
+                } else {
+                    seen.set(c.courseId, { ...c, Degrees: [...c.Degrees] });
+                }
+            });
+
+            const finalData = Array.from(seen.values());
+
+            setCourses(finalData);
+            await saveCache(GRADES_CACHE_KEY, finalData);
+
+        } catch (err) {
+            console.error('Error fetching grades:', err);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchGrades = async () => {
-            try {
-                const res = await API.get('/student/grades');
-                const rawGrades: Course[] = res.data?.grades || [];
+        fetchGrades(true);
+    }, []);
 
-                
-                const seen = new Map<string, Course>();
-                rawGrades.forEach((c) => {
-                    if (seen.has(c.courseId)) {
-                       
-                        const existing = seen.get(c.courseId)!;
-                        existing.Degrees = [...existing.Degrees, ...c.Degrees];
-                    } else {
-                        seen.set(c.courseId, { ...c, Degrees: [...c.Degrees] });
-                    }
-                });
-
-                setCourses(Array.from(seen.values()));
-            } catch (err) {
-                setCourses([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
         fetchGrades();
     }, []);
 
@@ -67996,31 +68215,48 @@ const StudentGrades = () => {
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
 
+            {/* Header */}
             <View style={styles.HeaderStyle}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Entypo name="chevron-with-circle-left" size={24} color="white" />
+                    <Entypo name="chevron-with-circle-left" size={28} color="white" />
                 </TouchableOpacity>
                 <Image source={require('../assets/images/logo(1).png')} style={styles.imageStyle} />
+                <View style={{ width: 28 }} />
             </View>
 
+            {/* Title Section */}
             <View style={styles.titleContainer}>
-                <MaterialCommunityIcons name="pencil-box-multiple" size={28} color="rgb(23, 42, 70)" />
-                <Text style={styles.titleText}>My Courses</Text>
+                <View style={styles.iconCircle}>
+                    <MaterialCommunityIcons name="medal-outline" size={24} color="white" />
+                </View>
+                <View>
+                    <Text style={styles.titleText}>My Grades</Text>
+                    <Text style={styles.subtitleText}>Performance Overview</Text>
+                </View>
             </View>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="rgb(23, 42, 70)" style={{ marginTop: 40 }} />
+            {loading && courses.length === 0 ? (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
+                </View>
             ) : courses.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                    <MaterialCommunityIcons name="book-off" size={50} color="gray" />
-                    <Text style={styles.emptyText}>No courses found</Text>
+                    <MaterialCommunityIcons name="book-off-outline" size={70} color="#ccc" />
+                    <Text style={styles.emptyText}>No data available</Text>
                 </View>
             ) : (
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    style={styles.scrollView} 
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="rgb(23, 42, 70)" />
+                    }
+                >
                     {courses.map((course) => (
                         <TouchableOpacity
                             key={course.courseId}
                             style={styles.courseCard}
+                            activeOpacity={0.7}
                             onPress={() =>
                                 router.push({
                                     pathname: '/coursedetails',
@@ -68033,12 +68269,18 @@ const StudentGrades = () => {
                             }
                         >
                             <View style={styles.courseInfo}>
-                                <Text style={styles.courseId}>{course.courseId}</Text>
-                                <Text style={styles.courseName}>{course.courseName}</Text>
+                                <View style={styles.courseIcon}>
+                                    <MaterialCommunityIcons name="book-open-variant" size={22} color="rgb(23, 42, 70)" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.courseId}>{course.courseId}</Text>
+                                    <Text style={styles.courseName}>{course.courseName}</Text>
+                                </View>
                             </View>
-                            <MaterialCommunityIcons name="chevron-right" size={24} color="rgb(23, 42, 70)" />
+                            <MaterialCommunityIcons name="chevron-right" size={22} color="#ddd" />
                         </TouchableOpacity>
                     ))}
+                    <View style={{ height: 30 }} />
                 </ScrollView>
             )}
         </View>
@@ -68048,81 +68290,33 @@ const StudentGrades = () => {
 export default StudentGrades;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f4ff',
-    },
+    container: { flex: 1, backgroundColor: '#f8faff' },
     HeaderStyle: {
-        width: '100%',
-        height: 120,
-        backgroundColor: 'rgb(23, 42, 70)',
-        elevation: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        paddingHorizontal: 20,
-        paddingTop: StatusBar.currentHeight,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        width: '100%', height: 110, backgroundColor: 'rgb(23, 42, 70)',
+        elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5, shadowRadius: 10, paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     },
-    imageStyle: {
-        height: 50,
-        width: '40%',
-        resizeMode: 'contain',
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        paddingHorizontal: 20,
-        paddingVertical: 20,
-    },
-    titleText: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
-    },
-    scrollView: {
-        paddingHorizontal: 20,
-    },
+    imageStyle: { height: 45, width: '35%', resizeMode: 'contain' },
+    titleContainer: { flexDirection: 'row', alignItems: 'center', gap: 15, paddingHorizontal: 20, paddingVertical: 25 },
+    iconCircle: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgb(23, 42, 70)', alignItems: 'center', justifyContent: 'center', elevation: 4 },
+    titleText: { fontSize: 22, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    subtitleText: { fontSize: 13, color: 'gray' },
+    scrollView: { paddingHorizontal: 20 },
     courseCard: {
-        backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 20,
-        marginBottom: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        elevation: 3,
-        shadowColor: 'rgb(23, 42, 70)',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 15,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05, shadowRadius: 8, borderWidth: 1, borderColor: '#f0f0f0'
     },
-    courseInfo: {
-        gap: 5,
-    },
-    courseId: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
-    },
-    courseName: {
-        fontSize: 14,
-        color: 'gray',
-    },
-    emptyContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: 'gray',
-    },
+    courseInfo: { flexDirection: 'row', alignItems: 'center', gap: 15, flex: 1 },
+    courseIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#f0f4ff', alignItems: 'center', justifyContent: 'center' },
+    courseId: { fontSize: 12, fontWeight: 'bold', color: '#888', marginBottom: 2 },
+    courseName: { fontSize: 16, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingBottom: 100 },
+    emptyText: { fontSize: 16, color: '#aaa', fontWeight: '500' },
 });-e 
 
 === File: ./Mobile/app/propage.tsx ===
@@ -68946,15 +69140,15 @@ const styles = StyleSheet.create({
 });-e 
 
 === File: ./Mobile/app/teacherattendance.tsx ===
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, FlatList,
-    ActivityIndicator, StatusBar, TextInput, ScrollView, Modal
+    ActivityIndicator, StatusBar, TextInput, ScrollView, Modal, Platform
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { Stack } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import API from '../api/axiosConfig';
+// استيراد دالة الكاش الموحدة للمدرس
 import { getTeacherProfile } from '../api/teacherApi';
 
 interface AttendanceRecord {
@@ -68983,13 +69177,19 @@ const TeacherAttendance = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        fetchOptions();
-    }, []);
+    // --- التحديث عند دخول الشاشة باستخدام الكاش ---
+    useFocusEffect(
+        useCallback(() => {
+            fetchOptions();
+        }, [])
+    );
 
     const fetchOptions = async () => {
         try {
+            // جلب بيانات المدرس (سواء من الـ RAM أو التخزين المحلي أو السيرفر)
             const data = await getTeacherProfile();
+            
+            // معالجة البيانات للتأكد من الوصول للمواد والمجموعات بشكل صحيح
             const rawCourses = data?.user?.courses || data?.courses || [];
 
             const list: GroupOption[] = [];
@@ -68999,7 +69199,7 @@ const TeacherAttendance = () => {
                 const groupId = c.group?._id || '';
                 const groupNum = c.group?.groupName || '';
                 const groupType = c.group?.type || '';
-                const courseName = c.course?.name || c.course?._id || '';
+                const courseName = c.course?.name || c.course?._id || 'Unknown Course';
 
                 if (!groupId || seen.has(groupId)) return;
                 seen.add(groupId);
@@ -69010,30 +69210,26 @@ const TeacherAttendance = () => {
 
             setOptions(list);
         } catch (err) {
-            console.log('Error fetching options:', err);
+            console.log('❌ Error fetching attendance options:', err);
         } finally {
             setLoading(false);
         }
     };
 
     const handleSearch = async () => {
-        if (!selected) return;
-
-        if (sessionFilter.trim() === '') {
-            return;
-        }
+        if (!selected || sessionFilter.trim() === '') return;
 
         setSearching(true);
         setSearched(true);
         setCurrentPage(1);
         try {
+            // البحث عن سجلات الحضور (دائماً من السيرفر لضمان الدقة اللحظية)
             const res = await API.get(`/teacher/attendance/${selected.groupId}`, {
                 params: { sessionNumber: sessionFilter.trim() }
             });
-            const data: AttendanceRecord[] = res.data || [];
-            setRecords(data);
+            setRecords(res.data || []);
         } catch (err) {
-            console.log('Error fetching attendance:', err);
+            console.log('❌ Error fetching attendance records:', err);
             setRecords([]);
         } finally {
             setSearching(false);
@@ -69048,6 +69244,7 @@ const TeacherAttendance = () => {
         });
     };
 
+    // --- Pagination Logic ---
     const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
     const paginatedRecords = records.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
@@ -69059,22 +69256,25 @@ const TeacherAttendance = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <MaterialCommunityIcons name="arrow-left" size={28} color="white" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Attendance</Text>
-                <View style={{ width: 26 }} />
+                <Text style={styles.headerTitle}>Attendance Tracking</Text>
+                <View style={{ width: 45 }} />
             </View>
 
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
+                    <Text style={{ marginTop: 10, color: '#666' }}>Loading Groups...</Text>
                 </View>
             ) : (
                 <View style={{ flex: 1 }}>
+                    {/* Filter Card */}
                     <View style={styles.filtersCard}>
-                        <Text style={styles.label}>Select Lecture</Text>
+                        <Text style={styles.label}>Select Group / Lecture</Text>
                         <TouchableOpacity
                             style={styles.dropdown}
                             onPress={() => setModalVisible(true)}
@@ -69083,15 +69283,15 @@ const TeacherAttendance = () => {
                                 style={selected ? styles.dropdownSelected : styles.dropdownPlaceholder}
                                 numberOfLines={1}
                             >
-                                {selected ? selected.label : 'Select a lecture...'}
+                                {selected ? selected.label : 'Choose a group...'}
                             </Text>
-                            <MaterialCommunityIcons name="chevron-down" size={22} color="#888" />
+                            <MaterialCommunityIcons name="chevron-down" size={24} color="#888" />
                         </TouchableOpacity>
 
-                        <Text style={[styles.label, { marginTop: 14 }]}>Session Number</Text>
+                        <Text style={[styles.label, { marginTop: 15 }]}>Session Number</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. 1"
+                            placeholder="e.g. 1, 2, 3..."
                             placeholderTextColor="#aaa"
                             keyboardType="numeric"
                             value={sessionFilter}
@@ -69110,63 +69310,58 @@ const TeacherAttendance = () => {
                                 <ActivityIndicator size="small" color="white" />
                             ) : (
                                 <>
-                                    <MaterialCommunityIcons name="magnify" size={20} color="white" />
-                                    <Text style={styles.searchBtnText}>Search</Text>
+                                    <MaterialCommunityIcons name="magnify" size={22} color="white" />
+                                    <Text style={styles.searchBtnText}>Show Attendance</Text>
                                 </>
                             )}
                         </TouchableOpacity>
                     </View>
 
-                    {/* عدد الطلاب */}
+                    {/* Stats Row */}
                     {searched && !searching && (
                         <View style={styles.countRow}>
-                            <MaterialCommunityIcons name="account-group" size={20} color="rgb(23, 42, 70)" />
+                            <MaterialCommunityIcons name="account-check-outline" size={22} color="rgb(23, 42, 70)" />
                             <Text style={styles.countText}>
-                                Total Attended:{' '}
-                                <Text style={styles.countNum}>{records.length} Students</Text>
+                                Total Present: <Text style={styles.countNum}>{records.length}</Text>
                             </Text>
                         </View>
                     )}
 
+                    {/* Table Header */}
                     {searched && !searching && records.length > 0 && (
                         <View style={styles.tableHeader}>
-                            <Text style={[styles.thText, { flex: 1.5 }]}>Name</Text>
-                            <Text style={[styles.thText, { flex: 1.2 }]}>ID</Text>
+                            <Text style={[styles.thText, { flex: 2 }]}>Student Name</Text>
                             <Text style={[styles.thText, { flex: 1.2, textAlign: 'center' }]}>Session</Text>
                             <Text style={[styles.thText, { flex: 1, textAlign: 'right' }]}>Time</Text>
                         </View>
                     )}
 
+                    {/* Results List */}
                     {searching ? (
                         <View style={styles.centerContainer}>
                             <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
                         </View>
                     ) : searched && records.length === 0 ? (
                         <View style={styles.centerContainer}>
-                            <MaterialCommunityIcons name="clipboard-text-off-outline" size={55} color="#ccc" />
-                            <Text style={styles.emptyText}>No attendance records found</Text>
+                            <MaterialCommunityIcons name="clipboard-text-off-outline" size={70} color="#cbd5e0" />
+                            <Text style={styles.emptyText}>No attendance found for this session</Text>
                         </View>
                     ) : (
                         <View style={{ flex: 1 }}>
                             <FlatList
                                 data={paginatedRecords}
                                 keyExtractor={(item) => item._id}
-                                contentContainerStyle={{ paddingBottom: 10 }}
+                                contentContainerStyle={{ paddingBottom: 20 }}
                                 renderItem={({ item, index }) => (
                                     <View style={[styles.row, index % 2 === 0 && styles.rowAlt]}>
-                                        <Text style={[styles.studentName, { flex: 1.5 }]}>
-                                            {item.student?.name || '-'}
-                                        </Text>
-                                        <Text
-                                            style={[styles.studentId, { flex: 1.2 }]}
-                                            numberOfLines={1}
-                                        >
-                                            {item.student?._id || ''}
-                                        </Text>
-                                        <View style={[styles.badge, { flex: 1.2 }]}>
-                                            <Text style={styles.badgeText}>
-                                                session {item.sessionNumber}
+                                        <View style={{ flex: 2 }}>
+                                            <Text style={styles.studentName} numberOfLines={1}>
+                                                {item.student?.name || 'Unknown'}
                                             </Text>
+                                            <Text style={styles.studentId}>{item.student?._id}</Text>
+                                        </View>
+                                        <View style={[styles.badge, { flex: 1.2 }]}>
+                                            <Text style={styles.badgeText}>S-{item.sessionNumber}</Text>
                                         </View>
                                         <Text style={[styles.timeText, { flex: 1, textAlign: 'right' }]}>
                                             {formatTime(item.timestamp)}
@@ -69175,40 +69370,23 @@ const TeacherAttendance = () => {
                                 )}
                             />
 
+                            {/* Pagination Controls */}
                             {totalPages > 1 && (
                                 <View style={styles.pagination}>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.pageBtn,
-                                            currentPage === 1 && styles.pageBtnDisabled,
-                                        ]}
+                                        style={[styles.pageBtn, currentPage === 1 && styles.pageBtnDisabled]}
                                         onPress={() => setCurrentPage((p) => p - 1)}
                                         disabled={currentPage === 1}
                                     >
-                                        <MaterialCommunityIcons
-                                            name="chevron-left"
-                                            size={20}
-                                            color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'}
-                                        />
+                                        <MaterialCommunityIcons name="chevron-left" size={24} color={currentPage === 1 ? '#ccc' : 'rgb(23, 42, 70)'} />
                                     </TouchableOpacity>
-                                    <Text style={styles.pageText}>
-                                        {currentPage} / {totalPages}
-                                    </Text>
+                                    <Text style={styles.pageText}>{currentPage} / {totalPages}</Text>
                                     <TouchableOpacity
-                                        style={[
-                                            styles.pageBtn,
-                                            currentPage === totalPages && styles.pageBtnDisabled,
-                                        ]}
+                                        style={[styles.pageBtn, currentPage === totalPages && styles.pageBtnDisabled]}
                                         onPress={() => setCurrentPage((p) => p + 1)}
                                         disabled={currentPage === totalPages}
                                     >
-                                        <MaterialCommunityIcons
-                                            name="chevron-right"
-                                            size={20}
-                                            color={
-                                                currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'
-                                            }
-                                        />
+                                        <MaterialCommunityIcons name="chevron-right" size={24} color={currentPage === totalPages ? '#ccc' : 'rgb(23, 42, 70)'} />
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -69217,16 +69395,17 @@ const TeacherAttendance = () => {
                 </View>
             )}
 
+            {/* Selection Modal */}
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Lecture</Text>
+                            <Text style={styles.modalTitle}>Choose Group</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <MaterialCommunityIcons name="close" size={24} color="#333" />
+                                <MaterialCommunityIcons name="close-circle" size={28} color="#666" />
                             </TouchableOpacity>
                         </View>
-                        <ScrollView>
+                        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
                             {options.map((opt) => (
                                 <TouchableOpacity
                                     key={opt.groupId}
@@ -69241,17 +69420,22 @@ const TeacherAttendance = () => {
                                         setModalVisible(false);
                                     }}
                                 >
+                                    <MaterialCommunityIcons 
+                                        name="account-group" 
+                                        size={22} 
+                                        color={selected?.groupId === opt.groupId ? 'white' : 'rgb(23, 42, 70)'} 
+                                        style={{ marginRight: 12 }}
+                                    />
                                     <Text
                                         style={[
                                             styles.modalItemText,
-                                            selected?.groupId === opt.groupId &&
-                                            styles.modalItemTextActive,
+                                            selected?.groupId === opt.groupId && styles.modalItemTextActive,
                                         ]}
                                     >
                                         {opt.label}
                                     </Text>
                                     {selected?.groupId === opt.groupId && (
-                                        <MaterialCommunityIcons name="check" size={20} color="white" />
+                                        <MaterialCommunityIcons name="check-circle" size={22} color="white" />
                                     )}
                                 </TouchableOpacity>
                             ))}
@@ -69266,160 +69450,171 @@ const TeacherAttendance = () => {
 export default TeacherAttendance;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f4ff' },
+    container: { flex: 1, backgroundColor: '#f4f7ff' },
     header: {
         backgroundColor: 'rgb(23, 42, 70)',
-        paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
+        paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40),
         paddingBottom: 20,
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        elevation: 10,
+        elevation: 12,
     },
-    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    emptyText: { fontSize: 15, color: '#aaa', marginTop: 12 },
+    backBtn: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
+    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+    emptyText: { fontSize: 16, color: '#94a3b8', marginTop: 15, textAlign: 'center', fontWeight: '500' },
+    
     filtersCard: {
         backgroundColor: '#fff',
         margin: 15,
-        borderRadius: 15,
-        padding: 16,
-        elevation: 4,
-        shadowColor: 'rgb(23, 42, 70)',
+        borderRadius: 20,
+        padding: 20,
+        elevation: 5,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 10,
     },
-    label: { fontSize: 13, fontWeight: '600', color: 'rgb(23, 42, 70)', marginBottom: 6 },
+    label: { fontSize: 14, fontWeight: '700', color: '#1e293b', marginBottom: 8, marginLeft: 2 },
     dropdown: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 1.5,
-        borderColor: '#dde3f0',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        backgroundColor: '#f8faff',
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 14,
+        backgroundColor: '#f8fafc',
     },
-    dropdownPlaceholder: { color: '#aaa', fontSize: 14, flex: 1 },
-    dropdownSelected: { color: 'rgb(23, 42, 70)', fontSize: 14, fontWeight: '600', flex: 1 },
+    dropdownPlaceholder: { color: '#94a3b8', fontSize: 15 },
+    dropdownSelected: { color: 'rgb(23, 42, 70)', fontSize: 15, fontWeight: '700' },
     input: {
         borderWidth: 1.5,
-        borderColor: '#dde3f0',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        fontSize: 14,
+        borderColor: '#e2e8f0',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+        fontSize: 16,
         color: 'rgb(23, 42, 70)',
-        backgroundColor: '#f8faff',
+        backgroundColor: '#f8fafc',
+        fontWeight: '600'
     },
     searchBtn: {
         backgroundColor: 'rgb(23, 42, 70)',
-        borderRadius: 10,
-        paddingVertical: 14,
+        borderRadius: 12,
+        paddingVertical: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        marginTop: 15,
+        gap: 10,
+        marginTop: 20,
     },
-    searchBtnDisabled: { opacity: 0.45 },
-    searchBtnText: { color: 'white', fontWeight: 'bold', fontSize: 15 },
+    searchBtnDisabled: { backgroundColor: '#94a3b8' },
+    searchBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
     countRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 10,
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        backgroundColor: '#e8f0fe',
+        paddingVertical: 12,
+        backgroundColor: '#dbeafe',
         marginHorizontal: 15,
-        borderRadius: 10,
-        marginBottom: 5,
+        borderRadius: 12,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#bfdbfe'
     },
-    countText: { fontSize: 14, color: 'rgb(23, 42, 70)' },
-    countNum: { fontWeight: 'bold', fontSize: 15 },
+    countText: { fontSize: 15, color: '#1e3a8a', fontWeight: '500' },
+    countNum: { fontWeight: '800', fontSize: 17 },
+
     tableHeader: {
         flexDirection: 'row',
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         paddingVertical: 12,
         backgroundColor: 'rgb(23, 42, 70)',
+        marginHorizontal: 15,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
     },
-    thText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 'bold' },
+    thText: { color: '#cbd5e1', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
+
     row: {
         flexDirection: 'row',
-        paddingHorizontal: 15,
-        paddingVertical: 14,
+        paddingHorizontal: 20,
+        paddingVertical: 15,
         alignItems: 'center',
         backgroundColor: '#fff',
+        marginHorizontal: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    rowAlt: { backgroundColor: '#f8faff' },
-    studentName: { fontSize: 13, fontWeight: '600', color: 'rgb(23, 42, 70)' },
-    studentId: { fontSize: 12, color: '#888' },
+    rowAlt: { backgroundColor: '#f8fafc' },
+    studentName: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+    studentId: { fontSize: 11, color: '#64748b', marginTop: 2 },
     badge: {
-        backgroundColor: '#e8f0fe',
-        borderRadius: 12,
-        paddingHorizontal: 8,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 8,
         paddingVertical: 4,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
     },
-    badgeText: { fontSize: 12, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    timeText: { fontSize: 13, color: '#555', fontWeight: '500' },
+    badgeText: { fontSize: 11, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    timeText: { fontSize: 13, color: '#475569', fontWeight: '600' },
+
     pagination: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
-        gap: 20,
+        paddingVertical: 15,
+        gap: 25,
         backgroundColor: '#fff',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: '#e2e8f0',
     },
     pageBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#f0f4ff',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
         alignItems: 'center',
         justifyContent: 'center',
+        elevation: 2
     },
-    pageBtnDisabled: { backgroundColor: '#f5f5f5' },
-    pageText: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
-    },
+    pageBtnDisabled: { opacity: 0.5 },
+    pageText: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
     modalContent: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '65%',
-        paddingBottom: 30,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        maxHeight: '70%',
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
+        padding: 25,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    modalTitle: { fontSize: 17, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    modalTitle: { fontSize: 18, fontWeight: '800', color: 'rgb(23, 42, 70)' },
     modalItem: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: 25,
+        paddingVertical: 18,
         borderBottomWidth: 1,
-        borderBottomColor: '#f5f5f5',
+        borderBottomColor: '#f8fafc',
     },
     modalItemActive: { backgroundColor: 'rgb(23, 42, 70)' },
-    modalItemText: { fontSize: 15, color: '#333', flex: 1 },
+    modalItemText: { fontSize: 15, color: '#334155', flex: 1, fontWeight: '500' },
     modalItemTextActive: { color: 'white', fontWeight: 'bold' },
 });-e 
 
@@ -70825,6 +71020,7 @@ const styles = StyleSheet.create({
 
 === File: ./Mobile/app/techprofile.tsx ===
 import Entypo from '@expo/vector-icons/Entypo';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, router } from "expo-router";
 import { useEffect, useState } from 'react';
 import {
@@ -70836,31 +71032,22 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Platform
 } from 'react-native';
-import { FONTS } from '../constants/theme';
 import { getTeacherProfile } from '../api/teacherApi';
 
-interface TeacherData {
-    _id: string;
-    name: string;
-    email: string;
-    department: string;
-    profileImg: string;
-}
-
 const TechProfile = () => {
-    const [userData, setUserData] = useState<TeacherData | null>(null);
+    const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const data = await getTeacherProfile();
-                setUserData(data);
+                const finalData = data?.user || data;
+                setUserData(finalData);
             } catch (err: any) {
-                console.log('❌ Error:', err.message);
-                setError('Failed to load profile');
+                console.log('Failed to load profile');
             } finally {
                 setLoading(false);
             }
@@ -70872,18 +71059,6 @@ const TechProfile = () => {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
-                <Text style={{ marginTop: 10, color: 'rgb(23, 42, 70)' }}>Loading...</Text>
-            </View>
-        );
-    }
-
-    if (error) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text style={{ color: 'red', fontSize: 16 }}>{error}</Text>
-                <TouchableOpacity onPress={() => router.replace('/' as any)} style={styles.retryButton}>
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Back to Login</Text>
-                </TouchableOpacity>
             </View>
         );
     }
@@ -70891,163 +71066,118 @@ const TechProfile = () => {
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar barStyle="light-content" />
+            
+            {/* Header */}
             <View style={styles.HeaderStyle}>
-                <View style={[{ flexDirection: 'row' }, { gap: 20 }, { alignItems: 'center' }]}>
-                    <TouchableOpacity onPress={() => router.push('/hometeacher' as any)}>
-                        <Entypo name="chevron-with-circle-left" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={() => router.push('/hometeacher')}>
+                    <Entypo name="chevron-with-circle-left" size={28} color="white" />
+                </TouchableOpacity>
                 <Image source={require('../assets/images/logo(1).png')} style={styles.imageStyle} />
+                <View style={{ width: 28 }} />
             </View>
 
-            <ScrollView style={styles.mainContainer}>
-                <View style={styles.profileContainer}>
-                    <View style={styles.imageContainer}>
-                       
+            <ScrollView style={styles.mainContainer} showsVerticalScrollIndicator={false}>
+                
+                {/* Profile Header Card */}
+                <View style={styles.profileHeaderCard}>
+                    <View style={styles.avatarWrapper}>
                         <Image
                             source={
-                                userData?.profileImg && userData.profileImg !== 'default-teacher.jpg'
-                                    ? { uri: userData.profileImg }
+                                (userData?.profileImg && !userData.profileImg.includes('default')) 
+                                    ? { uri: userData.profileImg } 
                                     : require('../assets/images/11.png')
                             }
-                            style={styles.imagePROStyle}
+                            style={styles.avatarImage}
                         />
                     </View>
-                    <View style={{ flexShrink: 1 }}>
-                        <Text style={styles.dataLabelDR}>DR</Text>
-                        <Text style={styles.nameText}>{userData?.name}</Text>
+                    <Text style={styles.userNameText}>Dr. {userData?.name || 'Academic Member'}</Text>
+                    <View style={styles.roleBadge}>
+                        <MaterialCommunityIcons name="seal-variant" size={14} color="rgb(23, 42, 70)" />
+                        <Text style={styles.roleBadgeText}>Faculty Member</Text>
                     </View>
                 </View>
 
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.dataLabel}>ID</Text>
-                    <Text style={styles.dataValue}>{userData?._id}</Text>
+                {/* Info Section */}
+                <View style={styles.infoSection}>
+                    <View style={styles.fieldCard}>
+                        <View style={styles.fieldIconContainer}>
+                            <MaterialCommunityIcons name="account" size={22} color="rgb(23, 42, 70)" />
+                        </View>
+                        <View style={styles.fieldTextContainer}>
+                            <Text style={styles.fieldLabelText}>Academic ID</Text>
+                            <Text style={styles.fieldValueText}>{userData?._id ? String(userData._id) : 'Not Available'}</Text>
+                        </View>
+                    </View>
+
+                    <InfoField 
+                        icon="email-outline" 
+                        label="Academic Email" 
+                        value={userData?.email} 
+                    />
+                    <InfoField 
+                        icon="office-building-marker-outline" 
+                        label="Department" 
+                        value={userData?.department} 
+                    />
+                    <InfoField 
+                        icon="certificate-outline" 
+                        label="Specialization" 
+                        value={userData?.specialization || 'General'} 
+                    />
+                    <InfoField 
+                        icon="school-outline" 
+                        label="Scientific Degree" 
+                        value={userData?.degree || 'Professor'} 
+                    />
                 </View>
 
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.dataLabel}>Department</Text>
-                    <Text style={styles.dataValue}>{userData?.department}</Text>
-                </View>
-
-                <View style={styles.fieldContainer}>
-                    <Text style={styles.dataLabel}>Email</Text>
-                    <Text style={styles.dataValue}>{userData?.email}</Text>
-                </View>
+                <View style={{ height: 50 }} />
             </ScrollView>
         </View>
     );
 };
 
-export default TechProfile;
+const InfoField = ({ icon, label, value }: { icon: string; label: string; value?: string }) => (
+    <View style={styles.fieldCard}>
+        <View style={styles.fieldIconContainer}>
+            <MaterialCommunityIcons name={icon as any} size={22} color="rgb(23, 42, 70)" />
+        </View>
+        <View style={styles.fieldTextContainer}>
+            <Text style={styles.fieldLabelText}>{label}</Text>
+            <Text style={styles.fieldValueText}>{value || '---'}</Text>
+        </View>
+    </View>
+);
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f4ff',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f0f4ff',
-    },
-    retryButton: {
-        marginTop: 20,
-        backgroundColor: 'rgb(23, 42, 70)',
-        padding: 12,
-        borderRadius: 8,
-    },
+    container: { flex: 1, backgroundColor: 'rgb(23, 42, 70)' },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
     HeaderStyle: {
-        width: '100%',
-        height: 120,
-        backgroundColor: "rgb(23, 42, 70)",
-        elevation: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        paddingHorizontal: 20,
-        paddingTop: StatusBar.currentHeight,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        width: '100%', height: 110, backgroundColor: 'rgb(23, 42, 70)',
+        paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 50 : 35,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     },
-    imageStyle: {
-        height: 50,
-        width: '40%',
-        resizeMode: 'contain',
+    imageStyle: { height: 40, width: 110, resizeMode: 'contain' },
+    mainContainer: { flex: 1, backgroundColor: '#f8fafc', borderTopLeftRadius: 35, borderTopRightRadius: 35, paddingHorizontal: 20 },
+    profileHeaderCard: {
+        alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 25, padding: 20, marginTop: 25, marginBottom: 20,
+        elevation: 4, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10,
     },
-    mainContainer: {
-        flex: 1,
-        backgroundColor: '#ffffff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        padding: 20,
-        margin: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-    },
-    imageContainer: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        overflow: 'hidden',
-        borderWidth: 3,
-        borderColor: '#5a5c5c',
-        alignSelf: 'flex-end',
-    },
-    imagePROStyle: {
-        width: '100%',
-        height: 120,
-    },
-    profileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 15,
-        marginBottom: 20,
-    },
-    nameText: {
-        fontFamily: FONTS.bold,
-        fontSize: 20,
-    },
-    dataLabelDR: {
-        fontWeight: 'bold',
-        color: '#03015d',
-        width: 100,
-        fontSize: 20,
-    },
-    fieldContainer: {
-        backgroundColor: '#ebebeb',
-        borderRadius: 10,
-        padding: 15,
-        marginTop: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-    },
-    dataRow: {
-        flexDirection: 'row',
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    dataLabel: {
-        fontWeight: 'bold',
-        color: "rgb(23, 42, 70)",
-        width: 100,
-    },
-    dataValue: {
-        color: '#000000',
-        flexShrink: 1,
-        fontSize: 13,
-        fontFamily: FONTS.bold,
-    },
+    avatarWrapper: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, borderColor: '#f1f5f9', overflow: 'hidden', marginBottom: 12 },
+    avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+    userNameText: { fontSize: 20, fontWeight: 'bold', color: 'rgb(23, 42, 70)', textAlign: 'center' },
+    roleBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12, marginTop: 8 },
+    roleBadgeText: { fontSize: 13, color: 'rgb(23, 42, 70)', fontWeight: '600' },
+    infoSection: { gap: 12 },
+    fieldCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 18, padding: 15, elevation: 2, shadowColor: '#000', shadowOpacity: 0.03 },
+    fieldIconContainer: { width: 45, height: 45, borderRadius: 12, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+    fieldTextContainer: { flex: 1 },
+    fieldLabelText: { fontSize: 12, color: '#94a3b8', fontWeight: '600', marginBottom: 2 },
+    fieldValueText: { fontSize: 15, color: '#1e293b', fontWeight: 'bold' },
 });
--e 
+
+export default TechProfile;-e 
 
 === File: ./Mobile/api/authApi.ts ===
 import API from './axiosConfig';
@@ -95337,6 +95467,8 @@ router.post('/swap-request',       studentAuth, controller.requestSwap);
 router.get ('/get_pending_requests',studentAuth, controller.getPendingSwapRequests);
 router.post('/swap-respond',       studentAuth, controller.respondToSwapRequest);
 router.delete('/swap-cancel',      studentAuth, controller.cancelSwapRequest);
+router.get ('/sent-swap-requests',   studentAuth, controller.getSentSwapRequests);
+router.delete('/cancel-swap-request/:id', studentAuth, controller.cancelSwapRequest);
 
 router.get('/academic-record', studentAuth, controller.getAcademicRecord);
 router.get('/final-results',   studentAuth, controller.getFinalResults);
@@ -96278,24 +96410,42 @@ const respondToSwapRequest = async (req, res) => {
     }
 };
 
+const getSentSwapRequests = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const requests = await SwapRequest.find({ sender: studentId })
+            .populate('receiver', 'name _id profileImg')
+            .populate('courseId', 'name _id');
+
+        res.status(200).json(requests);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 const cancelSwapRequest = async (req, res) => {
     try {
         const studentId = req.user.id;
-        const { courseId } = req.body;
+        const requestId = req.params.id || req.body.requestId;
 
-        if (!courseId) {
-            return res.status(400).json({ message: 'Please provide a course ID' });
+        if (!requestId) {
+            return res.status(400).json({ message: 'Please provide a request ID' });
         }
 
-        const result = await SwapRequest.deleteMany({
-            sender: studentId,
-            courseId: courseId,
-            status: 'Pending'
-        });
-
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'No pending swap requests found for this course' });
+        const swapRequest = await SwapRequest.findById(requestId);
+        if (!swapRequest) {
+            return res.status(404).json({ message: 'Swap request not found' });
         }
+
+        if (swapRequest.sender.toString() !== studentId) {
+            return res.status(403).json({ message: 'Not authorized to cancel this request' });
+        }
+
+        if (swapRequest.status !== 'Pending') {
+            return res.status(400).json({ message: 'Can only cancel pending requests' });
+        }
+
+        await SwapRequest.findByIdAndDelete(requestId);
 
         res.status(200).json({ message: 'Swap request cancelled successfully' });
 
@@ -96612,6 +96762,7 @@ module.exports = {
     markAllRead,
     registerAttendance,
     cancelSwapRequest,
+    getSentSwapRequests,
     getAcademicRecord,
     getFinalResults,
     generateSchedules,

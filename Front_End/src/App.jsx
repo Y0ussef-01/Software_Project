@@ -16,6 +16,7 @@ import ResetStudentPasswordPage from "./pages/RestPasswordPage/RestStudentPasswo
 import RestTeacherPasswordPage from "./pages/RestPasswordPage/RestTeacherPasswordPage";
 import AdminLayout from "./pages/AdminPage/Dashboard/AdminLayout";
 import { CustomThemeProvider } from "./context/Admin/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import AdminProfilePage from "./pages/AdminPage/AdminProfilePage/AdminProfilePage";
 import { AdminProfileProvider } from "./context/Admin/AdminProfileContext";
 import RestAdminPasswordPage from "./pages/AdminPage/RestAdminPage/RestAdminPasswordPage";
@@ -37,7 +38,8 @@ import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendanceP
 function App() {
   return (
     <AuthProvider>
-      <ToastContainer style={{ zIndex: 99999 }} />
+      <LanguageProvider>
+        <ToastContainer style={{ zIndex: 99999 }} />
       <BrowserRouter>
         <Routes>
           <Route
@@ -115,6 +117,7 @@ function App() {
           <Route path="*" element={<Error404 />} />
         </Routes>
       </BrowserRouter>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
