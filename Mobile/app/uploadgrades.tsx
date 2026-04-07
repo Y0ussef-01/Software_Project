@@ -1,6 +1,6 @@
 import Entypo from '@expo/vector-icons/Entypo';
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -11,6 +11,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -24,52 +25,70 @@ interface UploadedFile {
 }
 
 const UploadGrades = () => {
+    // استقبال بيانات المادة من الشاشة السابقة
     const { courseId, courseName } = useLocalSearchParams();
     const [file, setFile] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
+    // دالة اختيار ملف الإكسيل
     const pickFile = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                type: [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel' // .xls
+                ],
+                copyToCacheDirectory: true
             });
+
             if (!result.canceled) {
-                setFile(result.assets[0]);
+                const selectedFile = result.assets[0];
+                // التأكد من امتداد الملف يدوياً لزيادة الأمان
+                if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
+                    setFile(selectedFile);
+                } else {
+                    Alert.alert('⚠️ Invalid File', 'Please select a valid Excel file (.xlsx or .xls)');
+                }
             }
         } catch (err) {
             Alert.alert('❌ Error', 'Failed to pick file');
         }
     };
 
+    // دالة لفتح الملف بعد رفعه (للمعاينة)
     const openFile = async (uri: string) => {
         try {
-            await Sharing.shareAsync(uri, {
-                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                dialogTitle: 'Open with...',
-            });
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (isAvailable) {
+                await Sharing.shareAsync(uri);
+            } else {
+                Alert.alert('❌', 'Sharing is not available on this device');
+            }
         } catch (err) {
             Alert.alert('❌', 'Failed to open file');
         }
     };
 
+    // حذف ملف من قائمة "التم رفعهم مؤخراً"
     const removeUploadedFile = (index: number) => {
         Alert.alert(
-            'Remove File',
-            'Are you sure you want to remove this file?',
+            'Remove Record',
+            'Remove this file from recent history?',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Remove',
                     style: 'destructive',
                     onPress: () => {
-                        setUploadedFiles((prev: UploadedFile[]) => prev.filter((_, i) => i !== index));
+                        setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
                     },
                 },
             ]
         );
     };
 
+    // دالة الرفع للسيرفر
     const handleUpload = async () => {
         if (!file) {
             Alert.alert('⚠️', 'Please select an Excel file first');
@@ -81,24 +100,35 @@ const UploadGrades = () => {
 
             const formData = new FormData();
             formData.append('courseId', courseId as string);
-            formData.append('excelFile', {
-                uri: file.uri,
+            
+            // تجهيز الملف للرفع
+            const fileToUpload = {
+                uri: Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri,
                 name: file.name,
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            } as any);
+            };
+
+            formData.append('excelFile', fileToUpload as any);
 
             await API.post('/teacher/upload-grades-excel', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                },
+                // إضافة timeout لأن ملفات الإكسيل قد تأخذ وقتاً في المعالجة بالسيرفر
+                timeout: 30000 
             });
 
+            // إضافة الملف لقائمة التاريخ (History)
             const now = new Date();
-            const uploadedAt = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-            setUploadedFiles((prev: UploadedFile[]) => [{ name: file.name, uploadedAt, uri: file.uri }, ...prev]);
-            setFile(null);
+            const timestamp = `${now.toLocaleDateString()} at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            
+            setUploadedFiles((prev) => [{ name: file.name, uploadedAt: timestamp, uri: file.uri }, ...prev]);
+            setFile(null); // تفريغ الملف المختار بعد النجاح
 
-            Alert.alert('✅ Success', 'Grades uploaded successfully!');
+            Alert.alert('✅ Success', 'Grades have been processed and uploaded successfully!');
         } catch (err: any) {
-            Alert.alert('❌ Error', err.response?.data?.message || 'Failed to upload grades');
+            console.log("Upload Error:", err.response?.data || err.message);
+            Alert.alert('❌ Upload Failed', err.response?.data?.message || 'Server error during processing');
         } finally {
             setLoading(false);
         }
@@ -107,51 +137,71 @@ const UploadGrades = () => {
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
+            {/* Header */}
             <View style={styles.HeaderStyle}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Entypo name="chevron-with-circle-left" size={24} color="white" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Entypo name="chevron-with-circle-left" size={28} color="white" />
                 </TouchableOpacity>
                 <Image source={require('../assets/images/logo(1).png')} style={styles.imageStyle} />
+                <View style={{ width: 45 }} />
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                
+                {/* Course Info Section */}
                 <View style={styles.courseCard}>
-                    <MaterialCommunityIcons name="book-open-variant" size={28} color="white" />
-                    <View>
-                        <Text style={styles.courseId}>{courseId}</Text>
-                        <Text style={styles.courseName}>{courseName}</Text>
+                    <View style={styles.courseIconCircle}>
+                        <MaterialCommunityIcons name="table-edit" size={30} color="white" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.courseIdLabel}>COURSE ID</Text>
+                        <Text style={styles.courseIdText}>{courseId}</Text>
+                        <Text style={styles.courseNameText}>{courseName}</Text>
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.uploadBox} onPress={pickFile}>
-                    <MaterialCommunityIcons
-                        name="file-excel"
-                        size={32}
-                        color={file ? 'green' : 'rgb(23, 42, 70)'}
-                    />
+                <Text style={styles.sectionTitle}>Upload New Grades</Text>
+                
+                {/* Upload Zone */}
+                <TouchableOpacity 
+                    style={[styles.uploadBox, file && styles.uploadBoxActive]} 
+                    onPress={pickFile}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.excelIconCircle, file && { backgroundColor: '#e8f5e9' }]}>
+                        <MaterialCommunityIcons
+                            name={file ? "file-check" : "file-excel-outline"}
+                            size={40}
+                            color={file ? '#2e7d32' : 'rgb(23, 42, 70)'}
+                        />
+                    </View>
+                    
                     <View style={{ flex: 1 }}>
                         {file ? (
-                            <Text style={styles.fileName} numberOfLines={1}>✅ {file.name}</Text>
+                            <View>
+                                <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+                                <Text style={styles.fileSize}>Ready to upload</Text>
+                            </View>
                         ) : (
-                            <>
-                                <Text style={styles.uploadText}>Tap to select Excel file</Text>
-                                <Text style={styles.uploadSubText}>.xlsx files only</Text>
-                            </>
+                            <View>
+                                <Text style={styles.uploadText}>Select Excel Sheet</Text>
+                                <Text style={styles.uploadSubText}>Make sure it follows the template</Text>
+                            </View>
                         )}
                     </View>
-                    {file ? (
-                        <TouchableOpacity onPress={() => setFile(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                            <MaterialCommunityIcons name="close-circle" size={22} color="red" />
+
+                    {file && (
+                        <TouchableOpacity onPress={() => setFile(null)} style={styles.clearBtn}>
+                            <MaterialCommunityIcons name="close-circle" size={24} color="#ef5350" />
                         </TouchableOpacity>
-                    ) : (
-                        <MaterialCommunityIcons name="chevron-right" size={20} color="gray" />
                     )}
                 </TouchableOpacity>
 
+                {/* Upload Action Button */}
                 <TouchableOpacity
-                    style={[styles.button, !file && styles.buttonDisabled]}
+                    style={[styles.button, (!file || loading) && styles.buttonDisabled]}
                     onPress={handleUpload}
                     disabled={loading || !file}
                 >
@@ -159,34 +209,45 @@ const UploadGrades = () => {
                         <ActivityIndicator color="white" />
                     ) : (
                         <>
-                            <MaterialCommunityIcons name="upload" size={20} color="white" />
-                            <Text style={styles.buttonText}>Upload Grades</Text>
+                            <MaterialCommunityIcons name="cloud-upload" size={22} color="white" />
+                            <Text style={styles.buttonText}>Confirm & Process Upload</Text>
                         </>
                     )}
                 </TouchableOpacity>
 
+                {/* History Section */}
                 {uploadedFiles.length > 0 && (
                     <View style={styles.historyContainer}>
-                        <Text style={styles.historyTitle}>Uploaded Grades</Text>
+                        <View style={styles.historyHeader}>
+                            <MaterialCommunityIcons name="history" size={20} color="rgb(23, 42, 70)" />
+                            <Text style={styles.historyTitle}>Recently Uploaded</Text>
+                        </View>
+                        
                         {uploadedFiles.map((f, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.historyItem}
-                                onPress={() => openFile(f.uri)}
-                            >
-                                <MaterialCommunityIcons name="file-excel" size={22} color="green" />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.historyFileName} numberOfLines={1}>{f.name}</Text>
-                                    <Text style={styles.historyDate}>{f.uploadedAt}</Text>
-                                </View>
-                                <TouchableOpacity onPress={() => removeUploadedFile(index)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                                    <MaterialCommunityIcons name="close-circle" size={20} color="red" />
+                            <View key={index} style={styles.historyItem}>
+                                <TouchableOpacity 
+                                    style={styles.historyItemContent} 
+                                    onPress={() => openFile(f.uri)}
+                                >
+                                    <View style={styles.smallExcelIcon}>
+                                        <MaterialCommunityIcons name="file-excel" size={20} color="#2e7d32" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.historyFileName} numberOfLines={1}>{f.name}</Text>
+                                        <Text style={styles.historyDate}>{f.uploadedAt}</Text>
+                                    </View>
                                 </TouchableOpacity>
-                            </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    onPress={() => removeUploadedFile(index)} 
+                                    style={styles.itemRemoveBtn}
+                                >
+                                    <MaterialCommunityIcons name="trash-can-outline" size={20} color="#b0bec5" />
+                                </TouchableOpacity>
+                            </View>
                         ))}
                     </View>
                 )}
-
             </ScrollView>
         </View>
     );
@@ -195,132 +256,121 @@ const UploadGrades = () => {
 export default UploadGrades;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f4ff',
-    },
+    container: { flex: 1, backgroundColor: '#f4f7ff' },
     HeaderStyle: {
         width: '100%',
-        height: 120,
+        height: Platform.OS === 'ios' ? 120 : 100,
         backgroundColor: 'rgb(23, 42, 70)',
-        elevation: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
         paddingHorizontal: 20,
-        paddingTop: StatusBar.currentHeight,
+        paddingTop: Platform.OS === 'ios' ? 40 : StatusBar.currentHeight,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        elevation: 10,
     },
-    imageStyle: {
-        height: 50,
-        width: '40%',
-        resizeMode: 'contain',
-    },
-    content: {
-        flex: 1,
-        padding: 20,
-    },
+    backBtn: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+    imageStyle: { height: 40, width: 140, resizeMode: 'contain' },
+    content: { flex: 1, padding: 20 },
+    
     courseCard: {
         backgroundColor: 'rgb(23, 42, 70)',
-        borderRadius: 15,
+        borderRadius: 20,
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 15,
-        marginBottom: 20,
-        elevation: 5,
+        marginBottom: 30,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
     },
-    courseId: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
+    courseIconCircle: {
+        width: 55,
+        height: 55,
+        borderRadius: 15,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15
     },
-    courseName: {
-        fontSize: 13,
-        color: 'rgba(255,255,255,0.7)',
-        marginTop: 3,
-    },
+    courseIdLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold', letterSpacing: 1 },
+    courseIdText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+    courseNameText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#334155', marginBottom: 15, marginLeft: 5 },
+    
     uploadBox: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 15,
+        borderRadius: 18,
+        padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
         borderWidth: 2,
-        borderColor: 'rgb(23, 42, 70)',
+        borderColor: '#cbd5e1',
         borderStyle: 'dashed',
-        marginBottom: 15,
+        marginBottom: 20,
     },
-    uploadText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
+    uploadBoxActive: { borderColor: '#2e7d32', backgroundColor: '#f1f8e9', borderStyle: 'solid' },
+    excelIconCircle: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#f1f5f9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15
     },
-    uploadSubText: {
-        fontSize: 11,
-        color: 'gray',
-        marginTop: 2,
-    },
-    fileName: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: 'green',
-    },
+    uploadText: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    uploadSubText: { fontSize: 12, color: '#64748b', marginTop: 3 },
+    fileName: { fontSize: 15, fontWeight: 'bold', color: '#2e7d32' },
+    fileSize: { fontSize: 12, color: '#689f38' },
+    clearBtn: { padding: 5 },
+
     button: {
         backgroundColor: 'rgb(23, 42, 70)',
-        padding: 15,
-        borderRadius: 12,
+        paddingVertical: 16,
+        borderRadius: 15,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
-        marginBottom: 25,
+        gap: 12,
+        elevation: 4,
+        marginBottom: 30,
     },
-    buttonDisabled: {
-        opacity: 0.5,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    buttonDisabled: { backgroundColor: '#94a3b8', elevation: 0 },
+    buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
     historyContainer: {
         backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 15,
+        borderRadius: 20,
+        padding: 20,
         elevation: 3,
-        shadowColor: 'rgb(23, 42, 70)',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        marginBottom: 20,
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
     },
-    historyTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
-        marginBottom: 12,
-    },
+    historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+    historyTitle: { fontSize: 15, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
     historyItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#f1f5f9',
     },
-    historyFileName: {
-        fontSize: 13,
-        fontWeight: 'bold',
-        color: '#333',
+    historyItemContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+    smallExcelIcon: { 
+        width: 35, 
+        height: 35, 
+        backgroundColor: '#e8f5e9', 
+        borderRadius: 10, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        marginRight: 12
     },
-    historyDate: {
-        fontSize: 11,
-        color: 'gray',
-        marginTop: 2,
-    },
+    historyFileName: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
+    historyDate: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+    itemRemoveBtn: { padding: 8 }
 });
