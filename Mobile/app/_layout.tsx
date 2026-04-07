@@ -4,18 +4,11 @@ import { I18nManager } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { getToken, getRole } from '../api/storage';
 
+import { getStudentProfile } from '../api/studentApi';
+import { getTeacherProfile } from '../api/teacherApi';
+
 I18nManager.forceRTL(false);
 I18nManager.allowRTL(false);
-
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
 
 export default function RootLayout() {
     useEffect(() => {
@@ -24,24 +17,19 @@ export default function RootLayout() {
             const role = await getRole();
 
             if (token && role) {
-                setTimeout(() => {
-                    if (role === 'student') {
-                        router.replace('/home' as any);
-                    } else if (role === 'teacher') {
-                        router.replace('/hometeacher' as any);
-                    }
-                }, 100);
+                
+                if (role === 'student') {
+                    getStudentProfile().catch(() => {}); 
+                    router.replace('/home' as any);
+                } else if (role === 'teacher') {
+                    getTeacherProfile().catch(() => {});
+                    router.replace('/hometeacher' as any);
+                }
             }
         };
         checkAuth();
     }, []);
 
-    useEffect(() => {
-        const subscription = Notifications.addNotificationResponseReceivedListener(() => {
-            router.push('/notifications' as any);
-        });
-        return () => subscription.remove();
-    }, []);
-
-    return <Stack />;
+   
+    return <Stack screenOptions={{ headerShown: false }} />;
 }
