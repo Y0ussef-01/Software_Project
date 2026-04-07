@@ -80,6 +80,8 @@ export default function RegistrationComp() {
     pendingSwapRequests,
     handleSwapRequest,
     handleSwapRespond,
+    sentSwapRequests,
+    handleCancelSwapRequest,
   } = useRegistration();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -1237,6 +1239,96 @@ export default function RegistrationComp() {
                           Accept Swap
                         </Button>
                       </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
+
+      {/* SENT SWAP REQUESTS UI */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: "24px",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+          <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+            Sent Swap Requests ({sentSwapRequests?.length || 0})
+          </Typography>
+        </Box>
+
+        {sentSwapRequests?.length === 0 || !sentSwapRequests ? (
+          <Box
+            sx={{
+              textAlign: "center",
+              py: 5,
+              bgcolor: "#f8fafc",
+              borderRadius: "16px",
+            }}
+          >
+            <Typography variant="subtitle1" color="text.secondary">
+              No sent swap requests available.
+            </Typography>
+          </Box>
+        ) : (
+          <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+            <Table sx={{ minWidth: 600 }}>
+              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Course</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>From Group</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Target Group</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>Status</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sentSwapRequests.map((req) => (
+                  <TableRow key={req._id}>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {req.courseId?.name || "Unknown"} ({req.courseId?._id || req.courseId || "Unknown"})
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={req.senderGroupName} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
+                    </TableCell>
+                    <TableCell>
+                      <Typography 
+                        variant="body2" 
+                        fontWeight="bold" 
+                        color={req.status === 'Pending' ? "warning.main" : req.status === 'Accepted' ? "success.main" : "error.main"}
+                      >
+                        {req.status}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      {req.status === 'Pending' && (
+                        <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            disabled={isActionLoading}
+                            onClick={() => handleCancelSwapRequest(req._id)}
+                            startIcon={<DeleteOutlineIcon />}
+                            sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                          >
+                            Cancel Request
+                          </Button>
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

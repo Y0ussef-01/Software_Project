@@ -33,6 +33,7 @@ export default function useRegistration() {
   );
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [pendingSwapRequests, setPendingSwapRequests] = useState([]);
+  const [sentSwapRequests, setSentSwapRequests] = useState([]);
 
   const fetchPendingSwaps = async () => {
     try {
@@ -43,6 +44,18 @@ export default function useRegistration() {
       setPendingSwapRequests(response.data || []);
     } catch (error) {
       console.error("Failed to fetch pending swap requests", error);
+    }
+  };
+
+  const fetchSentSwaps = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/student/get_sent_requests",
+        getAuthHeaders(),
+      );
+      setSentSwapRequests(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch sent swap requests", error);
     }
   };
 
@@ -66,7 +79,7 @@ export default function useRegistration() {
       sessionStorage.setItem("user_data", encodeData(profileData));
       sessionStorage.setItem("reg_courses", encodeData(coursesData));
       
-      await fetchPendingSwaps();
+      await Promise.all([fetchPendingSwaps(), fetchSentSwaps()]);
     } catch (error) {
       if (!studentProfile) toast.error("Failed to load registration data.");
     } finally {
@@ -270,6 +283,27 @@ export default function useRegistration() {
     }
   };
 
+  const handleCancelSwapRequest = async (requestId) => {
+    if (!requestId) return;
+    setIsActionLoading(true);
+    try {
+      const targetReq = sentSwapRequests.find((r) => r._id === requestId);
+      const courseId = targetReq?.courseId?._id || targetReq?.courseId || requestId;
+      
+      await axios.delete("http://localhost:5000/student/swap-cancel", {
+        headers: getAuthHeaders().headers,
+        data: { courseId },
+      });
+      
+      toast.success("Swap request cancelled successfully!", { autoClose: 2000 });
+      fetchSentSwaps();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to cancel swap request.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   return {
     isLoading,
     isActionLoading,
@@ -284,11 +318,14 @@ export default function useRegistration() {
     remainingHours,
     registeredCourses,
     pendingSwapRequests,
+    sentSwapRequests,
     handleRegister,
     handleDropCourse,
     handleSwitchGroup,    
     handleSwapRequest,
     handleSwapRespond,
+    handleCancelSwapRequest,
     fetchPendingSwaps,
+    fetchSentSwaps,
   };
 }
