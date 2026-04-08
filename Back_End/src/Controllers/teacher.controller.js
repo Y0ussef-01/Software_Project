@@ -104,10 +104,11 @@ const uploadGradesExcel = async (req, res) => {
             return res.status(400).json({ message: 'File is empty' });
         }
 
-        const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'الكود', 'رقم الطالب'];
+        const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'كود', 'رقم الجلوس'];
         const ignoreColumns = ['name', 'student name', 'student_name', 'email', 'department', 'serial',  'الاسم'];
 
         const bulkOperations = [];
+        const processedStudentIds = [];
 
         for (let row of gradesData) {
             let studentId = null;
@@ -138,10 +139,11 @@ const uploadGradesExcel = async (req, res) => {
             }
 
             if (assessments.length > 0) {
+                const cleanStudentId = String(studentId).trim();
                 bulkOperations.push({
                     updateOne: {
                         filter: {
-                            _id: String(studentId).trim(),
+                            _id: cleanStudentId,
                             "registeredCourses.course": courseId
                         },
                         update: {
@@ -149,6 +151,8 @@ const uploadGradesExcel = async (req, res) => {
                         }
                     }
                 });
+
+                processedStudentIds.push(cleanStudentId);
             }
         }
 
@@ -166,21 +170,27 @@ const uploadGradesExcel = async (req, res) => {
         const courseName = course ? course.name : 'Unknown Course';
 
         const studentsForNotif = await Student.find({
+            _id: { $in: processedStudentIds },
             "registeredCourses.course": courseId,
         }).select('_id pushToken');
 
         const notifDocs = studentsForNotif.map(s => ({
             studentId: s._id,
-            title: ' New Grades Posted',
+            title: '🔔 New Grades Posted',
             body: `Your grades for ${courseId} have been updated. Check them now!`
         }));
-        await Notification.insertMany(notifDocs);
+
+        if (notifDocs.length > 0) {
+            await Notification.insertMany(notifDocs);
+        }
 
         const tokens = studentsForNotif
             .map(s => s.pushToken)
             .filter(token => token && token !== null && token !== 'null');
 
-        await sendPushNotification(tokens, ' New Grades Posted', `Your grades for ${courseId} have been updated!`);
+        if (tokens.length > 0) {
+            await sendPushNotification(tokens, '🔔 New Grades Posted', `Your grades for ${courseId} have been updated!`);
+        }
 
         res.status(200).json({ message: 'Updated Successfully' });
 
