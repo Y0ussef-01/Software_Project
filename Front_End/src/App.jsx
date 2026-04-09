@@ -34,89 +34,97 @@ import TeacherSchedulePage from "./pages/TeacherSchedulePage/TeacherSchedulePage
 import TeacherManageGradesPage from "./pages/TeacherManageGradesPage/TeacherManageGradesPage.jsx";
 import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
 import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendancePage.jsx";
+import GradesPage from "./pages/GradesPage/GradesPage.jsx";
 
 function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
         <ToastContainer style={{ zIndex: 99999 }} />
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            }
-          />
-
-          {/* 🛡️ منطقة الطالب (Student Zone) */}
-          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-            <Route path="/home" element={<HomeStuentPage />} />
-            <Route path="/help" element={<HelpPage />} />
-            <Route path="/profile" element={<ProfileStudnetPage />} />
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/register-course" element={<RegistrationPage />} />
+        <BrowserRouter>
+          <Routes>
             <Route
-              path="/reset-password"
-              element={<ResetStudentPasswordPage />}
-            />
-          </Route>
-
-          {/* 🛡️ منطقة الأستاذ (Teacher Zone) */}
-          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
-            <Route path="/teacher" element={<HomeTeacherPage />} />
-            <Route path="/teacher/profile" element={<TeacherProfilePage />} />
-            <Route path="/teacher/attendance" element={<ManageAttendancePage />} />
-            <Route
-              path="/teacher/manage-grades"
-              element={<TeacherManageGradesPage />}
-            />
-            <Route path="/teacher/schedule" element={<TeacherSchedulePage />} />
-            <Route
-              path="/teacher/reset-password"
-              element={<RestTeacherPasswordPage />}
-            />
-          </Route>
-
-          {/* 🛡️ منطقة الإدارة (Admin Zone) */}
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route
-              path="/adminPanel"
+              path="/"
               element={
-                <CustomThemeProvider>
-                  <AdminProfileProvider>
-                    <AdminLayout />
-                  </AdminProfileProvider>
-                </CustomThemeProvider>
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
               }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="profile" element={<AdminProfilePage />} />
-              <Route path="students" element={<StudentManagementPage />} />
-              <Route path="add-student" element={<AddStudentPage />} />
-              <Route path="teachers" element={<TeatureManagementPage />} />
-              <Route path="add-teacher" element={<AddTeaturePage />} />
-              <Route path="classes" element={<Classes />} />
+            />
+
+            {/* 🛡️ منطقة الطالب (Student Zone) */}
+            <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+              <Route path="/home" element={<HomeStuentPage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/profile" element={<ProfileStudnetPage />} />
+              <Route path="/grades" element={<GradesPage />} />
+              <Route path="/appointments" element={<AppointmentsPage />} />
+              <Route path="/register-course" element={<RegistrationPage />} />
               <Route
-                path="enrollments"
-                element={<EnrollmentManagementPage />}
-              />
-              <Route
-                path="teacher-assignments"
-                element={<TeacherAssignmentPage />}
-              />
-              <Route
-                path="reset-password"
-                element={<RestAdminPasswordPage />}
+                path="/reset-password"
+                element={<ResetStudentPasswordPage />}
               />
             </Route>
-          </Route>
 
-          <Route path="*" element={<Error404 />} />
-        </Routes>
-      </BrowserRouter>
+            {/* 🛡️ منطقة الأستاذ (Teacher Zone) */}
+            <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+              <Route path="/teacher" element={<HomeTeacherPage />} />
+              <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+              <Route
+                path="/teacher/attendance"
+                element={<ManageAttendancePage />}
+              />
+              <Route
+                path="/teacher/manage-grades"
+                element={<TeacherManageGradesPage />}
+              />
+              <Route
+                path="/teacher/schedule"
+                element={<TeacherSchedulePage />}
+              />
+              <Route
+                path="/teacher/reset-password"
+                element={<RestTeacherPasswordPage />}
+              />
+            </Route>
+
+            {/* 🛡️ منطقة الإدارة (Admin Zone) */}
+            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+              <Route
+                path="/adminPanel"
+                element={
+                  <CustomThemeProvider>
+                    <AdminProfileProvider>
+                      <AdminLayout />
+                    </AdminProfileProvider>
+                  </CustomThemeProvider>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="profile" element={<AdminProfilePage />} />
+                <Route path="students" element={<StudentManagementPage />} />
+                <Route path="add-student" element={<AddStudentPage />} />
+                <Route path="teachers" element={<TeatureManagementPage />} />
+                <Route path="add-teacher" element={<AddTeaturePage />} />
+                <Route path="classes" element={<Classes />} />
+                <Route
+                  path="enrollments"
+                  element={<EnrollmentManagementPage />}
+                />
+                <Route
+                  path="teacher-assignments"
+                  element={<TeacherAssignmentPage />}
+                />
+                <Route
+                  path="reset-password"
+                  element={<RestAdminPasswordPage />}
+                />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Error404 />} />
+          </Routes>
+        </BrowserRouter>
       </LanguageProvider>
     </AuthProvider>
   );

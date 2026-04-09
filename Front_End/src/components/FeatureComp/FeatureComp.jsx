@@ -5,6 +5,7 @@ import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import SchoolIcon from "@mui/icons-material/School";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { useLanguage } from "../../context/LanguageContext";
 
 const TRANSLATIONS = {
@@ -12,14 +13,15 @@ const TRANSLATIONS = {
     registration: "Registration",
     appointments: "Appointments",
     grades: "Grades",
-    profile: "Profile"
+    profile: "Profile",
+    Academic: "Academic Record",
   },
   ar: {
     registration: "التسجيل",
     appointments: "المواعيد",
     grades: "الدرجات",
-    profile: "الملف الشخصي"
-  }
+    profile: "الملف الشخصي",
+  },
 };
 
 export default function FeaturesComp() {
@@ -51,6 +53,12 @@ export default function FeaturesComp() {
       title: t.profile,
       icon: <SchoolIcon fontSize="inherit" />,
       path: "/profile",
+    },
+    {
+      id: 6,
+      title: t.Academic,
+      icon: <MenuBookIcon fontSize="inherit" />,
+      path: "/Academic",
     },
   ];
 
