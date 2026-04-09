@@ -1,14 +1,13 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { StatusBar } from "react-native";
-import { Animated, View, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ScrollView, Dimensions } from 'react-native';
+import { Animated, View, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, router, useFocusEffect } from "expo-router";
 import { getRole, clearStorage } from '../api/storage';
 import { getStudentProfile, clearProfileCache } from '../api/studentApi';
 import { getTeacherProfile, clearTeacherCache } from '../api/teacherApi';
+import { unregisterPushToken } from '../api/notifications';
 import API from '../api/axiosConfig';
-
-const { width } = Dimensions.get('window');
 
 interface GridItemProps {
     id: string;
@@ -51,7 +50,6 @@ const Home = () => {
         useCallback(() => {
             let isMounted = true;
 
-            
             setProfileImg(null);
             setUserName('');
             setUnreadCount(0);
@@ -87,33 +85,36 @@ const Home = () => {
             return () => { isMounted = false; };
         }, [])
     );
+const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+            text: 'Log Out', style: 'destructive',
+            onPress: async () => {
+                try {
+                    // الخطوة الأهم: مسح التوكن من السيرفر "أولاً" وإحنا لسه Login
+                    await unregisterPushToken(role);
 
-    const handleLogout = () => {
-        Alert.alert('Log Out', 'Are you sure you want to log out?', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-                text: 'Log Out', style: 'destructive',
-                onPress: async () => {
-                    try {
-                        await API.put(`/${role}/registerToken`, { pushToken: null });
-                    } catch (e) { console.log("Token clear error"); }
-
+                    // مسح الكاش المحلي بعد ما السيرفر خلص
                     await clearStorage();
-
-                   
                     await clearProfileCache();
                     await clearTeacherCache();
-                    
+
+                    // تصفير الـ States والرجوع
                     setProfileImg(null);
                     setUserName('');
                     setRole(null);
-                    setUnreadCount(0);
-
                     router.replace('/');
-                },
+                } catch (e) {
+                    console.error("Logout failed", e);
+                    // حتى لو السيرفر فشل، بنمسح الكاش عشان اليوزر يعرف يخرج
+                    await clearStorage();
+                    router.replace('/');
+                }
             },
-        ]);
-    };
+        },
+    ]);
+};
 
     const navigateTo = (path: string) => {
         if (drawerOpen) closeDrawer();
@@ -125,16 +126,13 @@ const Home = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" backgroundColor="rgb(23, 42, 70)" />
 
-            {/* --- Main Header --- */}
+            {/* Header */}
             <View style={styles.HeaderStyle}>
                 <View style={styles.headerLeft}>
                     <TouchableOpacity onPress={toggleDrawer}>
                         <MaterialCommunityIcons name="menu" size={28} color="white" />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => navigateTo('/notifications')}
-                        style={styles.bellContainer}
-                    >
+                    <TouchableOpacity onPress={() => navigateTo('/notifications')} style={styles.bellContainer}>
                         <MaterialCommunityIcons name="bell" size={26} color="white" />
                         {unreadCount > 0 && (
                             <View style={styles.badge}>
@@ -153,61 +151,46 @@ const Home = () => {
                         <Text style={styles.welcomeSubText}>Welcome back, {userName.split(' ')[0]}</Text>
                         <Text style={styles.welcomeMainText}>Keep up your{"\n"}scientific excellence</Text>
                     </View>
-                    <MaterialCommunityIcons name="auto-fix" size={50} color="rgba(255,255,255,0.2)" style={styles.welcomeIcon} />
+                    <MaterialCommunityIcons name="auto-fix" size={50} color="rgba(255,255,255,0.2)" />
                 </View>
 
                 <Text style={styles.sectionTitle}>Academic Services</Text>
 
                 <View style={styles.gridContainer}>
                     <View style={styles.rowContainer}>
-                        <GridItem
-                            id="attendance" icon="calendar-check" label="Attendance"
+                        <GridItem id="attendance" icon="calendar-check" label="Attendance"
                             onPress={() => navigateTo('/attendancecourses')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
-                        <GridItem
-                            id="schedule" icon="calendar-month" label="Schedule"
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
+                        <GridItem id="schedule" icon="calendar-month" label="Schedule"
                             onPress={() => navigateTo('/teacherschedule')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
-                        <GridItem
-                            id="eval" icon="star-circle" label="Evaluation"
-                            onPress={() => navigateTo('/teacherevaluation')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
-                        <GridItem
-                            id="quizzes" icon="pencil-box-multiple" label="Quizzes"
+                        <GridItem id="eval" icon="chart-bar" label="My Performance"
+                            onPress={() => navigateTo(role === 'student' ? '/mycourses' : '/teacherevaluation')}
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
+                        <GridItem id="quizzes" icon="pencil-box-multiple" label="Quizzes"
                             onPress={() => navigateTo(role === 'teacher' ? '/quizzes' : '/studentgrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
-                        <GridItem
-                            id="grades" icon="clipboard-text" label="Final Grades"
+                        <GridItem id="grades" icon="clipboard-text" label="Final Grades"
                             onPress={() => navigateTo('/teachergrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
-                        <GridItem
-                            id="courses" icon="book-open-variant" label="Courses"
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
+                        <GridItem id="courses" icon="book-open-variant" label="Courses"
                             onPress={() => navigateTo(role === 'teacher' ? '/teachercourses' : '/studentgrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem}
-                        />
+                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                 </View>
             </ScrollView>
 
-            {/* --- Overlay & Improved Drawer --- */}
             {drawerOpen && <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeDrawer} />}
 
             <Animated.View style={[styles.drawer, { transform: [{ translateX: drawerAnim }] }]}>
-                {/* 1. Slim Integrated Top Bar */}
                 <View style={styles.drawerTopBar}>
                     <Image source={require('../assets/images/logo(1).png')} style={styles.miniLogo} />
                 </View>
 
-                {/* 2. Compact Profile Card */}
                 <View style={styles.drawerProfileCard}>
                     <View style={styles.miniImageContainer}>
                         <Image
@@ -226,13 +209,10 @@ const Home = () => {
 
                 <View style={styles.divider} />
 
-                {/* 3. Menu Items */}
                 <View style={styles.drawerMenu}>
                     <DrawerItem icon="account-circle-outline" label="Profile Page" onPress={() => navigateTo(role === 'student' ? '/propage' : '/techprofile')} />
                     <DrawerItem icon="lock-reset" label="Reset Password" onPress={() => navigateTo('/password')} />
                     <DrawerItem icon="bell-outline" label="Notifications" onPress={() => navigateTo('/notifications')} />
-
-                    {/* 4. Bottom Logout Button */}
                     <View style={styles.bottomLogoutWrapper}>
                         <TouchableOpacity style={styles.logoutBtnNew} onPress={handleLogout}>
                             <MaterialCommunityIcons name="logout" size={22} color="#ef5350" />
@@ -246,13 +226,11 @@ const Home = () => {
 };
 
 const GridItem = ({ id, icon, label, onPress, pressedItem, setPressedItem }: GridItemProps) => (
-    <TouchableOpacity
-        activeOpacity={1}
+    <TouchableOpacity activeOpacity={1}
         style={[styles.gridItem, pressedItem === id && styles.gridItemActive]}
         onPressIn={() => setPressedItem(id)}
         onPressOut={() => setPressedItem(null)}
-        onPress={onPress}
-    >
+        onPress={onPress}>
         <View style={[styles.iconContainer, pressedItem === id && styles.iconContainerActive]}>
             <MaterialCommunityIcons name={icon as any} size={32} color={pressedItem === id ? '#fff' : 'rgb(23, 42, 70)'} />
         </View>
@@ -289,7 +267,6 @@ const styles = StyleSheet.create({
     },
     welcomeSubText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 5 },
     welcomeMainText: { color: '#fff', fontSize: 20, fontWeight: 'bold', lineHeight: 28 },
-    welcomeIcon: { position: 'absolute', right: -10, bottom: -10 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: 'rgb(23, 42, 70)', paddingHorizontal: 20, marginVertical: 10 },
     gridContainer: { paddingHorizontal: 15 },
     rowContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
