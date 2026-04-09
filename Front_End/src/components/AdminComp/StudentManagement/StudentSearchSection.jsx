@@ -5,12 +5,13 @@ import {
   Button,
   useTheme,
   InputAdornment,
-  IconButton,    
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-import CloseIcon from "@mui/icons-material/Close";     
+import CloseIcon from "@mui/icons-material/Close";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useNavigate } from "react-router-dom";
 
 export default function StudentSearchSection({
@@ -98,6 +99,7 @@ export default function StudentSearchSection({
       />
 
       <Box sx={{ display: "flex", gap: 2, width: { xs: "100%", md: "auto" } }}>
+        {/* Search */}
         <Button
           type="submit"
           variant="contained"
@@ -119,6 +121,7 @@ export default function StudentSearchSection({
           Get Student
         </Button>
 
+        {/* Add single student */}
         <Button
           variant="outlined"
           startIcon={<PersonAddAlt1Icon />}
@@ -136,6 +139,27 @@ export default function StudentSearchSection({
           }}
         >
           Add Student
+        </Button>
+
+        {/* Bulk upload */}
+        <Button
+          variant="outlined"
+          color="success"
+          startIcon={<UploadFileIcon />}
+          onClick={() => navigate("/adminPanel/bulk-upload-students")}
+          sx={{
+            px: { xs: 2, lg: 3 },
+            py: 1.5,
+            borderRadius: "14px",
+            fontWeight: "bold",
+            textTransform: "none",
+            flexGrow: { xs: 1, md: 0 },
+            whiteSpace: "nowrap",
+            borderWidth: "2px",
+            "&:hover": { borderWidth: "2px" },
+          }}
+        >
+          Bulk Upload
         </Button>
       </Box>
     </Box>

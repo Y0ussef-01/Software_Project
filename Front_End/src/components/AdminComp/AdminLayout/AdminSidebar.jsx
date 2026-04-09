@@ -21,6 +21,7 @@ import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
 
 export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate();
@@ -54,6 +55,11 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: <AssignmentOutlinedIcon />, 
     path: "/adminPanel/teacher-assignments" 
     },
+    {
+  title: "Final Grades",
+  icon: <GradingOutlinedIcon />,
+  path: "/adminPanel/final-grades",
+},
   ];
 
   return (

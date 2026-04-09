@@ -115,7 +115,14 @@ export const REGISTRATION_TRANS = {
     tba: "TBA",
     lec: "Lecture",
     lab: "LAB",
-    hrs: "Hrs"
+    hrs: "Hrs",
+    generateReadySchedules: "Generate Ready-Made Schedules",
+    selectCoursesForGen: "Select Courses for Generation",
+    generateSchedulesBtn: "Generate Schedules",
+    generatingSchedules: "Generating...",
+    validSchedulesFound: "Valid Schedules Found",
+    confirmThisSchedule: "Confirm this Schedule",
+    noSchedulesGenerated: "No schedules generated yet."
   },
   ar: {
     hoursTracker: "متتبع الساعات",
@@ -170,6 +177,13 @@ export const REGISTRATION_TRANS = {
     tba: "يحدد لاحقاً",
     lec: "محاضرة",
     lab: "معمل",
-    hrs: "ساعات"
+    hrs: "ساعات",
+    generateReadySchedules: "إنشاء جداول جاهزة",
+    selectCoursesForGen: "اختر المقررات للإنشاء",
+    generateSchedulesBtn: "إنشاء الجداول",
+    generatingSchedules: "جاري الإنشاء...",
+    validSchedulesFound: "جداول صحيحة متاحة",
+    confirmThisSchedule: "تأكيد هذا الجدول",
+    noSchedulesGenerated: "لم يتم إنشاء جداول بعد."
   }
 };
