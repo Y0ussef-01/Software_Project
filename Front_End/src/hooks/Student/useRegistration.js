@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 export default function useRegistration() {
   const encodeData = (data) =>
-    btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+      btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   const decodeData = (encoded) => {
     try {
       return JSON.parse(decodeURIComponent(escape(atob(encoded))));
@@ -19,17 +19,17 @@ export default function useRegistration() {
   };
 
   const [studentProfile, setStudentProfile] = useState(() =>
-    decodeData(sessionStorage.getItem("user_data")),
+      decodeData(sessionStorage.getItem("user_data")),
   );
 
   const [availableCourses, setAvailableCourses] = useState(
-    () => decodeData(sessionStorage.getItem("reg_courses")) || [],
+      () => decodeData(sessionStorage.getItem("reg_courses")) || [],
   );
 
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
   const [isLoading, setIsLoading] = useState(
-    !studentProfile || availableCourses.length === 0,
+      !studentProfile || availableCourses.length === 0,
   );
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [pendingSwapRequests, setPendingSwapRequests] = useState([]);
@@ -38,10 +38,12 @@ export default function useRegistration() {
   const fetchPendingSwaps = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/student/get_pending_requests",
-        getAuthHeaders(),
+          "http://localhost:5000/student/get_pending_requests",
+          getAuthHeaders(),
       );
-      setPendingSwapRequests(response.data || []);
+      // التأكد من إن الداتا الراجعة عبارة عن مصفوفة (Array) عشان الـ map ماتضربش الشاشة
+      const rawData = response.data?.requests || response.data?.data || response.data || [];
+      setPendingSwapRequests(Array.isArray(rawData) ? rawData : []);
     } catch (error) {
       console.error("Failed to fetch pending swap requests", error);
     }
@@ -50,17 +52,20 @@ export default function useRegistration() {
   const fetchSentSwaps = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/student/sent-swap-requests",
-        getAuthHeaders(),
+          "http://localhost:5000/student/sent-swap-requests",
+          getAuthHeaders(),
       );
       console.log("Sent Swaps Data:", response.data);
       const rawData = response.data?.requests || response.data?.data || response.data || [];
-      
-      const grouped = rawData.reduce((acc, curr) => {
+
+      // التأكد من النوع هنا كمان لتجنب خطأ الـ reduce
+      const validData = Array.isArray(rawData) ? rawData : [];
+
+      const grouped = validData.reduce((acc, curr) => {
         const courseId = curr.courseId?._id || curr.courseId;
         const targetGroupName = curr.receiverGroupName || curr.targetGroupName;
         const groupKey = `${courseId}_${targetGroupName}`;
-        
+
         if (!acc[groupKey]) {
           acc[groupKey] = { ...curr, relatedIds: [curr._id] };
         } else {
@@ -68,7 +73,7 @@ export default function useRegistration() {
         }
         return acc;
       }, {});
-      
+
       setSentSwapRequests(Object.values(grouped));
     } catch (error) {
       console.error("Failed to fetch sent swap requests", error);
@@ -81,8 +86,8 @@ export default function useRegistration() {
       const [profileRes, coursesRes] = await Promise.all([
         axios.get("http://localhost:5000/student/Profile", getAuthHeaders()),
         axios.get(
-          "http://localhost:5000/student/getAllCourses",
-          getAuthHeaders(),
+            "http://localhost:5000/student/getAllCourses",
+            getAuthHeaders(),
         ),
       ]);
 
@@ -94,7 +99,7 @@ export default function useRegistration() {
 
       sessionStorage.setItem("user_data", encodeData(profileData));
       sessionStorage.setItem("reg_courses", encodeData(coursesData));
-      
+
       await Promise.all([fetchPendingSwaps(), fetchSentSwaps()]);
     } catch (error) {
       if (!studentProfile) toast.error("Failed to load registration data.");
@@ -113,27 +118,27 @@ export default function useRegistration() {
   registeredCourses.forEach((row) => {
     const courseObj = row.course || row;
     const baseCourseCode =
-      typeof row.course === "string"
-        ? row.course
-        : courseObj.courseId || courseObj._id || row.courseId;
+        typeof row.course === "string"
+            ? row.course
+            : courseObj.courseId || courseObj._id || row.courseId;
     if (baseCourseCode && !uniqueCoursesMap[baseCourseCode])
       uniqueCoursesMap[baseCourseCode] = courseObj.hours || row.hours || 3;
   });
 
   const registeredHours = Object.values(uniqueCoursesMap).reduce(
-    (total, hours) => total + hours,
-    0,
+      (total, hours) => total + hours,
+      0,
   );
   const remainingHours = maxHours - registeredHours;
   const selectedCourseDetails = availableCourses.find(
-    (c) => c._id === selectedCourseId || c.courseId === selectedCourseId,
+      (c) => c._id === selectedCourseId || c.courseId === selectedCourseId,
   );
 
   const handleRegister = async () => {
     if (!selectedCourseId || !selectedGroup) return;
     if (
-      selectedCourseDetails &&
-      registeredHours + (selectedCourseDetails.hours || 3) > maxHours
+        selectedCourseDetails &&
+        registeredHours + (selectedCourseDetails.hours || 3) > maxHours
     ) {
       toast.error("Exceeded maximum allowed hours!");
       return;
@@ -143,9 +148,9 @@ export default function useRegistration() {
     try {
       const payload = { courseId: selectedCourseId, groupName: selectedGroup };
       const response = await axios.post(
-        "http://localhost:5000/student/register-course",
-        payload,
-        getAuthHeaders(),
+          "http://localhost:5000/student/register-course",
+          payload,
+          getAuthHeaders(),
       );
 
       const newEntry = {
@@ -185,9 +190,9 @@ export default function useRegistration() {
       const updatedCourses = registeredCourses.filter((row) => {
         const cObj = row.course || row;
         const code =
-          typeof row.course === "string"
-            ? row.course
-            : cObj.courseId || cObj._id || row.courseId;
+            typeof row.course === "string"
+                ? row.course
+                : cObj.courseId || cObj._id || row.courseId;
         return code !== courseId;
       });
 
@@ -213,23 +218,23 @@ export default function useRegistration() {
     try {
       const payload = { courseId, newGroupName };
       const response = await axios.put(
-        "http://localhost:5000/student/switch-group",
-        payload,
-        getAuthHeaders(),
+          "http://localhost:5000/student/switch-group",
+          payload,
+          getAuthHeaders(),
       );
 
       const updatedCourses =
-        response.data.registeredCourses ||
-        registeredCourses.map((row) => {
-          const baseCourseCode =
-            typeof row.course === "string"
-              ? row.course
-              : row.course?.courseId || row.courseId;
-          if (baseCourseCode === courseId) {
-            return { ...row, groupName: newGroupName };
-          }
-          return row;
-        });
+          response.data.registeredCourses ||
+          registeredCourses.map((row) => {
+            const baseCourseCode =
+                typeof row.course === "string"
+                    ? row.course
+                    : row.course?.courseId || row.courseId;
+            if (baseCourseCode === courseId) {
+              return { ...row, groupName: newGroupName };
+            }
+            return row;
+          });
 
       const updatedProfile = {
         ...studentProfile,
@@ -240,10 +245,10 @@ export default function useRegistration() {
       sessionStorage.setItem("user_data", encodeData(updatedProfile));
 
       toast.success(
-        response.data.message || `Switched successfully to ${newGroupName}`,
-        { autoClose: 2000 },
+          response.data.message || `Switched successfully to ${newGroupName}`,
+          { autoClose: 2000 },
       );
-      fetchData(false);       
+      fetchData(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to switch group.");
     } finally {
@@ -257,9 +262,9 @@ export default function useRegistration() {
     try {
       const payload = { courseId, targetGroupName };
       const response = await axios.post(
-        "http://localhost:5000/student/swap-request",
-        payload,
-        getAuthHeaders(),
+          "http://localhost:5000/student/swap-request",
+          payload,
+          getAuthHeaders(),
       );
       toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
       fetchSentSwaps();
@@ -277,24 +282,24 @@ export default function useRegistration() {
     try {
       const payload = { requestId, action };
       const response = await axios.post(
-        "http://localhost:5000/student/swap-respond",
-        payload,
-        getAuthHeaders(),
+          "http://localhost:5000/student/swap-respond",
+          payload,
+          getAuthHeaders(),
       );
-      
+
       toast.success(response.data.message || `Swap request ${action.toLowerCase()}!`, { autoClose: 2000 });
       fetchData(false);
     } catch (error) {
       const msg = error.response?.data?.message || "";
       if (
-        (error.response?.status === 400 && msg.toLowerCase().includes("too late")) ||
-        error.response?.status === 404
+          (error.response?.status === 400 && msg.toLowerCase().includes("too late")) ||
+          error.response?.status === 404
       ) {
         toast.error("Too late! This request was already accepted by someone else.");
       } else {
         toast.error(msg || `Failed to ${action.toLowerCase()} swap request.`);
       }
-      fetchPendingSwaps(); // Immediately refresh the list to omit the fulfilled request
+      fetchPendingSwaps();
     } finally {
       setIsActionLoading(false);
     }
@@ -305,13 +310,13 @@ export default function useRegistration() {
     setIsActionLoading(true);
     try {
       await Promise.all(
-        relatedIds.map((id) =>
-          axios.delete(`http://localhost:5000/student/cancel-swap-request/${id}`, {
-            headers: getAuthHeaders().headers,
-          })
-        )
+          relatedIds.map((id) =>
+              axios.delete(`http://localhost:5000/student/cancel-swap-request/${id}`, {
+                headers: getAuthHeaders().headers,
+              })
+          )
       );
-      
+
       toast.success("Swap request cancelled successfully!", { autoClose: 2000 });
       fetchSentSwaps();
     } catch (error) {
@@ -338,7 +343,7 @@ export default function useRegistration() {
     sentSwapRequests,
     handleRegister,
     handleDropCourse,
-    handleSwitchGroup,    
+    handleSwitchGroup,
     handleSwapRequest,
     handleSwapRespond,
     handleCancelSwapRequest,
