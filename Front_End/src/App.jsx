@@ -35,6 +35,7 @@ import TeacherManageGradesPage from "./pages/TeacherManageGradesPage/TeacherMana
 import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
 import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendancePage.jsx";
 import GradesPage from "./pages/GradesPage/GradesPage.jsx";
+import AcademicRecordPage from "./pages/AcademicRecordPage/AcademicRecordPage.jsx";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
               <Route path="/help" element={<HelpPage />} />
               <Route path="/profile" element={<ProfileStudnetPage />} />
               <Route path="/grades" element={<GradesPage />} />
+              <Route path="/Academic" element={<AcademicRecordPage />} />
               <Route path="/appointments" element={<AppointmentsPage />} />
               <Route path="/register-course" element={<RegistrationPage />} />
               <Route

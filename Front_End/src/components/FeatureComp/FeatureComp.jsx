@@ -21,6 +21,7 @@ const TRANSLATIONS = {
     appointments: "المواعيد",
     grades: "الدرجات",
     profile: "الملف الشخصي",
+    Academic: "السجل الاكاديمى",
   },
 };
 
