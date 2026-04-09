@@ -50,13 +50,11 @@ const ANALYTICS_CACHE_PREFIX = 'student_analytics_';
 
 export const getCourseAnalytics = async (courseId: string) => {
     try {
-        // 1. لو في Memory رجعها فوراً وحدّث في الخلفية
         if (memoizedAnalytics[courseId]) {
             fetchAndSaveAnalytics(courseId);
             return memoizedAnalytics[courseId];
         }
 
-        // 2. لو في AsyncStorage
         const localData = await AsyncStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${courseId}`);
         if (localData) {
             memoizedAnalytics[courseId] = JSON.parse(localData);
@@ -64,7 +62,6 @@ export const getCourseAnalytics = async (courseId: string) => {
             return memoizedAnalytics[courseId];
         }
 
-        // 3. أول مرة - جيب من الـ API
         return await fetchAndSaveAnalytics(courseId);
 
     } catch (error) {
@@ -87,14 +84,67 @@ const fetchAndSaveAnalytics = async (courseId: string) => {
 };
 
 // ============================================
+// Final Results Cache
+// ============================================
+let memoizedFinalResults: any = null;
+const FINAL_RESULTS_KEY = 'student_final_results_cache';
+
+export const getFinalResults = async () => {
+    try {
+        if (memoizedFinalResults) {
+            fetchAndSaveFinalResults();
+            return memoizedFinalResults;
+        }
+
+        const localData = await AsyncStorage.getItem(FINAL_RESULTS_KEY);
+        if (localData) {
+            const parsed = JSON.parse(localData);
+            // تحقق من expiresAt أول حاجة
+            const firstResult = parsed?.results?.[0];
+            if (firstResult?.expiresAt) {
+                const isExpired = new Date(firstResult.expiresAt) < new Date();
+                if (isExpired) {
+                    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
+                    memoizedFinalResults = null;
+                    return await fetchAndSaveFinalResults();
+                }
+            }
+            memoizedFinalResults = parsed;
+            fetchAndSaveFinalResults();
+            return memoizedFinalResults;
+        }
+
+        return await fetchAndSaveFinalResults();
+
+    } catch (error) {
+        console.error("Final Results Error:", error);
+        throw error;
+    }
+};
+
+const fetchAndSaveFinalResults = async () => {
+    try {
+        const response = await API.get('/student/final-results');
+        const data = response.data;
+        memoizedFinalResults = data;
+        await AsyncStorage.setItem(FINAL_RESULTS_KEY, JSON.stringify(data));
+        return data;
+    } catch (err) {
+        if (memoizedFinalResults) return memoizedFinalResults;
+        throw err;
+    }
+};
+
+// ============================================
 // Clear Functions
 // ============================================
 
-// امسح كل حاجة (profile + analytics) - تستخدم عند الـ logout
 export const clearProfileCache = async () => {
     memoizedProfile = null;
     memoizedAnalytics = {};
+    memoizedFinalResults = null;
     await AsyncStorage.removeItem(CACHE_KEY);
+    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
     const keys = await AsyncStorage.getAllKeys();
     const analyticsKeys = keys.filter(k => k.startsWith(ANALYTICS_CACHE_PREFIX));
     if (analyticsKeys.length > 0) {
@@ -102,8 +152,12 @@ export const clearProfileCache = async () => {
     }
 };
 
-// امسح analytics مادة معينة بس
 export const clearCourseAnalyticsCache = async (courseId: string) => {
     delete memoizedAnalytics[courseId];
     await AsyncStorage.removeItem(`${ANALYTICS_CACHE_PREFIX}${courseId}`);
+};
+
+export const clearFinalResultsCache = async () => {
+    memoizedFinalResults = null;
+    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
 };
