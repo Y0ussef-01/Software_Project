@@ -358,6 +358,19 @@ export default function useRegistration() {
 
   const handleConfirmSchedule = async (schedule) => {
     if (!Array.isArray(schedule) || schedule.length === 0) return;
+
+    let scheduleTotalHours = 0;
+    for (const item of schedule) {
+      const courseObj = availableCourses.find(c => c._id === item.courseId || c.courseId === item.courseId);
+      const hours = courseObj?.hours || 3;
+      scheduleTotalHours += hours;
+    }
+
+    if (registeredHours + scheduleTotalHours > maxHours) {
+      toast.error(`Cannot confirm schedule. It exceeds your maximum allowed hours (${maxHours} Hrs).`);
+      return;
+    }
+
     setIsActionLoading(true);
     try {
       for (const item of schedule) {
@@ -368,17 +381,17 @@ export default function useRegistration() {
             getAuthHeaders(),
         );
       }
-      toast.success("Schedule confirmed successfully!", { autoClose: 2000 });
+      toast.success("Schedule confirmed and registered successfully!", { autoClose: 2000 });
       setGeneratedSchedules([]);
       setSelectedCoursesForGen([]);
       fetchData(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to confirm schedule.");
+      toast.error(error.response?.data?.message || "Failed to confirm schedule completely.");
+      fetchData(false);
     } finally {
       setIsActionLoading(false);
     }
   };
-
   return {
     isLoading,
     isActionLoading,
