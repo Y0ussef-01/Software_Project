@@ -35,6 +35,10 @@ export default function useRegistration() {
   const [pendingSwapRequests, setPendingSwapRequests] = useState([]);
   const [sentSwapRequests, setSentSwapRequests] = useState([]);
 
+  const [selectedCoursesForGen, setSelectedCoursesForGen] = useState([]);
+  const [generatedSchedules, setGeneratedSchedules] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const fetchPendingSwaps = async () => {
     try {
       const response = await axios.get(
@@ -92,7 +96,8 @@ export default function useRegistration() {
       ]);
 
       const profileData = profileRes.data?.student || profileRes.data || {};
-      const coursesData = coursesRes.data?.courses || coursesRes.data || [];
+      const rawCoursesData = coursesRes.data?.courses || coursesRes.data || [];
+      const coursesData = Array.isArray(rawCoursesData) ? rawCoursesData : [];
 
       setStudentProfile(profileData);
       setAvailableCourses(coursesData);
@@ -326,6 +331,54 @@ export default function useRegistration() {
     }
   };
 
+  const handleGenerateSchedules = async () => {
+    if (!Array.isArray(selectedCoursesForGen) || selectedCoursesForGen.length === 0) return;
+    setIsGenerating(true);
+    try {
+      const payload = { courseIds: selectedCoursesForGen };
+      const response = await axios.post(
+          "http://localhost:5000/student/generate-schedules",
+          payload,
+          getAuthHeaders()
+      );
+      const rawData = response.data?.schedules || response.data || [];
+      const validData = Array.isArray(rawData) ? rawData : [];
+      setGeneratedSchedules(validData);
+      if (validData.length === 0) {
+        toast.info("No valid schedules found for selected courses.");
+      } else {
+        toast.success(`${validData.length} schedules generated!`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to generate schedules.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmSchedule = async (schedule) => {
+    if (!Array.isArray(schedule) || schedule.length === 0) return;
+    setIsActionLoading(true);
+    try {
+      for (const item of schedule) {
+        const payload = { courseId: item.courseId, groupName: item.groupName };
+        await axios.post(
+            "http://localhost:5000/student/register-course",
+            payload,
+            getAuthHeaders(),
+        );
+      }
+      toast.success("Schedule confirmed successfully!", { autoClose: 2000 });
+      setGeneratedSchedules([]);
+      setSelectedCoursesForGen([]);
+      fetchData(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to confirm schedule.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   return {
     isLoading,
     isActionLoading,
@@ -349,5 +402,12 @@ export default function useRegistration() {
     handleCancelSwapRequest,
     fetchPendingSwaps,
     fetchSentSwaps,
+    selectedCoursesForGen,
+    setSelectedCoursesForGen,
+    generatedSchedules,
+    setGeneratedSchedules,
+    isGenerating,
+    handleGenerateSchedules,
+    handleConfirmSchedule,
   };
 }
