@@ -36,7 +36,8 @@ import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
 import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendancePage.jsx";
 import GradesPage from "./pages/GradesPage/GradesPage.jsx";
 import AcademicRecordPage from "./pages/AcademicRecordPage/AcademicRecordPage.jsx";
-
+import FinalGradesPage from "./pages/AdminPage/FinalGrades/Finalgradespage.jsx";
+import BulkUploadStudentsPage from "./pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -106,6 +107,10 @@ function App() {
                 <Route path="profile" element={<AdminProfilePage />} />
                 <Route path="students" element={<StudentManagementPage />} />
                 <Route path="add-student" element={<AddStudentPage />} />
+                <Route
+                  path="bulk-upload-students"
+                  element={<BulkUploadStudentsPage />}
+                />
                 <Route path="teachers" element={<TeatureManagementPage />} />
                 <Route path="add-teacher" element={<AddTeaturePage />} />
                 <Route path="classes" element={<Classes />} />
@@ -121,6 +126,7 @@ function App() {
                   path="reset-password"
                   element={<RestAdminPasswordPage />}
                 />
+                <Route path="final-grades" element={<FinalGradesPage />} />
               </Route>
             </Route>
 
