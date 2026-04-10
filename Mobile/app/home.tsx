@@ -162,7 +162,7 @@ const handleLogout = () => {
                             onPress={() => navigateTo('/attendancecourses')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                         <GridItem id="schedule" icon="calendar-month" label="Schedule"
-                            onPress={() => navigateTo('/teacherschedule')}
+                            onPress={() => navigateTo('/studentschedule')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
