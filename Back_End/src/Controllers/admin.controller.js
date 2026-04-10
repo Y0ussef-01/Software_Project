@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const AcademicRecord = require('../models/AcademicRecord');
 const FinalResult = require('../models/FinalResult');
 const Notification = require('../models/Notification');
+const sendEmail = require('../utils/sendEmail');
 const { getLetterGrade, getCourseGPA } = require("../utils/gradeCalculator");const sendPushNotification = require('../utils/sendPushNotification');
 const bcrypt = require("bcrypt");
 const xlsx = require('xlsx');
@@ -14,9 +15,11 @@ const addStudent = async (req, res) => {
   try {
     const { _id, name, password } = req.body;
     const Email = `20${_id}@std.sci.cu.edu.eg`;
+
     if (!password) {
       return res.status(400).json({ message: "Password is required" });
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newStudent = new Student({
@@ -27,9 +30,23 @@ const addStudent = async (req, res) => {
     });
 
     await newStudent.save();
-    res
-        .status(201)
-        .json({ message: "added student successfully", student: newStudent });
+
+    const emailSubject = "Welcome to Cairo University Portal";
+    const emailHtml = `
+      <div style="direction: ltr; font-family: Arial, sans-serif;">
+        <h2>Welcome ${name}!</h2>
+        <p>Your university account has been created successfully.</p>
+        <p><b>Your User ID:</b> ${_id}</p>
+        <p><b>Your Password:</b> ${password}</p>
+        <br/>
+        <p><i>Please make sure to change your password after your first login for security reasons.</i></p>
+      </div>
+    `;
+
+    sendEmail(Email, emailSubject, "", emailHtml).catch(err => console.log("Email failed to send", err));
+
+    res.status(201).json({ message: "added student successfully", student: newStudent });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -614,11 +631,12 @@ const uploadStudentsExcel = async (req, res) => {
       return res.status(400).json({ message: 'File is empty' });
     }
 
-    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'الكود', 'رقم الجلوس'];
+    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'كود', 'رقم الجلوس'];
     const namePossibleNames = ['name', 'student_name', 'student name', 'الاسم', 'اسم الطالب'];
-    const passPossibleNames = ['password', 'pass', 'الرقم السري', 'الباسورد'];
+    const passPossibleNames = ['password', 'pass', 'كلمة السر', 'الباسورد'];
 
     const bulkOps = [];
+    const emailsToSend = [];
 
     for (let row of rows) {
       const rowKeys = Object.keys(row);
@@ -633,7 +651,7 @@ const uploadStudentsExcel = async (req, res) => {
           break;
         }
       }
-      if (!studentId || studentId === "") continue; // لو مفيش ID نتجاهل الصف ده
+      if (!studentId || studentId === "") continue;
 
       for (let key of rowKeys) {
         if (namePossibleNames.includes(key.toLowerCase().trim())) {
@@ -655,6 +673,25 @@ const uploadStudentsExcel = async (req, res) => {
 
       const email = `20${studentId}@std.sci.cu.edu.eg`;
       const hashedPassword = await bcrypt.hash(password, 10);
+
+      const emailSubject = "Welcome to Cairo University Portal";
+      const emailHtml = `
+        <div style="direction: ltr; font-family: Arial, sans-serif;">
+          <h2>Welcome ${name}!</h2>
+          <p>Your university account has been created successfully.</p>
+          <p><b>Your User ID:</b> ${studentId}</p>
+          <p><b>Your Email:</b> ${email}</p>
+          <p><b>Your Password:</b> ${password}</p>
+          <br/>
+          <p><i>Please make sure to change your password after your first login for security reasons.</i></p>
+        </div>
+      `;
+
+      emailsToSend.push({
+        to: email,
+        subject: emailSubject,
+        html: emailHtml
+      });
 
       bulkOps.push({
         updateOne: {
@@ -678,8 +715,12 @@ const uploadStudentsExcel = async (req, res) => {
 
     await Student.bulkWrite(bulkOps);
 
+    Promise.allSettled(
+        emailsToSend.map(mail => sendEmail(mail.to, mail.subject, "", mail.html))
+    ).then(() => console.log("All bulk emails processed."));
+
     res.status(200).json({
-      message: 'Students uploaded successfully',
+      message: 'Students uploaded successfully and emails are being sent',
       processedCount: bulkOps.length
     });
 
