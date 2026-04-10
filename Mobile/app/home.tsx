@@ -9,15 +9,6 @@ import { getTeacherProfile, clearTeacherCache } from '../api/teacherApi';
 import { unregisterPushToken } from '../api/notifications';
 import API from '../api/axiosConfig';
 
-interface GridItemProps {
-    id: string;
-    icon: string;
-    label: string;
-    onPress: () => void;
-    pressedItem: string | null;
-    setPressedItem: (id: string | null) => void;
-}
-
 interface DrawerItemProps {
     icon: string;
     label: string;
@@ -85,41 +76,48 @@ const Home = () => {
             return () => { isMounted = false; };
         }, [])
     );
-const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-            text: 'Log Out', style: 'destructive',
-            onPress: async () => {
-                try {
-                    // الخطوة الأهم: مسح التوكن من السيرفر "أولاً" وإحنا لسه Login
-                    await unregisterPushToken(role);
 
-                    // مسح الكاش المحلي بعد ما السيرفر خلص
-                    await clearStorage();
-                    await clearProfileCache();
-                    await clearTeacherCache();
+    const handleLogout = () => {
+        Alert.alert('Log Out', 'Are you sure?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Log Out', style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await unregisterPushToken(role);
 
-                    // تصفير الـ States والرجوع
-                    setProfileImg(null);
-                    setUserName('');
-                    setRole(null);
-                    router.replace('/');
-                } catch (e) {
-                    console.error("Logout failed", e);
-                    // حتى لو السيرفر فشل، بنمسح الكاش عشان اليوزر يعرف يخرج
-                    await clearStorage();
-                    router.replace('/');
-                }
+                        await clearStorage();
+                        await clearProfileCache();
+                        await clearTeacherCache();
+
+                        setProfileImg(null);
+                        setUserName('');
+                        setRole(null);
+                        router.replace('/');
+                    } catch (e) {
+                        console.error("Logout failed", e);
+                        await clearStorage();
+                        router.replace('/');
+                    }
+                },
             },
-        },
-    ]);
-};
+        ]);
+    };
 
     const navigateTo = (path: string) => {
         if (drawerOpen) closeDrawer();
         router.push(path as any);
     };
+
+  
+    const menuItems = [
+        { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/attendancecourses' },
+        { id: 'schedule', title: 'Schedule', icon: 'calendar-month', path: '/teacherschedule' },
+        { id: 'eval', title: 'My Performance', icon: 'chart-bar', path: role === 'student' ? '/mycourses' : '/teacherevaluation' },
+        { id: 'quizzes', title: 'Quizzes', icon: 'pencil-box-multiple', path: role === 'teacher' ? '/quizzes' : '/studentgrades' },
+        { id: 'grades', title: 'Final Grades', icon: 'clipboard-text', path: role === 'student' ? '/finalResults' : '/teachergrades' },
+        { id: 'courses', title: 'Courses', icon: 'book-open-variant', path: '/allsubjectsschedule' }
+    ];
 
     return (
         <View style={styles.container}>
@@ -156,31 +154,27 @@ const handleLogout = () => {
 
                 <Text style={styles.sectionTitle}>Academic Services</Text>
 
+               
                 <View style={styles.gridContainer}>
-                    <View style={styles.rowContainer}>
-                        <GridItem id="attendance" icon="calendar-check" label="Attendance"
-                            onPress={() => navigateTo('/attendancecourses')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                        <GridItem id="schedule" icon="calendar-month" label="Schedule"
-                            onPress={() => navigateTo('/teacherschedule')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                    </View>
-                    <View style={styles.rowContainer}>
-                        <GridItem id="eval" icon="chart-bar" label="My Performance"
-                            onPress={() => navigateTo(role === 'student' ? '/mycourses' : '/teacherevaluation')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                        <GridItem id="quizzes" icon="pencil-box-multiple" label="Quizzes"
-                            onPress={() => navigateTo(role === 'teacher' ? '/quizzes' : '/studentgrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                    </View>
-                    <View style={styles.rowContainer}>
-                      <GridItem id="grades" icon="clipboard-text" label="Final Grades"
-                         onPress={() => navigateTo(role === 'student' ? '/finalResults' : '/teachergrades')}
-                                pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                        <GridItem id="courses" icon="book-open-variant" label="Courses"
-                            onPress={() => navigateTo(role === 'teacher' ? '/teachercourses' : '/studentgrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
-                    </View>
+                    {menuItems.map((item) => (
+                        <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={1}
+                            style={[styles.gridItem, pressedItem === item.id && styles.gridItemActive]}
+                            onPressIn={() => setPressedItem(item.id)}
+                            onPressOut={() => setPressedItem(null)}
+                            onPress={() => navigateTo(item.path)}
+                        >
+                            <View style={[styles.iconContainer, pressedItem === item.id && styles.iconContainerActive]}>
+                                <MaterialCommunityIcons 
+                                    name={item.icon as any} 
+                                    size={32} 
+                                    color={pressedItem === item.id ? '#fff' : 'rgb(23, 42, 70)'} 
+                                />
+                            </View>
+                            <Text style={[styles.gridText, pressedItem === item.id && styles.gridTextActive]}>{item.title}</Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
             </ScrollView>
 
@@ -225,19 +219,6 @@ const handleLogout = () => {
     );
 };
 
-const GridItem = ({ id, icon, label, onPress, pressedItem, setPressedItem }: GridItemProps) => (
-    <TouchableOpacity activeOpacity={1}
-        style={[styles.gridItem, pressedItem === id && styles.gridItemActive]}
-        onPressIn={() => setPressedItem(id)}
-        onPressOut={() => setPressedItem(null)}
-        onPress={onPress}>
-        <View style={[styles.iconContainer, pressedItem === id && styles.iconContainerActive]}>
-            <MaterialCommunityIcons name={icon as any} size={32} color={pressedItem === id ? '#fff' : 'rgb(23, 42, 70)'} />
-        </View>
-        <Text style={[styles.gridText, pressedItem === id && styles.gridTextActive]}>{label}</Text>
-    </TouchableOpacity>
-);
-
 const DrawerItem = ({ icon, label, onPress, color = '#1e293b' }: DrawerItemProps) => (
     <TouchableOpacity style={styles.drawerItem} onPress={onPress}>
         <View style={styles.drawerItemIconBg}>
@@ -268,9 +249,10 @@ const styles = StyleSheet.create({
     welcomeSubText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, marginBottom: 5 },
     welcomeMainText: { color: '#fff', fontSize: 20, fontWeight: 'bold', lineHeight: 28 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: 'rgb(23, 42, 70)', paddingHorizontal: 20, marginVertical: 10 },
-    gridContainer: { paddingHorizontal: 15 },
-    rowContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
-    gridItem: { width: '47%', backgroundColor: '#fff', borderRadius: 22, height: 130, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOpacity: 0.05 },
+    
+    gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 15 },
+    
+    gridItem: { width: '47%', backgroundColor: '#fff', borderRadius: 22, height: 130, alignItems: 'center', justifyContent: 'center', marginBottom: 15, elevation: 3, shadowColor: '#000', shadowOpacity: 0.05 },
     gridItemActive: { backgroundColor: "rgb(23, 42, 70)" },
     iconContainer: { backgroundColor: '#f0f4ff', borderRadius: 15, padding: 12, marginBottom: 8 },
     iconContainerActive: { backgroundColor: 'rgba(255,255,255,0.2)' },
