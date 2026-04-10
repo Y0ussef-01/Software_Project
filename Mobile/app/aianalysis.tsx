@@ -43,24 +43,24 @@ const AIAnalysis = () => {
             const promptText = buildPrompt(data, courseName || 'Course', isArabic);
 
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-        'Authorization': `Bearer ${process.env.EXPO_PUBLIC_OPENROUTER_KEY}`,
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        model: 'openrouter/auto',
-        messages: [{ role: 'user', content: promptText }],
-    }),
-});
+                method: 'POST',
+                headers: {
+           'Authorization': `Bearer ${process.env.EXPO_PUBLIC_OPENROUTER_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'openrouter/auto',
+                    messages: [{ role: 'user', content: promptText }],
+                }),
+            });
 
             const result = await response.json();
-            console.log('Full Response:', JSON.stringify(result, null, 2));
             const text = result?.choices?.[0]?.message?.content;
             if (!text) throw new Error('No content returned');
 
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            const cleanJson = jsonMatch ? jsonMatch[0] : text;
+            const cleanText = text.replace(/```json|```/g, '').trim();
+            const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+            const cleanJson = jsonMatch ? jsonMatch[0] : cleanText;
 
             const parsed: AnalysisResult = JSON.parse(cleanJson);
             setAnalysis(parsed);
@@ -83,8 +83,8 @@ const AIAnalysis = () => {
         const quizzes = data.quizzes || [];
         const totalScore = grades.total?.score ?? 0;
         const totalOutOf = 40;
-        const midScore = grades.mid?.score ?? null;
-        const midOutOf = grades.mid?.outOf ?? 0;
+        const midScore = grades.midterm?.score ?? null;
+        const midOutOf = grades.midterm?.outOf ?? 0;
         const lang = arabic ? 'Arabic' : 'English';
 
         return `Analyze this student's academic performance in the course "${course}".
