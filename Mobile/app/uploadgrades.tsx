@@ -25,13 +25,11 @@ interface UploadedFile {
 }
 
 const UploadGrades = () => {
-    // استقبال بيانات المادة من الشاشة السابقة
     const { courseId, courseName } = useLocalSearchParams();
     const [file, setFile] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
-    // دالة اختيار ملف الإكسيل
     const pickFile = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
@@ -44,7 +42,7 @@ const UploadGrades = () => {
 
             if (!result.canceled) {
                 const selectedFile = result.assets[0];
-                // التأكد من امتداد الملف يدوياً لزيادة الأمان
+                
                 if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
                     setFile(selectedFile);
                 } else {
@@ -56,7 +54,6 @@ const UploadGrades = () => {
         }
     };
 
-    // دالة لفتح الملف بعد رفعه (للمعاينة)
     const openFile = async (uri: string) => {
         try {
             const isAvailable = await Sharing.isAvailableAsync();
@@ -70,7 +67,6 @@ const UploadGrades = () => {
         }
     };
 
-    // حذف ملف من قائمة "التم رفعهم مؤخراً"
     const removeUploadedFile = (index: number) => {
         Alert.alert(
             'Remove Record',
@@ -88,7 +84,6 @@ const UploadGrades = () => {
         );
     };
 
-    // دالة الرفع للسيرفر
     const handleUpload = async () => {
         if (!file) {
             Alert.alert('⚠️', 'Please select an Excel file first');
@@ -101,7 +96,6 @@ const UploadGrades = () => {
             const formData = new FormData();
             formData.append('courseId', courseId as string);
             
-            // تجهيز الملف للرفع
             const fileToUpload = {
                 uri: Platform.OS === 'ios' ? file.uri.replace('file://', '') : file.uri,
                 name: file.name,
@@ -114,16 +108,14 @@ const UploadGrades = () => {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                 },
-                // إضافة timeout لأن ملفات الإكسيل قد تأخذ وقتاً في المعالجة بالسيرفر
                 timeout: 30000 
             });
 
-            // إضافة الملف لقائمة التاريخ (History)
             const now = new Date();
             const timestamp = `${now.toLocaleDateString()} at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             
             setUploadedFiles((prev) => [{ name: file.name, uploadedAt: timestamp, uri: file.uri }, ...prev]);
-            setFile(null); // تفريغ الملف المختار بعد النجاح
+            setFile(null); 
 
             Alert.alert('✅ Success', 'Grades have been processed and uploaded successfully!');
         } catch (err: any) {
@@ -162,6 +154,39 @@ const UploadGrades = () => {
                     </View>
                 </View>
 
+                {/* 📌 كارت التعليمات (Instructions Card) 📌 */}
+                <View style={styles.instructionsCard}>
+                    <View style={styles.instructionsHeader}>
+                        <MaterialCommunityIcons name="information" size={22} color="#0284c7" />
+                        <Text style={styles.instructionsTitle}>Excel Sheet Guidelines</Text>
+                    </View>
+                    
+                    <View style={styles.instructionRow}>
+                        <MaterialCommunityIcons name="circle-small" size={24} color="#0284c7" />
+                        <Text style={styles.instructionText}>
+                            <Text style={{fontWeight: 'bold'}}>Student ID Column:</Text> Must be named:
+                            {'\n'}
+                            <Text style={styles.highlightText}>"id", "student_id", "code", "student id"</Text>
+                            {'\n'}
+                            or <Text style={styles.highlightText}>"كود الطالب"</Text>
+                        </Text>
+                    </View>
+                    
+                    <View style={styles.instructionRow}>
+                        <MaterialCommunityIcons name="circle-small" size={24} color="#0284c7" />
+                        <Text style={styles.instructionText}>
+                            <Text style={{fontWeight: 'bold'}}>Grade Columns Naming:</Text> You must write the max score next to the name using a slash. Example: <Text style={styles.highlightText}>Quiz1/10</Text> or <Text style={styles.highlightText}>Midterm/20</Text>.
+                        </Text>
+                    </View>
+
+                    <View style={styles.instructionRow}>
+                        <MaterialCommunityIcons name="circle-small" size={24} color="#0284c7" />
+                        <Text style={styles.instructionText}>
+                            <Text style={{fontWeight: 'bold'}}>Values:</Text> Grades must be <Text style={styles.highlightText}>Numbers</Text>. Text or empty values will be ignored.
+                        </Text>
+                    </View>
+                </View>
+
                 <Text style={styles.sectionTitle}>Upload New Grades</Text>
                 
                 {/* Upload Zone */}
@@ -187,7 +212,7 @@ const UploadGrades = () => {
                         ) : (
                             <View>
                                 <Text style={styles.uploadText}>Select Excel Sheet</Text>
-                                <Text style={styles.uploadSubText}>Make sure it follows the template</Text>
+                                <Text style={styles.uploadSubText}>Tap to browse files</Text>
                             </View>
                         )}
                     </View>
@@ -278,7 +303,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 20, 
         elevation: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -297,6 +322,45 @@ const styles = StyleSheet.create({
     courseIdLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold', letterSpacing: 1 },
     courseIdText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
     courseNameText: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+    // 📌 ستايل كارت التعليمات 📌
+    instructionsCard: {
+        backgroundColor: '#f0f9ff',
+        borderRadius: 15,
+        padding: 15,
+        marginBottom: 25,
+        borderWidth: 1,
+        borderColor: '#bae6fd',
+    },
+    instructionsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        gap: 8,
+    },
+    instructionsTitle: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#0284c7',
+    },
+    instructionRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 6,
+        paddingRight: 10,
+    },
+    instructionText: {
+        fontSize: 13,
+        color: '#334155',
+        flex: 1,
+        marginTop: 2,
+        lineHeight: 20,
+    },
+    highlightText: {
+        color: '#0369a1',
+        fontWeight: 'bold',
+        backgroundColor: '#e0f2fe',
+    },
 
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#334155', marginBottom: 15, marginLeft: 5 },
     
