@@ -1,22 +1,10 @@
-// ===== editgrade.tsx =====
 import Entypo from '@expo/vector-icons/Entypo';
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useCallback } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    Platform,
-    RefreshControl,
-    FlatList,
+    ActivityIndicator, Alert, Image, Modal, ScrollView,
+    StatusBar, StyleSheet, Text, TextInput, TouchableOpacity,
+    View, Platform, RefreshControl, FlatList,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import API from '../api/axiosConfig';
@@ -140,11 +128,36 @@ const EditGrade = () => {
         applySearch(allStudents, text);
     };
 
+    // ─── استخرج الـ outOf من الـ title لو مش موجود ───────────────────────────
+    const getOutOf = (degree: Degree): number | null => {
+        if (degree.outOf !== null && degree.outOf !== undefined) return degree.outOf;
+        const parts = degree.title?.split('/');
+        if (parts && parts.length === 2) {
+            const parsed = parseFloat(parts[1]);
+            if (!isNaN(parsed)) return parsed;
+        }
+        return null;
+    };
+
     // ─── Open Edit Modal ──────────────────────────────────────────────────────
     const openEdit = (student: StudentGrade) => {
-        setSelectedStudent(student);
+        // ── حدّث الـ outOf من الـ title لو مش موجود ──
+        const fixedDegrees = student.degrees.map(d => {
+            if (d.outOf === null || d.outOf === undefined) {
+                const parts = d.title?.split('/');
+                if (parts && parts.length === 2) {
+                    const parsed = parseFloat(parts[1]);
+                    if (!isNaN(parsed)) return { ...d, outOf: parsed };
+                }
+            }
+            return d;
+        });
+
+        const fixedStudent = { ...student, degrees: fixedDegrees };
+        setSelectedStudent(fixedStudent);
+
         const scores: Record<string, string> = {};
-        student.degrees.forEach(d => {
+        fixedDegrees.forEach(d => {
             scores[d.title] = d.score !== null && d.score !== undefined ? String(d.score) : '';
         });
         setEditedScores(scores);
@@ -157,12 +170,13 @@ const EditGrade = () => {
         if (isNaN(Number(value)) || value.trim() === '') return 'Numbers only';
         const num = parseFloat(value);
         if (num < 0) return 'Cannot be negative';
-        if (degree.outOf !== null && degree.outOf !== undefined && num > degree.outOf)
-            return `Max is ${degree.outOf}`;
+        const maxAllowed = getOutOf(degree);
+        if (maxAllowed !== null && num > maxAllowed)
+            return `Max is ${maxAllowed}`;
         return null;
     };
 
-    // ─── هل في أي error في أي field دلوقتي؟ ─────────────────────────────────
+    // ─── هل في أي error دلوقتي؟ ──────────────────────────────────────────────
     const hasAnyError = (): boolean => {
         if (!selectedStudent) return false;
         return selectedStudent.degrees.some(d => {
@@ -175,11 +189,9 @@ const EditGrade = () => {
     const handleSave = async () => {
         if (!selectedStudent) return;
 
-        // ── تأكيد نهائي قبل الإرسال ──
         for (const d of selectedStudent.degrees) {
             const val = editedScores[d.title] ?? '';
 
-            // 1. تحقق من الـ format
             if (val !== '' && (isNaN(Number(val)) || val.trim() === '')) {
                 Alert.alert('❌ Invalid Grade', `${d.label}: Numbers only`);
                 return;
@@ -188,17 +200,16 @@ const EditGrade = () => {
             if (val !== '') {
                 const num = parseFloat(val);
 
-                // 2. لا يقل عن صفر
                 if (num < 0) {
                     Alert.alert('❌ Invalid Grade', `${d.label}: Cannot be negative`);
                     return;
                 }
 
-                // 3. لا يتجاوز الـ Max — الحماية الأساسية
-                if (d.outOf !== null && d.outOf !== undefined && num > d.outOf) {
+                const maxAllowed = getOutOf(d);
+                if (maxAllowed !== null && num > maxAllowed) {
                     Alert.alert(
                         '❌ Invalid Grade',
-                        `${d.label}: Max allowed is ${d.outOf}\nYou entered: ${num}`
+                        `${d.label}: Max allowed is ${maxAllowed}\nYou entered: ${num}`
                     );
                     return;
                 }
@@ -264,13 +275,11 @@ const EditGrade = () => {
         );
     };
 
-    // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.HeaderStyle}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Entypo name="chevron-with-circle-left" size={28} color="white" />
@@ -279,7 +288,6 @@ const EditGrade = () => {
                 <View style={{ width: 28 }} />
             </View>
 
-            {/* Course Card */}
             <View style={styles.courseCard}>
                 <View style={styles.courseIconCircle}>
                     <MaterialCommunityIcons name="pencil-box-outline" size={28} color="white" />
@@ -291,7 +299,6 @@ const EditGrade = () => {
                 </View>
             </View>
 
-            {/* Group Selector */}
             <View style={styles.sectionWrapper}>
                 <Text style={styles.stepLabel}>Select Group</Text>
                 <TouchableOpacity
@@ -323,7 +330,6 @@ const EditGrade = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Search Bar */}
             {selectedGroup && (
                 <View style={styles.searchContainer}>
                     <MaterialCommunityIcons name="magnify" size={20} color="#94a3b8" />
@@ -342,7 +348,6 @@ const EditGrade = () => {
                 </View>
             )}
 
-            {/* Student List */}
             {!selectedGroup ? (
                 <View style={styles.centerContainer}>
                     <MaterialCommunityIcons name="gesture-tap" size={60} color="#dde3ee" />
@@ -412,7 +417,7 @@ const EditGrade = () => {
                 </ScrollView>
             )}
 
-            {/* ════════════ GROUP PICKER MODAL ════════════ */}
+            {/* GROUP PICKER MODAL */}
             <Modal visible={groupPickerVisible} animationType="slide" transparent onRequestClose={() => setGroupPickerVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.pickerSheet}>
@@ -451,11 +456,10 @@ const EditGrade = () => {
                 </View>
             </Modal>
 
-            {/* ════════════ EDIT GRADE MODAL ════════════ */}
+            {/* EDIT GRADE MODAL */}
             <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        {/* Header */}
                         <View style={styles.modalHeader}>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.modalTitle}>Edit Grades</Text>
@@ -468,7 +472,6 @@ const EditGrade = () => {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Dynamic Grade Fields */}
                         <ScrollView style={styles.modalBody}>
                             {!selectedStudent?.degrees.length ? (
                                 <View style={styles.noGradesContainer}>
@@ -480,6 +483,7 @@ const EditGrade = () => {
                                     const currentVal = editedScores[degree.title] ?? '';
                                     const fieldError = getFieldError(degree, currentVal);
                                     const hasError   = fieldError !== null;
+                                    const maxAllowed = getOutOf(degree);
 
                                     const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
                                     const color  = colors[idx % colors.length];
@@ -492,8 +496,9 @@ const EditGrade = () => {
                                                 </View>
                                                 <View style={styles.gradeInfo}>
                                                     <Text style={styles.gradeLabel}>{degree.label}</Text>
-                                                    {degree.outOf !== null && (
-                                                        <Text style={styles.gradeMax}>Max: {degree.outOf}</Text>
+                                                    {/* ← التعديل: استخدم maxAllowed بدل degree.outOf */}
+                                                    {maxAllowed !== null && (
+                                                        <Text style={styles.gradeMax}>Max: {maxAllowed}</Text>
                                                     )}
                                                 </View>
                                                 <TextInput
@@ -520,16 +525,13 @@ const EditGrade = () => {
                             <View style={{ height: 20 }} />
                         </ScrollView>
 
-                        {/* Save Button — disabled لو في أي error */}
                         <View style={styles.modalFooter}>
                             <TouchableOpacity
                                 style={[
                                     styles.saveBtn,
-                                    // ← التعديل: disabled لو saving أو مفيش درجات أو في error
                                     (saving || !selectedStudent?.degrees.length || hasAnyError()) && styles.saveBtnDisabled
                                 ]}
                                 onPress={handleSave}
-                                // ← التعديل: منع الضغط لو في error
                                 disabled={saving || !selectedStudent?.degrees.length || hasAnyError()}
                             >
                                 {saving ? (
@@ -554,49 +556,38 @@ export default EditGrade;
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f8faff' },
     HeaderStyle: {
-        width: '100%',
-        height: Platform.OS === 'ios' ? 120 : 100,
-        backgroundColor: 'rgb(23, 42, 70)',
-        paddingHorizontal: 20,
+        width: '100%', height: Platform.OS === 'ios' ? 120 : 100,
+        backgroundColor: 'rgb(23, 42, 70)', paddingHorizontal: 20,
         paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        elevation: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        elevation: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5, shadowRadius: 10,
     },
     imageStyle: { height: 45, width: '35%', resizeMode: 'contain' },
     courseCard: {
-        backgroundColor: 'rgb(23, 42, 70)',
-        margin: 16, borderRadius: 18, padding: 18,
+        backgroundColor: 'rgb(23, 42, 70)', margin: 16, borderRadius: 18, padding: 18,
         flexDirection: 'row', alignItems: 'center', gap: 14,
         elevation: 6, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8,
     },
     courseIconCircle: {
         width: 52, height: 52, borderRadius: 14,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        justifyContent: 'center', alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center',
     },
     courseIdLabel:  { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold', letterSpacing: 1 },
     courseNameText: { fontSize: 17, fontWeight: 'bold', color: 'white', marginTop: 2 },
     courseIdSmall:  { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 3 },
     sectionWrapper: { paddingHorizontal: 16, marginBottom: 12 },
-    stepLabel:      { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6, letterSpacing: 0.5 },
+    stepLabel: { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6, letterSpacing: 0.5 },
     selectorBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'white', borderRadius: 14,
+        flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 14,
         paddingHorizontal: 14, paddingVertical: 13, gap: 10,
         elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4,
     },
     selectorText:        { flex: 1, fontSize: 14, color: '#1e293b', fontWeight: '600' },
     selectorPlaceholder: { color: '#94a3b8', fontWeight: '400' },
     searchContainer: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'white', marginHorizontal: 16, marginBottom: 12,
-        borderRadius: 14, paddingHorizontal: 14,
+        flexDirection: 'row', alignItems: 'center', backgroundColor: 'white',
+        marginHorizontal: 16, marginBottom: 12, borderRadius: 14, paddingHorizontal: 14,
         paddingVertical: Platform.OS === 'ios' ? 12 : 8,
         elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, gap: 8,
     },
@@ -608,16 +599,14 @@ const styles = StyleSheet.create({
     emptyText:       { fontSize: 16, color: '#aaa', fontWeight: '500' },
     countText:       { fontSize: 13, color: '#64748b', marginBottom: 10, marginLeft: 4 },
     studentRow: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: '#fff', borderRadius: 14,
+        flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14,
         padding: 14, marginBottom: 10,
         elevation: 1, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, gap: 12,
     },
     studentRowAlt: { backgroundColor: '#f8fafc' },
     avatarCircle: {
         width: 44, height: 44, borderRadius: 22,
-        backgroundColor: 'rgb(23, 42, 70)',
-        justifyContent: 'center', alignItems: 'center',
+        backgroundColor: 'rgb(23, 42, 70)', justifyContent: 'center', alignItems: 'center',
     },
     avatarLetter: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     studentInfo: { flex: 1 },
@@ -636,13 +625,10 @@ const styles = StyleSheet.create({
     totalBadge: { fontSize: 11, color: '#10b981', fontWeight: '700', marginTop: 4 },
     editBtn: {
         flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: 'rgb(23, 42, 70)',
-        paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+        backgroundColor: 'rgb(23, 42, 70)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
     },
     editBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-    modalOverlay: {
-        flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end',
-    },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
     pickerSheet: {
         backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30,
         maxHeight: '55%', paddingBottom: Platform.OS === 'ios' ? 40 : 20,
@@ -680,18 +666,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: 14,
         backgroundColor: '#f8fafc', borderRadius: 14, padding: 14, marginBottom: 4,
     },
-    gradeRowError: {
-        backgroundColor: '#fff5f5',
-        borderWidth: 1,
-        borderColor: '#fca5a5',
-    },
+    gradeRowError: { backgroundColor: '#fff5f5', borderWidth: 1, borderColor: '#fca5a5' },
     gradeIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
     gradeInfo: { flex: 1 },
     gradeLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
     gradeMax:   { fontSize: 11, color: '#94a3b8', marginTop: 2 },
-    errorText: {
-        fontSize: 11, color: '#ef4444', fontWeight: '600', marginBottom: 10, marginLeft: 8,
-    },
+    errorText:  { fontSize: 11, color: '#ef4444', fontWeight: '600', marginBottom: 10, marginLeft: 8 },
     gradeInput: {
         width: 68, borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 10,
         paddingHorizontal: 10, paddingVertical: Platform.OS === 'ios' ? 10 : 7,
@@ -699,8 +679,7 @@ const styles = StyleSheet.create({
     },
     gradeInputError: { borderColor: '#ef4444', backgroundColor: '#fef2f2' },
     saveBtn: {
-        backgroundColor: 'rgb(23, 42, 70)',
-        paddingVertical: 16, borderRadius: 15,
+        backgroundColor: 'rgb(23, 42, 70)', paddingVertical: 16, borderRadius: 15,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
         gap: 10, elevation: 4, marginBottom: 10,
     },
