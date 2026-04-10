@@ -83,14 +83,11 @@ const HomeTeacher = () => {
     const menuItems = [
         { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/teacherattendance' },
         { id: 'schedule', title: 'Schedule', icon: 'calendar-clock', path: '/teacherschedule' },
-      
         { id: 'quizzes', title: 'Quizzes', icon: 'file-document-edit-outline', path: '/teachergrades' },
-    
         { id: 'notification', title: 'Send Notification', icon: 'bell-ring-outline', path: '/sendnotification' },
        
     ];
-
-    return (
+ return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" backgroundColor="rgb(23, 42, 70)" />
@@ -100,10 +97,9 @@ const HomeTeacher = () => {
                 <TouchableOpacity onPress={openDrawer} style={styles.iconBtn}>
                     <MaterialCommunityIcons name="menu" size={28} color="white" />
                 </TouchableOpacity>
+                
+                {/* التعديل هنا: اللوجو بقى هو العنصر التاني وبكده هيروح في اليمين مكان الجرس */}
                 <Image source={require('../assets/images/logo(1).png')} style={styles.logo} />
-                <TouchableOpacity onPress={() => navigateTo('/sendnotification')} style={styles.iconBtn}>
-                    <MaterialCommunityIcons name="bell-outline" size={26} color="white" />
-                </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>

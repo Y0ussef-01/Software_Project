@@ -14,7 +14,7 @@ const StudentSchema = new mongoose.Schema({
   gpaHours: { type: Number, default: 0 },
   maxHours: { type: Number, default: 19 },
   pushToken: { type: String, default: null },
-  expoPushToken: { type: String, default: null},
+  expoPushToken: { type: String, default: null },
   registeredCourses: [
     {
       course: { type: String, ref: "Course" },
@@ -22,7 +22,9 @@ const StudentSchema = new mongoose.Schema({
       Degrees: [
         {
           title: { type: String },
-          score: { type: Number }
+          label: { type: String },   // ← التعديل
+          score: { type: Number },
+          outOf: { type: Number },   // ← التعديل
         }
       ]
     },
