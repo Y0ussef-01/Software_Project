@@ -118,7 +118,7 @@ export default function BulkUploadStudentsComp() {
                 fontSize: { xs: "1.8rem", md: "2.2rem" },
               }}
             >
-              Bulk Upload Students
+             Upload Students
             </Typography>
             <Typography
               variant="subtitle2"
@@ -277,10 +277,10 @@ export default function BulkUploadStudentsComp() {
               mb: 1,
             }}
           >
-            Expected Excel Columns
+            Required File Format
           </Typography>
           <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-            {["_id", "name", "password (optional)"].map((col) => (
+            {[" id", "name", "password "].map((col) => (
               <Box
                 key={col}
                 sx={{
