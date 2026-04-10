@@ -301,8 +301,7 @@ export default function BulkUploadStudentsComp() {
             variant="caption"
             sx={{ color: theme.palette.text.disabled, display: "block", mt: 1 }}
           >
-            * If password is missing, Student ID will be used as default
-            password. Welcome emails are sent automatically.
+
           </Typography>
         </Box>
 
