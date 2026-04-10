@@ -174,9 +174,9 @@ const handleLogout = () => {
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
-                        <GridItem id="grades" icon="clipboard-text" label="Final Grades"
-                            onPress={() => navigateTo('/teachergrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
+                      <GridItem id="grades" icon="clipboard-text" label="Final Grades"
+                         onPress={() => navigateTo(role === 'student' ? '/finalResults' : '/teachergrades')}
+                                pressedItem={pressedItem} setPressedItem={setPressedItem} />
                         <GridItem id="courses" icon="book-open-variant" label="Courses"
                             onPress={() => navigateTo(role === 'teacher' ? '/teachercourses' : '/studentgrades')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
