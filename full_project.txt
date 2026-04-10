@@ -210,13 +210,11 @@ const ANALYTICS_CACHE_PREFIX = 'student_analytics_';
 
 export const getCourseAnalytics = async (courseId: string) => {
     try {
-        // 1. لو في Memory رجعها فوراً وحدّث في الخلفية
         if (memoizedAnalytics[courseId]) {
             fetchAndSaveAnalytics(courseId);
             return memoizedAnalytics[courseId];
         }
 
-        // 2. لو في AsyncStorage
         const localData = await AsyncStorage.getItem(`${ANALYTICS_CACHE_PREFIX}${courseId}`);
         if (localData) {
             memoizedAnalytics[courseId] = JSON.parse(localData);
@@ -224,7 +222,6 @@ export const getCourseAnalytics = async (courseId: string) => {
             return memoizedAnalytics[courseId];
         }
 
-        // 3. أول مرة - جيب من الـ API
         return await fetchAndSaveAnalytics(courseId);
 
     } catch (error) {
@@ -247,14 +244,67 @@ const fetchAndSaveAnalytics = async (courseId: string) => {
 };
 
 // ============================================
+// Final Results Cache
+// ============================================
+let memoizedFinalResults: any = null;
+const FINAL_RESULTS_KEY = 'student_final_results_cache';
+
+export const getFinalResults = async () => {
+    try {
+        if (memoizedFinalResults) {
+            fetchAndSaveFinalResults();
+            return memoizedFinalResults;
+        }
+
+        const localData = await AsyncStorage.getItem(FINAL_RESULTS_KEY);
+        if (localData) {
+            const parsed = JSON.parse(localData);
+            // تحقق من expiresAt أول حاجة
+            const firstResult = parsed?.results?.[0];
+            if (firstResult?.expiresAt) {
+                const isExpired = new Date(firstResult.expiresAt) < new Date();
+                if (isExpired) {
+                    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
+                    memoizedFinalResults = null;
+                    return await fetchAndSaveFinalResults();
+                }
+            }
+            memoizedFinalResults = parsed;
+            fetchAndSaveFinalResults();
+            return memoizedFinalResults;
+        }
+
+        return await fetchAndSaveFinalResults();
+
+    } catch (error) {
+        console.error("Final Results Error:", error);
+        throw error;
+    }
+};
+
+const fetchAndSaveFinalResults = async () => {
+    try {
+        const response = await API.get('/student/final-results');
+        const data = response.data;
+        memoizedFinalResults = data;
+        await AsyncStorage.setItem(FINAL_RESULTS_KEY, JSON.stringify(data));
+        return data;
+    } catch (err) {
+        if (memoizedFinalResults) return memoizedFinalResults;
+        throw err;
+    }
+};
+
+// ============================================
 // Clear Functions
 // ============================================
 
-// امسح كل حاجة (profile + analytics) - تستخدم عند الـ logout
 export const clearProfileCache = async () => {
     memoizedProfile = null;
     memoizedAnalytics = {};
+    memoizedFinalResults = null;
     await AsyncStorage.removeItem(CACHE_KEY);
+    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
     const keys = await AsyncStorage.getAllKeys();
     const analyticsKeys = keys.filter(k => k.startsWith(ANALYTICS_CACHE_PREFIX));
     if (analyticsKeys.length > 0) {
@@ -262,10 +312,14 @@ export const clearProfileCache = async () => {
     }
 };
 
-// امسح analytics مادة معينة بس
 export const clearCourseAnalyticsCache = async (courseId: string) => {
     delete memoizedAnalytics[courseId];
     await AsyncStorage.removeItem(`${ANALYTICS_CACHE_PREFIX}${courseId}`);
+};
+
+export const clearFinalResultsCache = async () => {
+    memoizedFinalResults = null;
+    await AsyncStorage.removeItem(FINAL_RESULTS_KEY);
 };
 // =========================================
 // File: ./Mobile/api/teacherApi.ts
@@ -496,6 +550,277 @@ module.exports = defineConfig([
   },
 ]);
 
+// =========================================
+// File: ./Mobile/app/finalResults.tsx
+// =========================================
+import React, { useCallback, useState } from 'react';
+import {
+    View, Text, StyleSheet, TouchableOpacity, ScrollView,
+    ActivityIndicator, StatusBar, Platform
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router, Stack, useFocusEffect } from 'expo-router';
+import { getFinalResults } from '../api/studentApi';
+
+const FinalResults = () => {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            let isMounted = true;
+            const fetch = async () => {
+                try {
+                    setLoading(true);
+                    setError(false);
+                    const result = await getFinalResults();
+                    if (isMounted) setData(result);
+                } catch (err) {
+                    console.log('Final Results Error:', err);
+                    if (isMounted) setError(true);
+                } finally {
+                    if (isMounted) setLoading(false);
+                }
+            };
+            fetch();
+            return () => { isMounted = false; };
+        }, [])
+    );
+
+    const getGradeColor = (status: string) => {
+        if (status === 'Passed') return '#10b981';
+        return '#ef4444';
+    };
+
+    const getScoreColor = (score: number) => {
+        if (score >= 85) return '#10b981';
+        if (score >= 70) return '#6366f1';
+        if (score >= 60) return '#f59e0b';
+        return '#ef4444';
+    };
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
+    const getDaysLeft = (dateStr: string) => {
+        const diff = new Date(dateStr).getTime() - new Date().getTime();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    };
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Stack.Screen options={{ headerShown: false }} />
+                <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
+                <Text style={styles.loadingText}>Loading final results...</Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Stack.Screen options={{ headerShown: false }} />
+                <MaterialCommunityIcons name="alert-circle-outline" size={60} color="#ef4444" />
+                <Text style={styles.errorText}>Failed to load results</Text>
+                <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
+                    <Text style={styles.retryText}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+   const results = data?.results || [];
+    const passed = results.filter((r: any) => r.status === 'Passed').length;
+    const failed = results.filter((r: any) => r.status === 'Failed').length;
+    const totalHours = results.filter((r: any) => r.status === 'Passed').reduce((sum: number, r: any) => sum + (r.hours || 0), 0);
+    const expiresAt = results[0]?.expiresAt;
+    const daysLeft = expiresAt ? getDaysLeft(expiresAt) : null;
+
+    if (results.length === 0) {
+        return (
+            <View style={styles.container}>
+                <Stack.Screen options={{ headerShown: false }} />
+                <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
+                    </TouchableOpacity>
+                    <View style={styles.headerCenter}>
+                        <Text style={styles.headerTitle}>Final Results</Text>
+                    </View>
+                    <View style={{ width: 26 }} />
+                </View>
+                <View style={styles.emptyContainer}>
+                    <MaterialCommunityIcons name="clipboard-text-off-outline" size={80} color="#cbd5e1" />
+                    <Text style={styles.emptyText}>No results available yet</Text>
+                    <Text style={styles.emptySubText}>Final results will appear here once published</Text>
+                </View>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
+
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()}>
+                    <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
+                </TouchableOpacity>
+                <View style={styles.headerCenter}>
+                    <Text style={styles.headerTitle}>Final Results</Text>
+                    <Text style={styles.headerSub}>Temporary Results</Text>
+                </View>
+                <View style={{ width: 26 }} />
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+
+                {/* Warning Banner */}
+                {daysLeft !== null && (
+                    <View style={[styles.warningBanner, { backgroundColor: daysLeft <= 2 ? '#fee2e2' : '#fef3c7' }]}>
+                        <MaterialCommunityIcons
+                            name="clock-alert-outline"
+                            size={20}
+                            color={daysLeft <= 2 ? '#ef4444' : '#f59e0b'}
+                        />
+                        <Text style={[styles.warningText, { color: daysLeft <= 2 ? '#ef4444' : '#92400e' }]}>
+                            Results expire in {daysLeft} day{daysLeft !== 1 ? 's' : ''} ({formatDate(expiresAt)})
+                        </Text>
+                    </View>
+                )}
+
+                {/* Summary Card */}
+                <View style={styles.summaryCard}>
+                    <View style={styles.summaryItem}>
+                        <Text style={styles.summaryValue}>{results.length}</Text>
+                        <Text style={styles.summaryLabel}>Courses</Text>
+                    </View>
+                    <View style={styles.summaryDivider} />
+                    <View style={styles.summaryItem}>
+                        <Text style={[styles.summaryValue, { color: '#10b981' }]}>{passed}</Text>
+                        <Text style={styles.summaryLabel}>Passed</Text>
+                    </View>
+                    <View style={styles.summaryDivider} />
+                    <View style={styles.summaryItem}>
+                        <Text style={[styles.summaryValue, { color: '#ef4444' }]}>{failed}</Text>
+                        <Text style={styles.summaryLabel}>Failed</Text>
+                    </View>
+                    <View style={styles.summaryDivider} />
+                    <View style={styles.summaryItem}>
+                        <Text style={[styles.summaryValue, { color: '#6366f1' }]}>{totalHours}</Text>
+                        <Text style={styles.summaryLabel}>Hours</Text>
+                    </View>
+                </View>
+
+                {/* Results List */}
+                {results.map((item: any, index: number) => {
+                    const statusColor = getGradeColor(item.status);
+                    const scoreColor = getScoreColor(item.score);
+                    return (
+                        <View key={index} style={styles.resultCard}>
+                            <View style={styles.resultTop}>
+                                <View style={styles.resultLeft}>
+                                    <Text style={styles.courseName}>{item.courseName}</Text>
+                                    <Text style={styles.courseId}>{item.courseId}</Text>
+                                    <View style={styles.hoursRow}>
+                                        <MaterialCommunityIcons name="clock-outline" size={14} color="#94a3b8" />
+                                        <Text style={styles.hoursText}>{item.hours} Credit Hours</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.resultRight}>
+                                    <View style={[styles.scoreBadge, { borderColor: scoreColor }]}>
+                                        <Text style={[styles.scoreText, { color: scoreColor }]}>{item.score}</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.resultBottom}>
+                                <View style={[styles.gradeBadge, { backgroundColor: statusColor + '15' }]}>
+                                    <MaterialCommunityIcons
+                                        name={item.status === 'Passed' ? 'check-circle' : 'close-circle'}
+                                        size={14}
+                                        color={statusColor}
+                                    />
+                                    <Text style={[styles.gradeText, { color: statusColor }]}>{item.status}</Text>
+                                </View>
+                                <View style={[styles.gradeBadge, { backgroundColor: '#6366f115' }]}>
+                                    <MaterialCommunityIcons name="medal-outline" size={14} color="#6366f1" />
+                                    <Text style={[styles.gradeText, { color: '#6366f1' }]}>{item.grade}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    );
+                })}
+
+            </ScrollView>
+        </View>
+    );
+};
+
+export default FinalResults;
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f8faff' },
+    loadingContainer: { flex: 1, backgroundColor: '#f8faff', alignItems: 'center', justifyContent: 'center', gap: 12 },
+    loadingText: { color: '#94a3b8', fontSize: 14 },
+    errorText: { color: '#ef4444', fontSize: 16, fontWeight: 'bold' },
+    retryBtn: { backgroundColor: 'rgb(23, 42, 70)', paddingHorizontal: 24, paddingVertical: 10, borderRadius: 10 },
+    retryText: { color: '#fff', fontWeight: 'bold' },
+    header: {
+        backgroundColor: 'rgb(23, 42, 70)',
+        paddingTop: Platform.OS === 'ios' ? 55 : (StatusBar.currentHeight || 0) + 10,
+        paddingBottom: 18, paddingHorizontal: 20,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        elevation: 10,
+    },
+    headerCenter: { flex: 1, alignItems: 'center' },
+    headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+    headerSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 },
+    warningBanner: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        marginHorizontal: 16, marginTop: 16, marginBottom: 4,
+        padding: 12, borderRadius: 14,
+    },
+    warningText: { fontSize: 13, fontWeight: '600', flex: 1 },
+    summaryCard: {
+        backgroundColor: 'rgb(23, 42, 70)', margin: 16, borderRadius: 24,
+        padding: 20, flexDirection: 'row', justifyContent: 'space-around',
+        alignItems: 'center', elevation: 8,
+    },
+    summaryItem: { alignItems: 'center' },
+    summaryValue: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+    summaryLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 },
+    summaryDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.15)' },
+    resultCard: {
+        backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 12,
+        borderRadius: 20, padding: 18, elevation: 3,
+        shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6,
+    },
+    resultTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+    resultLeft: { flex: 1 },
+    courseName: { fontSize: 16, fontWeight: 'bold', color: '#1e293b', marginBottom: 4 },
+    courseId: { fontSize: 12, color: '#94a3b8', marginBottom: 6 },
+    hoursRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    hoursText: { fontSize: 12, color: '#94a3b8' },
+    resultRight: { alignItems: 'center' },
+    scoreBadge: {
+        width: 60, height: 60, borderRadius: 30,
+        borderWidth: 3, alignItems: 'center', justifyContent: 'center',
+    },
+    scoreText: { fontSize: 18, fontWeight: 'bold' },
+    resultBottom: { flexDirection: 'row', gap: 10 },
+    gradeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+    gradeText: { fontSize: 13, fontWeight: 'bold' },
+    emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+    emptyText: { fontSize: 18, fontWeight: 'bold', color: '#94a3b8', marginTop: 16 },
+    emptySubText: { fontSize: 14, color: '#cbd5e1', textAlign: 'center', marginTop: 8 },
+});
 // =========================================
 // File: ./Mobile/app/coursedetails.tsx
 // =========================================
@@ -3288,9 +3613,9 @@ const handleLogout = () => {
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
-                        <GridItem id="grades" icon="clipboard-text" label="Final Grades"
-                            onPress={() => navigateTo('/teachergrades')}
-                            pressedItem={pressedItem} setPressedItem={setPressedItem} />
+                      <GridItem id="grades" icon="clipboard-text" label="Final Grades"
+                         onPress={() => navigateTo(role === 'student' ? '/finalResults' : '/teachergrades')}
+                                pressedItem={pressedItem} setPressedItem={setPressedItem} />
                         <GridItem id="courses" icon="book-open-variant" label="Courses"
                             onPress={() => navigateTo(role === 'teacher' ? '/teachercourses' : '/studentgrades')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
@@ -5004,9 +5329,9 @@ export * from 'expo-router';
 declare module 'expo-router' {
   export namespace ExpoRouter {
     export interface __routes<T extends string | object = string> {
-      hrefInputParams: { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/aianalysis`; params?: Router.UnknownInputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownInputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownInputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownInputParams; } | { pathname: `/home`; params?: Router.UnknownInputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownInputParams; } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/mycourses`; params?: Router.UnknownInputParams; } | { pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/password`; params?: Router.UnknownInputParams; } | { pathname: `/propage`; params?: Router.UnknownInputParams; } | { pathname: `/quizzes`; params?: Router.UnknownInputParams; } | { pathname: `/scanqr`; params?: Router.UnknownInputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownInputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownInputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownInputParams; } | { pathname: `/techprofile`; params?: Router.UnknownInputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; };
-      hrefOutputParams: { pathname: Router.RelativePathString, params?: Router.UnknownOutputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownOutputParams } | { pathname: `/aianalysis`; params?: Router.UnknownOutputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownOutputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownOutputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownOutputParams; } | { pathname: `/home`; params?: Router.UnknownOutputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownOutputParams; } | { pathname: `/`; params?: Router.UnknownOutputParams; } | { pathname: `/mycourses`; params?: Router.UnknownOutputParams; } | { pathname: `/notifications`; params?: Router.UnknownOutputParams; } | { pathname: `/password`; params?: Router.UnknownOutputParams; } | { pathname: `/propage`; params?: Router.UnknownOutputParams; } | { pathname: `/quizzes`; params?: Router.UnknownOutputParams; } | { pathname: `/scanqr`; params?: Router.UnknownOutputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownOutputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownOutputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownOutputParams; } | { pathname: `/techprofile`; params?: Router.UnknownOutputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownOutputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownOutputParams; };
-      href: Router.RelativePathString | Router.ExternalPathString | `/aianalysis${`?${string}` | `#${string}` | ''}` | `/attendancecourses${`?${string}` | `#${string}` | ''}` | `/coursedetails${`?${string}` | `#${string}` | ''}` | `/courseperformance${`?${string}` | `#${string}` | ''}` | `/home${`?${string}` | `#${string}` | ''}` | `/hometeacher${`?${string}` | `#${string}` | ''}` | `/${`?${string}` | `#${string}` | ''}` | `/mycourses${`?${string}` | `#${string}` | ''}` | `/notifications${`?${string}` | `#${string}` | ''}` | `/password${`?${string}` | `#${string}` | ''}` | `/propage${`?${string}` | `#${string}` | ''}` | `/quizzes${`?${string}` | `#${string}` | ''}` | `/scanqr${`?${string}` | `#${string}` | ''}` | `/sendnotification${`?${string}` | `#${string}` | ''}` | `/studentgrades${`?${string}` | `#${string}` | ''}` | `/teacherattendance${`?${string}` | `#${string}` | ''}` | `/techprofile${`?${string}` | `#${string}` | ''}` | `/uploadgrades${`?${string}` | `#${string}` | ''}` | `/_sitemap${`?${string}` | `#${string}` | ''}` | { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/aianalysis`; params?: Router.UnknownInputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownInputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownInputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownInputParams; } | { pathname: `/home`; params?: Router.UnknownInputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownInputParams; } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/mycourses`; params?: Router.UnknownInputParams; } | { pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/password`; params?: Router.UnknownInputParams; } | { pathname: `/propage`; params?: Router.UnknownInputParams; } | { pathname: `/quizzes`; params?: Router.UnknownInputParams; } | { pathname: `/scanqr`; params?: Router.UnknownInputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownInputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownInputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownInputParams; } | { pathname: `/techprofile`; params?: Router.UnknownInputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; };
+      hrefInputParams: { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/aianalysis`; params?: Router.UnknownInputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownInputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownInputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownInputParams; } | { pathname: `/finalResults`; params?: Router.UnknownInputParams; } | { pathname: `/home`; params?: Router.UnknownInputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownInputParams; } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/mycourses`; params?: Router.UnknownInputParams; } | { pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/password`; params?: Router.UnknownInputParams; } | { pathname: `/propage`; params?: Router.UnknownInputParams; } | { pathname: `/quizzes`; params?: Router.UnknownInputParams; } | { pathname: `/scanqr`; params?: Router.UnknownInputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownInputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownInputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownInputParams; } | { pathname: `/techprofile`; params?: Router.UnknownInputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; };
+      hrefOutputParams: { pathname: Router.RelativePathString, params?: Router.UnknownOutputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownOutputParams } | { pathname: `/aianalysis`; params?: Router.UnknownOutputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownOutputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownOutputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownOutputParams; } | { pathname: `/finalResults`; params?: Router.UnknownOutputParams; } | { pathname: `/home`; params?: Router.UnknownOutputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownOutputParams; } | { pathname: `/`; params?: Router.UnknownOutputParams; } | { pathname: `/mycourses`; params?: Router.UnknownOutputParams; } | { pathname: `/notifications`; params?: Router.UnknownOutputParams; } | { pathname: `/password`; params?: Router.UnknownOutputParams; } | { pathname: `/propage`; params?: Router.UnknownOutputParams; } | { pathname: `/quizzes`; params?: Router.UnknownOutputParams; } | { pathname: `/scanqr`; params?: Router.UnknownOutputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownOutputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownOutputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownOutputParams; } | { pathname: `/techprofile`; params?: Router.UnknownOutputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownOutputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownOutputParams; };
+      href: Router.RelativePathString | Router.ExternalPathString | `/aianalysis${`?${string}` | `#${string}` | ''}` | `/attendancecourses${`?${string}` | `#${string}` | ''}` | `/coursedetails${`?${string}` | `#${string}` | ''}` | `/courseperformance${`?${string}` | `#${string}` | ''}` | `/finalResults${`?${string}` | `#${string}` | ''}` | `/home${`?${string}` | `#${string}` | ''}` | `/hometeacher${`?${string}` | `#${string}` | ''}` | `/${`?${string}` | `#${string}` | ''}` | `/mycourses${`?${string}` | `#${string}` | ''}` | `/notifications${`?${string}` | `#${string}` | ''}` | `/password${`?${string}` | `#${string}` | ''}` | `/propage${`?${string}` | `#${string}` | ''}` | `/quizzes${`?${string}` | `#${string}` | ''}` | `/scanqr${`?${string}` | `#${string}` | ''}` | `/sendnotification${`?${string}` | `#${string}` | ''}` | `/studentgrades${`?${string}` | `#${string}` | ''}` | `/teacherattendance${`?${string}` | `#${string}` | ''}` | `/techprofile${`?${string}` | `#${string}` | ''}` | `/uploadgrades${`?${string}` | `#${string}` | ''}` | `/_sitemap${`?${string}` | `#${string}` | ''}` | { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/aianalysis`; params?: Router.UnknownInputParams; } | { pathname: `/attendancecourses`; params?: Router.UnknownInputParams; } | { pathname: `/coursedetails`; params?: Router.UnknownInputParams; } | { pathname: `/courseperformance`; params?: Router.UnknownInputParams; } | { pathname: `/finalResults`; params?: Router.UnknownInputParams; } | { pathname: `/home`; params?: Router.UnknownInputParams; } | { pathname: `/hometeacher`; params?: Router.UnknownInputParams; } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/mycourses`; params?: Router.UnknownInputParams; } | { pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/password`; params?: Router.UnknownInputParams; } | { pathname: `/propage`; params?: Router.UnknownInputParams; } | { pathname: `/quizzes`; params?: Router.UnknownInputParams; } | { pathname: `/scanqr`; params?: Router.UnknownInputParams; } | { pathname: `/sendnotification`; params?: Router.UnknownInputParams; } | { pathname: `/studentgrades`; params?: Router.UnknownInputParams; } | { pathname: `/teacherattendance`; params?: Router.UnknownInputParams; } | { pathname: `/techprofile`; params?: Router.UnknownInputParams; } | { pathname: `/uploadgrades`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; };
     }
   }
 }
@@ -7890,7 +8215,8 @@ import TeacherProfilePage from "./pages/ProfilePage/TeacherProfilePage.jsx";
 import ManageAttendancePage from "./pages/ManageAttendancePage/ManageAttendancePage.jsx";
 import GradesPage from "./pages/GradesPage/GradesPage.jsx";
 import AcademicRecordPage from "./pages/AcademicRecordPage/AcademicRecordPage.jsx";
-
+import FinalGradesPage from "./pages/AdminPage/FinalGrades/Finalgradespage.jsx";
+import BulkUploadStudentsPage from "./pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -7960,6 +8286,10 @@ function App() {
                 <Route path="profile" element={<AdminProfilePage />} />
                 <Route path="students" element={<StudentManagementPage />} />
                 <Route path="add-student" element={<AddStudentPage />} />
+                <Route
+                  path="bulk-upload-students"
+                  element={<BulkUploadStudentsPage />}
+                />
                 <Route path="teachers" element={<TeatureManagementPage />} />
                 <Route path="add-teacher" element={<AddTeaturePage />} />
                 <Route path="classes" element={<Classes />} />
@@ -7975,6 +8305,7 @@ function App() {
                   path="reset-password"
                   element={<RestAdminPasswordPage />}
                 />
+                <Route path="final-grades" element={<FinalGradesPage />} />
               </Route>
             </Route>
 
@@ -8745,6 +9076,39 @@ export default function StudentManagementPage() {
 }
 
 // =========================================
+// File: ./Front_End/src/pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx
+// =========================================
+import React from "react";
+import { Box } from "@mui/material";
+import BulkUploadStudentsComp from "../../../components/AdminComp/StudentManagement/Bulkuploadstudentscomp";
+
+export default function BulkUploadStudentsPage() {
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        flexGrow: 1,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        p: { xs: 2, md: 3, lg: 4 },
+        animation: "fadeInUp 0.5s ease-out",
+      }}
+    >
+      <BulkUploadStudentsComp />
+
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
+    </Box>
+  );
+}
+// =========================================
 // File: ./Front_End/src/pages/AdminPage/StudentManagement/AddStudentPage.jsx
 // =========================================
 import React from "react";
@@ -8778,6 +9142,17 @@ export default function AddStudentPage() {
   );
 }
 
+// =========================================
+// File: ./Front_End/src/pages/AdminPage/FinalGrades/Finalgradespage.jsx
+// =========================================
+import React from "react";
+import FinalGradesComp from "../../../components/AdminComp/FinalGrades/Finalgradescomp";
+
+const FinalGradesPage = () => {
+  return <FinalGradesComp />;
+};
+
+export default FinalGradesPage;
 // =========================================
 // File: ./Front_End/src/pages/AdminPage/Classes/Classes.jsx
 // =========================================
@@ -11570,6 +11945,192 @@ export default function useStudentManagement() {
 }
 
 // =========================================
+// File: ./Front_End/src/hooks/Admin/StudentManagement/Usebulkuploadstudents.js
+// =========================================
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+export default function useBulkUploadStudents() {
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (!selected) return;
+
+    const validTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!validTypes.includes(selected.type)) {
+      toast.error("Please upload a valid Excel file (.xlsx or .xls)");
+      setFile(null);
+      return;
+    }
+
+    setFile(selected);
+    setResult(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast.warning("Please select an Excel file first.");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:5000/admin/upload-students",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setResult(response.data);
+      toast.success(response.data.message || "Students uploaded successfully!");
+      setFile(null);
+      const fileInput = document.getElementById("bulkStudentsFileInput");
+      if (fileInput) fileInput.value = "";
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Upload failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setResult(null);
+    const fileInput = document.getElementById("bulkStudentsFileInput");
+    if (fileInput) fileInput.value = "";
+  };
+
+  return {
+    file,
+    loading,
+    result,
+    handleFileChange,
+    handleUpload,
+    handleReset,
+  };
+}
+// =========================================
+// File: ./Front_End/src/hooks/Admin/FinalGrades/Usefinalgrades.js
+// =========================================
+import { useState } from "react";
+import axiosInstance from "../../../api/axiosInstance";
+
+const useFinalGrades = () => {
+  const [file, setFile] = useState(null);
+  const [courseId, setCourseId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [uploadResult, setUploadResult] = useState(null);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (!selected) return;
+
+    const validTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!validTypes.includes(selected.type)) {
+      setErrorMessage("Please upload a valid Excel file (.xlsx or .xls)");
+      setFile(null);
+      return;
+    }
+
+    setFile(selected);
+    setErrorMessage("");
+    setSuccessMessage("");
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      setErrorMessage("Please select an Excel file first.");
+      return;
+    }
+    if (!courseId.trim()) {
+      setErrorMessage("Please enter a Course ID.");
+      return;
+    }
+
+    setLoading(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+    setUploadResult(null);
+
+    const formData = new FormData();
+    formData.append("courseId", courseId.trim());
+    formData.append("file", file);
+
+    try {
+      const response = await axiosInstance.post(
+        "/admin/upload-final-grades",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      setSuccessMessage(
+        response.data.message || "Final grades uploaded successfully!"
+      );
+      setUploadResult(response.data);
+      setFile(null);
+      setCourseId("");
+
+      const fileInput = document.getElementById("finalGradesFileInput");
+      if (fileInput) fileInput.value = "";
+    } catch (error) {
+      const msg =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearMessages = () => {
+    setSuccessMessage("");
+    setErrorMessage("");
+    setUploadResult(null);
+  };
+
+  return {
+    file,
+    courseId,
+    setCourseId,
+    loading,
+    successMessage,
+    errorMessage,
+    uploadResult,
+    handleFileChange,
+    handleUpload,
+    clearMessages,
+  };
+};
+
+export default useFinalGrades;
+// =========================================
 // File: ./Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js
 // =========================================
 import { useState, useEffect } from "react";
@@ -13172,6 +13733,19 @@ export default function useRegistration() {
 
   const handleConfirmSchedule = async (schedule) => {
     if (!Array.isArray(schedule) || schedule.length === 0) return;
+
+    let scheduleTotalHours = 0;
+    for (const item of schedule) {
+      const courseObj = availableCourses.find(c => c._id === item.courseId || c.courseId === item.courseId);
+      const hours = courseObj?.hours || 3;
+      scheduleTotalHours += hours;
+    }
+
+    if (registeredHours + scheduleTotalHours > maxHours) {
+      toast.error(`Cannot confirm schedule. It exceeds your maximum allowed hours (${maxHours} Hrs).`);
+      return;
+    }
+
     setIsActionLoading(true);
     try {
       for (const item of schedule) {
@@ -13182,17 +13756,17 @@ export default function useRegistration() {
             getAuthHeaders(),
         );
       }
-      toast.success("Schedule confirmed successfully!", { autoClose: 2000 });
+      toast.success("Schedule confirmed and registered successfully!", { autoClose: 2000 });
       setGeneratedSchedules([]);
       setSelectedCoursesForGen([]);
       fetchData(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to confirm schedule.");
+      toast.error(error.response?.data?.message || "Failed to confirm schedule completely.");
+      fetchData(false);
     } finally {
       setIsActionLoading(false);
     }
   };
-
   return {
     isLoading,
     isActionLoading,
@@ -18019,6 +18593,403 @@ export default function TeacherSearchSection({
   );
 }
 // =========================================
+// File: ./Front_End/src/components/AdminComp/StudentManagement/Bulkuploadstudentscomp.jsx
+// =========================================
+import React, { useRef, useState } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  useTheme,
+  CircularProgress,
+  Divider,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { useNavigate } from "react-router-dom";
+import useBulkUploadStudents from "../../../hooks/Admin/StudentManagement/Usebulkuploadstudents";
+
+export default function BulkUploadStudentsComp() {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const { file, loading, result, handleFileChange, handleUpload, handleReset } =
+    useBulkUploadStudents();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = e.dataTransfer.files[0];
+    if (dropped) handleFileChange({ target: { files: [dropped] } });
+  };
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        position: "relative",
+        width: "100%",
+        maxWidth: { xs: "850px", lg: "900px" },
+        p: { xs: 3, sm: 4, md: 5, lg: 6 },
+        borderRadius: { xs: "24px", xl: "32px" },
+        backgroundColor: theme.palette.background.paper,
+        boxShadow:
+          theme.palette.mode === "dark"
+            ? "0px 10px 40px rgba(0, 0, 0, 0.4)"
+            : "0px 10px 40px rgba(21, 43, 72, 0.08)",
+        overflow: "hidden",
+      }}
+    >
+      {/* Left accent bar */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: { xs: "8px", lg: "10px" },
+          backgroundColor: theme.palette.primary.main,
+        }}
+      />
+
+      {/* Background circle */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: "-15%",
+          right: "-5%",
+          width: { xs: "200px", md: "350px", lg: "450px" },
+          height: { xs: "200px", md: "350px", lg: "450px" },
+          borderRadius: "50%",
+          background:
+            theme.palette.mode === "dark"
+              ? "radial-gradient(circle, rgba(144,202,249,0.05) 0%, rgba(0,0,0,0) 70%)"
+              : "radial-gradient(circle, rgba(25,118,210,0.05) 0%, rgba(255,255,255,0) 70%)",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      <Box sx={{ position: "relative", zIndex: 1 }}>
+        {/* Back button */}
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/adminPanel/students")}
+          sx={{
+            mb: { xs: 3, md: 4 },
+            color: theme.palette.text.secondary,
+            fontWeight: 700,
+            textTransform: "none",
+            fontSize: { xs: "0.8rem", sm: "0.9rem", lg: "1rem" },
+            "&:hover": {
+              backgroundColor: "transparent",
+              color: theme.palette.primary.main,
+            },
+          }}
+        >
+          Back to Students
+        </Button>
+
+        {/* Header */}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 5 }}>
+          <GroupAddIcon
+            sx={{
+              fontSize: { xs: 35, md: 45 },
+              color: theme.palette.primary.main,
+              mr: 2,
+            }}
+          />
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 900,
+                color: theme.palette.text.primary,
+                fontSize: { xs: "1.8rem", md: "2.2rem" },
+              }}
+            >
+              Bulk Upload Students
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: theme.palette.text.secondary,
+                fontWeight: 500,
+                mt: 0.5,
+              }}
+            >
+              Upload an Excel sheet to add multiple students at once
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Drop Zone */}
+        <Box
+          onDrop={handleDrop}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onClick={() => !file && fileInputRef.current?.click()}
+          sx={{
+            border: `2px dashed ${
+              dragOver
+                ? theme.palette.primary.main
+                : file
+                  ? theme.palette.success.main
+                  : theme.palette.divider
+            }`,
+            borderRadius: "20px",
+            p: { xs: 4, md: 6 },
+            textAlign: "center",
+            cursor: file ? "default" : "pointer",
+            backgroundColor: dragOver
+              ? theme.palette.mode === "dark"
+                ? "rgba(144,202,249,0.08)"
+                : "rgba(25,118,210,0.04)"
+              : file
+                ? theme.palette.mode === "dark"
+                  ? "rgba(102,187,106,0.06)"
+                  : "rgba(76,175,80,0.04)"
+                : theme.palette.mode === "dark"
+                  ? "rgba(255,255,255,0.02)"
+                  : "#f8fafc",
+            transition: "all 0.25s ease",
+            "&:hover": !file
+              ? {
+                  borderColor: theme.palette.primary.main,
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(144,202,249,0.06)"
+                      : "rgba(25,118,210,0.03)",
+                }
+              : {},
+          }}
+        >
+          <input
+            id="bulkStudentsFileInput"
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+
+          {file ? (
+            <Box>
+              <InsertDriveFileOutlinedIcon
+                sx={{
+                  fontSize: 56,
+                  color: theme.palette.success.main,
+                  mb: 1.5,
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: theme.palette.text.primary,
+                  mb: 0.5,
+                }}
+              >
+                {file.name}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: theme.palette.text.secondary }}
+              >
+                {(file.size / 1024).toFixed(1)} KB — Ready to upload
+              </Typography>
+              <Button
+                startIcon={<DeleteOutlineIcon />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReset();
+                }}
+                color="error"
+                size="small"
+                sx={{ mt: 2, textTransform: "none", fontWeight: 600 }}
+              >
+                Remove File
+              </Button>
+            </Box>
+          ) : (
+            <Box>
+              <UploadFileIcon
+                sx={{
+                  fontSize: 56,
+                  color: theme.palette.text.disabled,
+                  mb: 1.5,
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: theme.palette.text.primary,
+                  mb: 0.5,
+                }}
+              >
+                Drag & drop your Excel file here
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: theme.palette.text.secondary }}
+              >
+                or click to browse — .xlsx / .xls only
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Excel format hint */}
+        <Box
+          sx={{
+            mt: 3,
+            p: 2.5,
+            borderRadius: "14px",
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255,255,255,0.03)"
+                : "#f8fafc",
+            border: `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: theme.palette.text.secondary,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              display: "block",
+              mb: 1,
+            }}
+          >
+            Expected Excel Columns
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+            {["_id", "name", "password (optional)"].map((col) => (
+              <Box
+                key={col}
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: "8px",
+                  backgroundColor: theme.palette.primary.main,
+                  color: "#fff",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                }}
+              >
+                {col}
+              </Box>
+            ))}
+          </Box>
+          <Typography
+            variant="caption"
+            sx={{ color: theme.palette.text.disabled, display: "block", mt: 1 }}
+          >
+            * If password is missing, Student ID will be used as default
+            password. Welcome emails are sent automatically.
+          </Typography>
+        </Box>
+
+        {/* Result summary */}
+        {result && (
+          <Box
+            sx={{
+              mt: 3,
+              p: 3,
+              borderRadius: "16px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(102,187,106,0.08)"
+                  : "rgba(76,175,80,0.06)",
+              border: `1px solid ${theme.palette.success.light}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            <CheckCircleOutlineIcon
+              sx={{ fontSize: 40, color: theme.palette.success.main }}
+            />
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 800, color: theme.palette.success.dark }}
+              >
+                Upload Successful!
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: theme.palette.text.secondary }}
+              >
+                Total Processed: <strong>{result.totalProcessed ?? "—"}</strong>{" "}
+                &nbsp;|&nbsp; New Students Added:{" "}
+                <strong>{result.newStudentsAdded ?? "—"}</strong>
+              </Typography>
+              {result.message && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: theme.palette.text.disabled,
+                    display: "block",
+                    mt: 0.5,
+                  }}
+                >
+                  {result.message}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        )}
+
+        <Divider sx={{ my: 4 }} />
+
+        {/* Upload Button */}
+        <Button
+          variant="contained"
+          fullWidth
+          disabled={loading || !file}
+          onClick={handleUpload}
+          startIcon={
+            loading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <UploadFileIcon />
+            )
+          }
+          sx={{
+            py: 1.8,
+            borderRadius: "14px",
+            fontWeight: "bold",
+            fontSize: "1.1rem",
+            textTransform: "none",
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 8px 20px rgba(0,0,0,0.5)"
+                : "0 8px 20px rgba(25, 118, 210, 0.25)",
+          }}
+        >
+          {loading ? "Uploading..." : "Upload Students"}
+        </Button>
+      </Box>
+    </Paper>
+  );
+}
+
+// =========================================
 // File: ./Front_End/src/components/AdminComp/StudentManagement/StudentDetailsCard.jsx
 // =========================================
 import React, { useState, useEffect, useRef } from "react";
@@ -18754,12 +19725,13 @@ import {
   Button,
   useTheme,
   InputAdornment,
-  IconButton,    
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-import CloseIcon from "@mui/icons-material/Close";     
+import CloseIcon from "@mui/icons-material/Close";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useNavigate } from "react-router-dom";
 
 export default function StudentSearchSection({
@@ -18847,6 +19819,7 @@ export default function StudentSearchSection({
       />
 
       <Box sx={{ display: "flex", gap: 2, width: { xs: "100%", md: "auto" } }}>
+        {/* Search */}
         <Button
           type="submit"
           variant="contained"
@@ -18868,6 +19841,7 @@ export default function StudentSearchSection({
           Get Student
         </Button>
 
+        {/* Add single student */}
         <Button
           variant="outlined"
           startIcon={<PersonAddAlt1Icon />}
@@ -18886,11 +19860,31 @@ export default function StudentSearchSection({
         >
           Add Student
         </Button>
+
+        {/* Bulk upload */}
+        <Button
+          variant="outlined"
+          color="success"
+          startIcon={<UploadFileIcon />}
+          onClick={() => navigate("/adminPanel/bulk-upload-students")}
+          sx={{
+            px: { xs: 2, lg: 3 },
+            py: 1.5,
+            borderRadius: "14px",
+            fontWeight: "bold",
+            textTransform: "none",
+            flexGrow: { xs: 1, md: 0 },
+            whiteSpace: "nowrap",
+            borderWidth: "2px",
+            "&:hover": { borderWidth: "2px" },
+          }}
+        >
+          Bulk Upload
+        </Button>
       </Box>
     </Box>
   );
 }
-
 // =========================================
 // File: ./Front_End/src/components/AdminComp/AdminLayout/AdminAvatarSection.jsx
 // =========================================
@@ -19130,6 +20124,7 @@ import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
 
 export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate();
@@ -19163,6 +20158,11 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
       icon: <AssignmentOutlinedIcon />, 
     path: "/adminPanel/teacher-assignments" 
     },
+    {
+  title: "Final Grades",
+  icon: <GradingOutlinedIcon />,
+  path: "/adminPanel/final-grades",
+},
   ];
 
   return (
@@ -19591,6 +20591,550 @@ export default function RestAdminPasswordComp() {
   );
 }
 
+// =========================================
+// File: ./Front_End/src/components/AdminComp/FinalGrades/Finalgradescomp.jsx
+// =========================================
+import React, { useRef, useState } from "react";
+
+import useFinalGrades from "../../../hooks/Admin/FinalGrades/Usefinalgrades";
+
+// ─── Inline style objects ────────────────────────────────────────────────────
+
+const styles = {
+  wrapper: {
+    padding: "2rem",
+    maxWidth: "680px",
+    margin: "0 auto",
+    fontFamily: "'Segoe UI', sans-serif",
+  },
+
+  // Header
+  header: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "1rem",
+    marginBottom: "2rem",
+  },
+  headerIconBox: {
+    flexShrink: 0,
+    width: "48px",
+    height: "48px",
+    background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+    borderRadius: "14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#fff",
+    padding: "10px",
+    boxSizing: "border-box",
+    boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
+  },
+  title: {
+    fontSize: "1.5rem",
+    fontWeight: 700,
+    color: "#1e1b4b",
+    margin: "0 0 0.25rem 0",
+  },
+  subtitle: {
+    fontSize: "0.875rem",
+    color: "#6b7280",
+    margin: 0,
+    lineHeight: 1.5,
+  },
+
+  // Card
+  card: {
+    background: "#ffffff",
+    borderRadius: "20px",
+    padding: "2rem",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05)",
+    border: "1px solid #e5e7eb",
+    display: "flex",
+    flexDirection: "column",
+    gap: "1.5rem",
+  },
+
+  // Field
+  field: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+  },
+  label: {
+    fontSize: "0.8125rem",
+    fontWeight: 600,
+    color: "#374151",
+    letterSpacing: "0.02em",
+    textTransform: "uppercase",
+  },
+
+  // Input
+  inputWrapper: { position: "relative" },
+  inputIconSpan: {
+    position: "absolute",
+    left: "14px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#9ca3af",
+    width: "18px",
+    height: "18px",
+    display: "flex",
+    alignItems: "center",
+  },
+  input: {
+    width: "100%",
+    padding: "0.75rem 1rem 0.75rem 2.75rem",
+    border: "1.5px solid #e5e7eb",
+    borderRadius: "12px",
+    fontSize: "0.9375rem",
+    color: "#111827",
+    background: "#f9fafb",
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s",
+  },
+  inputFocus: {
+    borderColor: "#4f46e5",
+    background: "#fff",
+    boxShadow: "0 0 0 3px rgba(79,70,229,0.1)",
+  },
+
+  // Dropzone
+  dropzone: (isActive) => ({
+    border: `2px dashed ${isActive ? "#4f46e5" : "#d1d5db"}`,
+    borderRadius: "16px",
+    padding: "2.5rem 1.5rem",
+    textAlign: "center",
+    cursor: "pointer",
+    background: isActive ? "#f5f3ff" : "#fafafa",
+    transition: "border-color 0.25s, background 0.25s",
+  }),
+
+  // Drop placeholder
+  dropIconCircle: {
+    width: "52px",
+    height: "52px",
+    margin: "0 auto 1rem auto",
+    background: "#ede9fe",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#4f46e5",
+  },
+  dropText: {
+    fontSize: "0.9375rem",
+    fontWeight: 500,
+    color: "#374151",
+    margin: "0 0 0.25rem 0",
+  },
+  dropHint: {
+    fontSize: "0.8125rem",
+    color: "#9ca3af",
+    margin: 0,
+  },
+
+  // File preview
+  filePreview: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    textAlign: "left",
+  },
+  fileIconBox: {
+    flexShrink: 0,
+    width: "44px",
+    height: "44px",
+    background: "#dcfce7",
+    borderRadius: "12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#16a34a",
+  },
+  fileInfo: { flex: 1, minWidth: 0 },
+  fileName: {
+    display: "block",
+    fontSize: "0.9rem",
+    fontWeight: 600,
+    color: "#111827",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  fileSize: {
+    display: "block",
+    fontSize: "0.8rem",
+    color: "#6b7280",
+    marginTop: "2px",
+  },
+  fileCheck: {
+    flexShrink: 0,
+    width: "28px",
+    height: "28px",
+    background: "#16a34a",
+    color: "#fff",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "0.875rem",
+    fontWeight: 700,
+  },
+
+  // Alerts
+  alertBase: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.625rem",
+    padding: "0.875rem 1.125rem",
+    borderRadius: "12px",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+  },
+  alertError: {
+    background: "#fef2f2",
+    color: "#dc2626",
+    border: "1px solid #fecaca",
+  },
+  alertSuccess: {
+    background: "#f0fdf4",
+    color: "#16a34a",
+    border: "1px solid #bbf7d0",
+  },
+
+  // Result
+  resultBox: {
+    background: "#f5f3ff",
+    border: "1px solid #ddd6fe",
+    borderRadius: "14px",
+    padding: "1.25rem 1.5rem",
+  },
+  resultTitle: {
+    fontSize: "0.875rem",
+    fontWeight: 700,
+    color: "#4f46e5",
+    margin: "0 0 1rem 0",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+  },
+  resultGrid: { display: "flex", gap: "2rem" },
+  resultItem: { display: "flex", flexDirection: "column", gap: "0.25rem" },
+  resultNum: {
+    fontSize: "1.75rem",
+    fontWeight: 800,
+    color: "#1e1b4b",
+    lineHeight: 1,
+  },
+  resultLabel: {
+    fontSize: "0.8rem",
+    color: "#7c3aed",
+    fontWeight: 500,
+  },
+
+  // Button
+  btn: (loading) => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    width: "100%",
+    padding: "0.9rem 1.5rem",
+    background: loading
+      ? "linear-gradient(135deg,#6366f1,#8b5cf6)"
+      : "linear-gradient(135deg,#4f46e5,#7c3aed)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "14px",
+    fontSize: "0.9375rem",
+    fontWeight: 600,
+    cursor: loading ? "not-allowed" : "pointer",
+    boxShadow: "0 4px 14px rgba(79,70,229,0.4)",
+    opacity: loading ? 0.8 : 1,
+    boxSizing: "border-box",
+  }),
+
+  // Note
+  note: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "0.5rem",
+    fontSize: "0.8125rem",
+    color: "#9ca3af",
+    lineHeight: 1.5,
+    margin: 0,
+  },
+};
+
+// ─── Spinner (CSS keyframe injected once) ────────────────────────────────────
+const SpinnerStyle = () => (
+  <style>{`
+    @keyframes fg-spin { to { transform: rotate(360deg); } }
+    .fg-spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: fg-spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    .fg-input-el:focus {
+      border-color: #4f46e5 !important;
+      background: #fff !important;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1) !important;
+    }
+    .fg-dropzone-el:hover {
+      border-color: #4f46e5 !important;
+      background: #f5f3ff !important;
+    }
+    .fg-btn-el:hover:not(:disabled) {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+  `}</style>
+);
+
+// ─── SVG Icons ───────────────────────────────────────────────────────────────
+const IconGrades = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: "100%", height: "100%" }}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"
+    />
+  </svg>
+);
+
+const IconBook = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px" }}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+    />
+  </svg>
+);
+
+const IconUpload = ({ size = 26 }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" style={{ width: size, height: size }}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+    />
+  </svg>
+);
+
+const IconFile = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: "22px", height: "22px" }}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+    />
+  </svg>
+);
+
+const IconError = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px", flexShrink: 0 }}>
+    <circle cx="12" cy="12" r="10" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+  </svg>
+);
+
+const IconSuccess = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "18px", height: "18px", flexShrink: 0 }}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const IconInfo = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: "15px", height: "15px", flexShrink: 0, marginTop: "1px", color: "#c4b5fd" }}>
+    <path strokeLinecap="round" strokeLinejoin="round"
+      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+    />
+  </svg>
+);
+
+// ─── Component ───────────────────────────────────────────────────────────────
+const FinalGradesComp = () => {
+  const {
+    file,
+    courseId,
+    setCourseId,
+    loading,
+    successMessage,
+    errorMessage,
+    uploadResult,
+    handleFileChange,
+    handleUpload,
+    clearMessages,
+  } = useFinalGrades();
+
+  const fileInputRef = useRef(null);
+  const [dropHover, setDropHover] = useState(false);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDropHover(false);
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      handleFileChange({ target: { files: [droppedFile] } });
+    }
+  };
+
+  return (
+    <>
+      <SpinnerStyle />
+
+      <div style={styles.wrapper}>
+        {/* ── Header ── */}
+        <div style={styles.header}>
+          <div style={styles.headerIconBox}>
+            <IconGrades />
+          </div>
+          <div>
+            <h1 style={styles.title}>Upload Final Grades</h1>
+            <p style={styles.subtitle}>
+              Upload an Excel sheet with final student grades — they'll be
+              distributed automatically to every student.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Card ── */}
+        <div style={styles.card}>
+
+          {/* Course ID */}
+          <div style={styles.field}>
+            <label style={styles.label}>Course ID</label>
+            <div style={styles.inputWrapper}>
+              <span style={styles.inputIconSpan}>
+                <IconBook />
+              </span>
+              <input
+                className="fg-input-el"
+                type="text"
+                placeholder="e.g. CS101"
+                value={courseId}
+                style={styles.input}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  clearMessages();
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Drop Zone */}
+          <div style={styles.field}>
+            <label style={styles.label}>Excel File</label>
+            <div
+              className="fg-dropzone-el"
+              style={styles.dropzone(dropHover || !!file)}
+              onDrop={handleDrop}
+              onDragOver={(e) => { e.preventDefault(); setDropHover(true); }}
+              onDragLeave={() => setDropHover(false)}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                id="finalGradesFileInput"
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  handleFileChange(e);
+                  clearMessages();
+                }}
+              />
+
+              {file ? (
+                <div style={styles.filePreview}>
+                  <div style={styles.fileIconBox}><IconFile /></div>
+                  <div style={styles.fileInfo}>
+                    <span style={styles.fileName}>{file.name}</span>
+                    <span style={styles.fileSize}>
+                      {(file.size / 1024).toFixed(1)} KB — ready to upload
+                    </span>
+                  </div>
+                  <div style={styles.fileCheck}>✓</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={styles.dropIconCircle}>
+                    <IconUpload size={26} />
+                  </div>
+                  <p style={styles.dropText}>Drag & drop your Excel file here</p>
+                  <p style={styles.dropHint}>or click to browse — .xlsx / .xls</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Error */}
+          {errorMessage && (
+            <div style={{ ...styles.alertBase, ...styles.alertError }}>
+              <IconError />
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Success */}
+          {successMessage && (
+            <div style={{ ...styles.alertBase, ...styles.alertSuccess }}>
+              <IconSuccess />
+              {successMessage}
+            </div>
+          )}
+
+          {/* Result summary */}
+          {uploadResult && (
+            <div style={styles.resultBox}>
+              <h3 style={styles.resultTitle}>Upload Summary</h3>
+              <div style={styles.resultGrid}>
+                {uploadResult.processed !== undefined && (
+                  <div style={styles.resultItem}>
+                    <span style={styles.resultNum}>{uploadResult.processed}</span>
+                    <span style={styles.resultLabel}>Students Processed</span>
+                  </div>
+                )}
+                {uploadResult.results?.length > 0 && (
+                  <div style={styles.resultItem}>
+                    <span style={styles.resultNum}>{uploadResult.results.length}</span>
+                    <span style={styles.resultLabel}>Records Updated</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Upload Button */}
+          <button
+            className="fg-btn-el"
+            style={styles.btn(loading)}
+            onClick={handleUpload}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="fg-spinner" />
+                Uploading Grades...
+              </>
+            ) : (
+              <>
+                <IconUpload size={18} />
+                Upload Final Grades
+              </>
+            )}
+          </button>
+
+          {/* Note */}
+          <p style={styles.note}>
+            <IconInfo />
+            Grades will be distributed to students automatically. Academic
+            records and GPA will be recalculated, and students will receive
+            push notifications.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default FinalGradesComp;
 // =========================================
 // File: ./Front_End/src/components/AdminComp/ClassesComp/ClassesComp.jsx
 // =========================================
