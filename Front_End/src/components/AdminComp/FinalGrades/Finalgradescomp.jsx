@@ -64,8 +64,10 @@ export default function Finalgradescomp() {
           theme.palette.mode === "dark"
             ? "0px 10px 40px rgba(0, 0, 0, 0.4)"
             : "0px 10px 40px rgba(21, 43, 72, 0.08)",
-        overflow: "hidden",
-        mx: "auto", display: "block" 
+        overflow: "visible",
+        mx: "auto", 
+        display: "block",
+        minHeight: "auto",
       }}
       
     >
@@ -99,7 +101,7 @@ export default function Finalgradescomp() {
         }}
       />
 
-      <Box sx={{ position: "relative", zIndex: 1 }}>
+      <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
           <UploadFileIcon
@@ -306,58 +308,155 @@ export default function Finalgradescomp() {
           )}
         </Box>
 
-        {/* Required Format */}
+        {/* Excel Sheet Guidelines - Display column names */}
         <Box
           sx={{
-            mt: 3,
-            p: 2.5,
+            mt: 4,
+            p: 0,
             borderRadius: "14px",
-            backgroundColor:
-              theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "#f8fafc",
-            border: `1px solid ${theme.palette.divider}`,
+            backgroundColor: "transparent",
           }}
         >
           <Typography
-            variant="caption"
+            variant="subtitle2"
             sx={{
-              color: theme.palette.text.secondary,
               fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              display: "block",
-              mb: 1,
+              color: theme.palette.primary.main,
+              mb: 2.5,
+              fontSize: "0.95rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
             }}
           >
-            Required File Format
+            <Box sx={{ fontSize: "1.3rem" }}>📋</Box>
+            Excel Sheet Guidelines
           </Typography>
-          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-            {["id", "name", "grade"].map((col) => (
-              <Box
-                key={col}
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "8px",
-                  backgroundColor: theme.palette.primary.main,
-                  color: "#fff",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                }}
-              >
-                {col}
-              </Box>
-            ))}
-          </Box>
-          <Typography
-            variant="caption"
+
+          {/* Student ID Column Names */}
+          <Box
             sx={{
-              color: theme.palette.text.disabled,
-              display: "block",
-              mt: 1,
+              mb: 2.5,
+              p: 2.5,
+              borderRadius: "12px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(25,118,210,0.12)"
+                  : "rgba(25,118,210,0.08)",
+              border: `1px solid ${theme.palette.primary.light}`,
             }}
           >
-            * If grade is missing for a student, that record will be skipped.
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                mb: 1.5,
+                fontSize: "0.9rem",
+              }}
+            >
+              Student ID Column Header
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: "block",
+              }}
+            >
+              Use one of the following options as the student ID column heading.
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+              }}
+            >
+              {['id', 'student_id', 'code', 'student id', 'كود الطالب'].map((val) => (
+                <Box
+                  key={val}
+                  sx={{
+                    px: 1.5,
+                    py: 0.7,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.primary.main,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    fontFamily: "monospace",
+                    border: `2px solid ${theme.palette.primary.dark}`,
+                    boxShadow: `0 2px 8px ${theme.palette.primary.main}40`,
+                  }}
+                >
+                  {val}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Final Grade Column Names */}
+          <Box
+            sx={{
+              p: 2.5,
+              borderRadius: "12px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(76,175,80,0.12)"
+                  : "rgba(76,175,80,0.08)",
+              border: `1px solid ${theme.palette.success.light}`,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.success.main,
+                mb: 1.5,
+                fontSize: "0.9rem",
+              }}
+            >
+              Final Grade Column Header
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: "block",
+              }}
+            >
+              Use one of the following options as the column title for the final grade.
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+              }}
+            >
+              {['final', 'final_grade', 'total', 'score', 'final score', 'final grade'].map((val) => (
+                <Box
+                  key={val}
+                  sx={{
+                    px: 1.5,
+                    py: 0.7,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.success.main,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    fontFamily: "monospace",
+                    border: `2px solid ${theme.palette.success.dark}`,
+                    boxShadow: `0 2px 8px ${theme.palette.success.main}40`,
+                  }}
+                >
+                  {val}
+                </Box>
+              ))}
+            </Box>
+          </Box>
         </Box>
 
         {/* Error Message */}
@@ -471,6 +570,7 @@ export default function Finalgradescomp() {
           will be recalculated, and students will receive push notifications.
         </Typography>
       </Box>
+      
     </Paper>
   );
 }
@@ -497,9 +597,3 @@ const IconInfo = () => (
     />
   </svg>
 );
-
-
-
-
-
-

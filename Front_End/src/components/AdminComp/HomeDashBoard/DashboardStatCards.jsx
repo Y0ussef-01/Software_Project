@@ -156,14 +156,35 @@ export default function DashboardStatCards() {
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3}>
+      {/* Stats Cards - Dynamic Flex Layout */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          width: "100%",
+        }}
+      >
         {statCards.map((card) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={card.title}>
+          <Box
+            key={card.title}
+            sx={{
+              flex: "1 1 calc(25% - 24px)",
+              minWidth: "250px",
+              "@media (max-width: 1200px)": {
+                flex: "1 1 calc(50% - 12px)",
+                minWidth: "280px",
+              },
+              "@media (max-width: 600px)": {
+                flex: "1 1 100%",
+                minWidth: "auto",
+              },
+            }}
+          >
             <StatCard {...card} isDark={isDark} />
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 }

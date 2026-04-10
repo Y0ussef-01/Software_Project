@@ -118,7 +118,7 @@ export default function BulkUploadStudentsComp() {
                 fontSize: { xs: "1.8rem", md: "2.2rem" },
               }}
             >
-             Upload Students
+              Upload Students
             </Typography>
             <Typography
               variant="subtitle2"
@@ -253,57 +253,232 @@ export default function BulkUploadStudentsComp() {
           )}
         </Box>
 
-        {/* Excel format hint */}
+        {/* Excel Sheet Guidelines */}
         <Box
           sx={{
             mt: 3,
-            p: 2.5,
+            p: 0,
             borderRadius: "14px",
-            backgroundColor:
-              theme.palette.mode === "dark"
-                ? "rgba(255,255,255,0.03)"
-                : "#f8fafc",
-            border: `1px solid ${theme.palette.divider}`,
+            backgroundColor: "transparent",
           }}
         >
           <Typography
-            variant="caption"
+            variant="subtitle2"
             sx={{
-              color: theme.palette.text.secondary,
               fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              display: "block",
-              mb: 1,
+              color: theme.palette.primary.main,
+              mb: 2.5,
+              fontSize: "0.95rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
             }}
           >
-            Required File Format
+            <Box sx={{ fontSize: "1.3rem" }}>📋</Box>
+            Excel Sheet Guidelines
           </Typography>
-          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-            {[" id", "name", "password "].map((col) => (
-              <Box
-                key={col}
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "8px",
-                  backgroundColor: theme.palette.primary.main,
-                  color: "#fff",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                }}
-              >
-                {col}
-              </Box>
-            ))}
-          </Box>
-          <Typography
-            variant="caption"
-            sx={{ color: theme.palette.text.disabled, display: "block", mt: 1 }}
+
+          {/* Student ID Column Names */}
+          <Box
+            sx={{
+              mb: 2.5,
+              p: 2.5,
+              borderRadius: "12px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(25,118,210,0.12)"
+                  : "rgba(25,118,210,0.08)",
+              border: `1px solid ${theme.palette.primary.light}`,
+            }}
           >
-            * If password is missing, Student ID will be used as default
-            password. Welcome emails are sent automatically.
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                mb: 1.5,
+                fontSize: "0.9rem",
+              }}
+            >
+              Student ID Column Header
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: "block",
+              }}
+            >
+              استخدم أحد الخيارات التالية كعنوان عمود معرّف الطالب
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+              }}
+            >
+              {["id", "student_id", "code", "student id", "كود الطالب"].map(
+                (val) => (
+                  <Box
+                    key={val}
+                    sx={{
+                      px: 1.5,
+                      py: 0.7,
+                      borderRadius: "8px",
+                      backgroundColor: theme.palette.primary.main,
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: "0.9rem",
+                      fontFamily: "monospace",
+                      border: `2px solid ${theme.palette.primary.dark}`,
+                      boxShadow: `0 2px 8px ${theme.palette.primary.main}40`,
+                    }}
+                  >
+                    {val}
+                  </Box>
+                ),
+              )}
+            </Box>
+          </Box>
+
+          {/* Student Name Column Names */}
+          <Box
+            sx={{
+              mb: 2.5,
+              p: 2.5,
+              borderRadius: "12px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(25,118,210,0.12)"
+                  : "rgba(25,118,210,0.08)",
+              border: `1px solid ${theme.palette.primary.light}`,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                mb: 1.5,
+                fontSize: "0.9rem",
+              }}
+            >
+              Student Name Column Header
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: "block",
+              }}
+            >
+              استخدم أحد الخيارات التالية كعنوان عمود اسم الطالب
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+              }}
+            >
+              {["name", "student_name", "الاسم", "اسم الطالب"].map((val) => (
+                <Box
+                  key={val}
+                  sx={{
+                    px: 1.5,
+                    py: 0.7,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.primary.main,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    fontFamily: "monospace",
+                    border: `2px solid ${theme.palette.primary.dark}`,
+                    boxShadow: `0 2px 8px ${theme.palette.primary.main}40`,
+                  }}
+                >
+                  {val}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Password Column Names */}
+          <Box
+            sx={{
+              p: 2.5,
+              borderRadius: "12px",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(76,175,80,0.12)"
+                  : "rgba(76,175,80,0.08)",
+              border: `1px solid ${theme.palette.success.light}`,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.success.main,
+                mb: 1.5,
+                fontSize: "0.9rem",
+              }}
+            >
+              Password Column Header
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 1.5,
+                display: "block",
+              }}
+            >
+              استخدم أحد الخيارات التالية كعنوان عمود كلمة المرور
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+              }}
+            >
+              {["password", "pass", "كلمة السر", "الباسورد"].map((val) => (
+                <Box
+                  key={val}
+                  sx={{
+                    px: 1.5,
+                    py: 0.7,
+                    borderRadius: "8px",
+                    backgroundColor: theme.palette.success.main,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    fontFamily: "monospace",
+                    border: `2px solid ${theme.palette.success.dark}`,
+                    boxShadow: `0 2px 8px ${theme.palette.success.main}40`,
+                  }}
+                >
+                  {val}
+                </Box>
+              ))}
+            </Box>
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.palette.text.disabled,
+                display: "block",
+                mt: 2,
+              }}
+            >
+              💡 إذا لم تكن كلمة المرور موجودة، سيتم استخدام معرف الطالب كلمة
+              المرور الافتراضية. سيتم إرسال رسائل البريد الإلكتروني الترحيبية
+              تلقائياً.
+            </Typography>
+          </Box>
         </Box>
 
         {/* Result summary */}
