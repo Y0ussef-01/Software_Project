@@ -445,6 +445,7 @@ const FinalGradesComp = () => {
                 }}
               />
 
+                
               {file ? (
                 <div style={styles.filePreview}>
                   <div style={styles.fileIconBox}><IconFile /></div>
