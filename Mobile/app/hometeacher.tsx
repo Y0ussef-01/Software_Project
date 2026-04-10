@@ -83,6 +83,10 @@ const HomeTeacher = () => {
     const menuItems = [
         { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/teacherattendance' },
         { id: 'schedule', title: 'Schedule', icon: 'calendar-clock', path: '/teacherschedule' },
+        { id: 'eval', title: 'Evaluation', icon: 'star-check-outline', path: '/teacherevaluation' },
+        { id: 'quizzes', title: 'Quizzes', icon: 'file-document-edit-outline', path: '/teachergrades' },
+        { id: 'notif', title: 'Broadcast', icon: 'bullhorn-outline', path: '/sendnotification' },
+        { id: 'grades', title: 'Final Grades', icon: 'clipboard-list-outline', path: '/quizgrades' },
         { id: 'notification', title: 'Send Notification', icon: 'bell-ring-outline', path: '/sendnotification' },
         { id: 'quizzes', title: 'Quizzes', icon: 'file-document-edit-outline', path: '/quizzes' },
     ];

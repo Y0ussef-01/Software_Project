@@ -22,4 +22,5 @@ router.get('/attendance/:groupId', teacherAuth, controller.getGroupAttendance);
 router.post('/generate-qr', teacherAuth, controller.generateAttendanceToken);
 router.post('/send-notification', teacherAuth, controller.sendCourseNotification);
 router.put('/registerToken', teacherAuth, controller.registerToken);
+router.get('/grades/:courseId', teacherAuth, controller.getStudentGrades); // ← أضف ده
 module.exports = router;

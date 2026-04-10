@@ -163,7 +163,6 @@ const uploadGradesExcel = async (req, res) => {
         await Student.bulkWrite(bulkOperations);
 
         const Notification = require('../models/Notification');
-        const sendPushNotification = require('../utils/sendPushNotification');
         const Course = require('../models/Course');
 
         const course = await Course.findById(courseId).select('name');
@@ -276,7 +275,7 @@ const getGroupAttendance = async (req, res) => {
         const { groupId } = req.params;
         const { sessionNumber } = req.query;
 
-        if(!sessionNumber) {
+        if (!sessionNumber) {
             return res.status(400).json({ message: "sessionNumber is required" });
         }
 
@@ -304,18 +303,19 @@ const sendCourseNotification = async (req, res) => {
 
         const Notification = require('../models/Notification');
 
-const teacherGroups = teacher.courses
-    .filter(c => c.course === courseId)
-    .map(c => c.group);
+        const teacherGroups = teacher.courses
+            .filter(c => c.course === courseId)
+            .map(c => c.group);
 
-const query = {
-    'registeredCourses.course': courseId,
-    'registeredCourses.group': groupIds ? { $in: groupIds } : { $in: teacherGroups }
-};
+        const query = {
+            'registeredCourses.course': courseId,
+            'registeredCourses.group': groupIds ? { $in: groupIds } : { $in: teacherGroups }
+        };
 
         const studentsForNotif = await Student.find(query).select('_id pushToken');
 
-const notifDocs = studentsForNotif.map((s) => ({            studentId: s._id,
+        const notifDocs = studentsForNotif.map((s) => ({
+            studentId: s._id,
             title: title,
             body: body
         }));
@@ -324,6 +324,7 @@ const notifDocs = studentsForNotif.map((s) => ({            studentId: s._id,
         const tokens = studentsForNotif
             .map((s) => s.pushToken)
             .filter((token) => token && token !== null && token !== 'null');
+
         if (tokens.length === 0) {
             return res.status(200).json({ message: "No students with push tokens found" });
         }
@@ -335,7 +336,7 @@ const notifDocs = studentsForNotif.map((s) => ({            studentId: s._id,
             count: tokens.length
         });
 
-   } catch (err) {
+    } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
@@ -350,7 +351,51 @@ const registerToken = async (req, res) => {
     }
 };
 
+// ─── NEW ──────────────────────────────────────────────────────────────────────
+const getStudentGrades = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const teacherId = req.user.id;
 
+        const teacher = await Teacher.findById(teacherId);
+        const isCourse = teacher.courses.some(c => c.course === courseId);
+        if (!isCourse) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
 
+        const students = await Student.find({
+            'registeredCourses.course': courseId
+        }).select('_id name registeredCourses');
 
-module.exports = { getProfile, updateProfileImg, updatePassword, uploadGradesExcel, updateStudentGrade, getGroupAttendance, generateAttendanceToken, sendCourseNotification, registerToken };   
+        const result = students.map(s => {
+            const reg = s.registeredCourses.find(r => r.course === courseId);
+            const degrees = reg?.Degrees || [];
+
+            const findScore = (title) => {
+                const d = degrees.find(d => d.title?.toLowerCase().includes(title));
+                return d ? d.score : null;
+            };
+
+            return {
+                studentId: s._id,
+                studentName: s.name,
+                midterm: findScore('midterm'),
+                oral: findScore('oral'),
+                practical: findScore('practical'),
+                year: findScore('year'),
+            };
+        });
+
+        res.status(200).json({ students: result });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+module.exports = {
+    getProfile, updateProfileImg, updatePassword,
+    uploadGradesExcel, updateStudentGrade, getGroupAttendance,
+    generateAttendanceToken, sendCourseNotification, registerToken,
+    getStudentGrades
+};
