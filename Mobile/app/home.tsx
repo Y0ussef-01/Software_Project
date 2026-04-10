@@ -112,7 +112,7 @@ const Home = () => {
   
     const menuItems = [
         { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/attendancecourses' },
-        { id: 'schedule', title: 'Schedule', icon: 'calendar-month', path: '/teacherschedule' },
+        { id: 'schedule', title: 'Schedule', icon: 'calendar-month', path: '/studentschedule' },
         { id: 'eval', title: 'My Performance', icon: 'chart-bar', path: role === 'student' ? '/mycourses' : '/teacherevaluation' },
         { id: 'quizzes', title: 'Quizzes', icon: 'pencil-box-multiple', path: role === 'teacher' ? '/quizzes' : '/studentgrades' },
         { id: 'grades', title: 'Final Grades', icon: 'clipboard-text', path: role === 'student' ? '/finalResults' : '/teachergrades' },
