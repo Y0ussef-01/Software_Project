@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from "recharts";
 import useDashboardStats from "../../../hooks/Admin/Dashboard/useDashboardStats";
 
@@ -60,13 +61,60 @@ export default function DashboardCourseChart() {
     );
   }
 
-  const chartData = (stats?.studentsPerCourse || []).map((item) => {
-    return {
-      courseId: item.courseId,
-      fullName: item.courseName,
-      count: item.enrolledStudentsCount,
-    };
-  });
+  const chartData = (stats?.studentsPerCourse || []).map((item) => ({
+    courseId: item.courseId,
+    fullName: item.courseName,
+    count: item.enrolledStudentsCount,
+  }));
+
+  // Custom label فوق كل عمود باسم الكورس — مسافة ثابتة 8px من رأس العمود
+  const CourseNameLabel = (props) => {
+    const { x, y, width, value } = props;
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 8}
+        textAnchor="middle"
+        fill={isDark ? "rgba(255,255,255,0.7)" : "#1e293b"}
+        fontSize={13}
+        fontWeight={700}
+      >
+        {value}
+      </text>
+    );
+  };
+
+  // Custom tick أسفل المحور بيعرض الـ count في صندوق
+  const CountTick = (props) => {
+    const { x, y, payload } = props;
+    const data = chartData.find((d) => d.courseId === payload.value);
+    const boxWidth = 50;
+
+    return (
+      <g>
+        <rect
+          x={x - boxWidth / 2}
+          y={y + 6}
+          width={boxWidth}
+          height={24}
+          rx={6}
+          fill={isDark ? "rgba(59,130,246,0.2)" : "rgba(59,130,246,0.1)"}
+          stroke={isDark ? "rgba(59,130,246,0.5)" : "rgba(59,130,246,0.3)"}
+          strokeWidth={1}
+        />
+        <text
+          x={x}
+          y={y + 23}
+          textAnchor="middle"
+          fill={isDark ? "#60a5fa" : "#2563eb"}
+          fontSize={12}
+          fontWeight={800}
+        >
+          {data?.count}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <Paper
@@ -128,65 +176,19 @@ export default function DashboardCourseChart() {
         <ResponsiveContainer width="40%" height={350}>
           <BarChart
             data={chartData}
-            margin={{ top: 60, right: 10, left: 0, bottom: 20 }}
-            barCategoryGap="4%"
+            margin={{ top: 40, right: 20, left: 0, bottom: 20 }}
+            barCategoryGap="30%"
           >
             <CartesianGrid
               strokeDasharray="5 5"
               stroke={isDark ? "rgba(255,255,255,0.03)" : "#f5f7fa"}
               vertical={false}
-              horizontalPoints={[0, 25, 50, 75, 100]}
             />
             <XAxis
               dataKey="courseId"
-              tick={(props) => {
-                const { x, y, payload } = props;
-                const data = chartData.find(
-                  (d) => d.courseId === payload.value,
-                );
-                return (
-                  <g>
-                    <text
-                      x={x}
-                      y={y - 90}
-                      textAnchor="middle"
-                      fill={isDark ? "rgba(255,255,255,0.7)" : "#1e293b"}
-                      fontSize={14}
-                      fontWeight={700}
-                    >
-                      {payload.value}
-                    </text>
-                    <rect
-                      x={x - 28}
-                      y={y + 8}
-                      width={56}
-                      height={24}
-                      rx={6}
-                      fill={
-                        isDark ? "rgba(59,130,246,0.2)" : "rgba(59,130,246,0.1)"
-                      }
-                      stroke={
-                        isDark ? "rgba(59,130,246,0.5)" : "rgba(59,130,246,0.3)"
-                      }
-                      strokeWidth={1}
-                    />
-                    <text
-                      x={x}
-                      y={y + 26}
-                      textAnchor="middle"
-                      fill={isDark ? "#60a5fa" : "#2563eb"}
-                      fontSize={13}
-                      fontWeight={800}
-                    >
-                      {data?.count}
-                    </text>
-                  </g>
-                );
-              }}
+              tick={<CountTick />}
               axisLine={false}
               tickLine={false}
-              angle={-35}
-              textAnchor="end"
               interval={0}
             />
             <YAxis
@@ -197,13 +199,13 @@ export default function DashboardCourseChart() {
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
-              domain={[0, 20]}
+              domain={[0, 10]}
             />
             <Bar
               dataKey="count"
               radius={[8, 8, 0, 0]}
               animationDuration={1200}
-              maxBarSize={30}
+              maxBarSize={40}
             >
               {chartData.map((entry, index) => (
                 <Cell
@@ -211,6 +213,12 @@ export default function DashboardCourseChart() {
                   fill={COLORS[index % COLORS.length]}
                 />
               ))}
+
+              {/* اسم الكورس فوق كل عمود بمسافة ثابتة */}
+              <LabelList
+                dataKey="courseId"
+                content={<CourseNameLabel />}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

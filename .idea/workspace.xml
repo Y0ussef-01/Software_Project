@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Back_End/src/utils/sendEmail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/admin.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/full_project.txt" beforeDir="false" afterPath="$PROJECT_DIR$/full_project.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project_code.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/Bulkuploadstudentscomp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/Bulkuploadstudentscomp.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/full_project.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -264,7 +258,9 @@
       <workItem from="1775760759133" duration="263000" />
       <workItem from="1775770921587" duration="7067000" />
       <workItem from="1775780064123" duration="242000" />
-      <workItem from="1775817652991" duration="4651000" />
+      <workItem from="1775817652991" duration="5279000" />
+      <workItem from="1775833401022" duration="6486000" />
+      <workItem from="1775849075402" duration="1017000" />
     </task>
     <servers />
   </component>
