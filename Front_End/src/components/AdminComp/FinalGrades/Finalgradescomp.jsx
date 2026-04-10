@@ -153,7 +153,7 @@ export default function Finalgradescomp() {
   displayEmpty
   renderValue={(selected) => {
     if (!selected) {
-      return "📖 Select a course to upload grades";
+      return "Select a course to upload grades";
     }
 
     const selectedCourse = courses?.find(
