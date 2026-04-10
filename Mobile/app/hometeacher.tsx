@@ -10,7 +10,7 @@ import { clearStorage } from '@/api/storage';
 const { width } = Dimensions.get('window');
 
 const HomeTeacher = () => {
-    
+   
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [pressedItem, setPressedItem] = useState<string | null>(null);
     const [teacherData, setTeacherData] = useState({
@@ -101,9 +101,10 @@ const HomeTeacher = () => {
                 <TouchableOpacity onPress={openDrawer} style={styles.iconBtn}>
                     <MaterialCommunityIcons name="menu" size={28} color="white" />
                 </TouchableOpacity>
-                
-                {/* التعديل هنا: اللوجو بقى هو العنصر التاني وبكده هيروح في اليمين مكان الجرس */}
                 <Image source={require('../assets/images/logo(1).png')} style={styles.logo} />
+                <TouchableOpacity onPress={() => navigateTo('/sendnotification')} style={styles.iconBtn}>
+                    <MaterialCommunityIcons name="bell-outline" size={26} color="white" />
+                </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
