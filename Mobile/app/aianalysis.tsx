@@ -45,7 +45,7 @@ const AIAnalysis = () => {
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer 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',
+           'Authorization': `Bearer ${process.env.EXPO_PUBLIC_OPENROUTER_KEY}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
