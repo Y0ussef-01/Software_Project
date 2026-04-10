@@ -1377,28 +1377,19 @@ interface Group {
     groupName: string;
 }
 
-interface StudentGrade {
-    studentId: string;
-    studentName: string;
-    midterm?: number | null;
-    midtermOutOf?: number;
-    oral?: number | null;
-    oralOutOf?: number;
-    practical?: number | null;
-    practicalOutOf?: number;
-    year?: number | null;
-    yearOutOf?: number;
-    total?: number | null;
-    totalOutOf?: number;
+interface Degree {
+    title: string;          // "Quizze1/10"
+    label: string;          // "Quizze1"
+    score: number | null;
+    outOf: number | null;   // Ø§Ù„Ù€ Max Ø§Ù„Ù…Ø­ÙÙˆØ¸ Ù…Ù† Ø§Ù„Ù€ Excel
 }
 
-// â”€â”€â”€ Grade fields config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const GRADE_FIELDS = [
-    { key: 'midterm',   label: 'Midterm',   icon: 'file-document-edit-outline', color: '#3b82f6', maxKey: 'midtermOutOf'   },
-    { key: 'oral',      label: 'Oral',       icon: 'microphone-outline',         color: '#8b5cf6', maxKey: 'oralOutOf'      },
-    { key: 'practical', label: 'Practical',  icon: 'flask-outline',              color: '#10b981', maxKey: 'practicalOutOf' },
-    { key: 'year',      label: 'Year Work',  icon: 'clipboard-text-outline',     color: '#f59e0b', maxKey: 'yearOutOf'      },
-] as const;
+interface StudentGrade {
+    studentId:   string;
+    studentName: string;
+    degrees:     Degree[];
+    total:       number | null;
+}
 
 // â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const EditGrade = () => {
@@ -1407,31 +1398,24 @@ const EditGrade = () => {
         courseName: string;
     }>();
 
-    // â”€â”€ Groups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [groups,             setGroups]             = useState<Group[]>([]);
     const [selectedGroup,      setSelectedGroup]      = useState<Group | null>(null);
     const [loadingGroups,      setLoadingGroups]      = useState(true);
     const [groupPickerVisible, setGroupPickerVisible] = useState(false);
 
-    // â”€â”€ Students â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const [allStudents,       setAllStudents]       = useState<StudentGrade[]>([]);
-    const [filteredStudents,  setFilteredStudents]  = useState<StudentGrade[]>([]);
-    const [searchQuery,       setSearchQuery]       = useState('');
-    const [loadingStudents,   setLoadingStudents]   = useState(false);
-    const [refreshing,        setRefreshing]        = useState(false);
+    const [allStudents,      setAllStudents]      = useState<StudentGrade[]>([]);
+    const [filteredStudents, setFilteredStudents] = useState<StudentGrade[]>([]);
+    const [searchQuery,      setSearchQuery]      = useState('');
+    const [loadingStudents,  setLoadingStudents]  = useState(false);
+    const [refreshing,       setRefreshing]       = useState(false);
 
-    // â”€â”€ Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [selectedStudent, setSelectedStudent] = useState<StudentGrade | null>(null);
     const [modalVisible,    setModalVisible]    = useState(false);
-    const [editedGrades, setEditedGrades] = useState<{
-        midterm?: number | string;
-        oral?: number | string;
-        practical?: number | string;
-        year?: number | string;
-    }>({});
+    // editedScores = { [title]: string }
+    const [editedScores, setEditedScores] = useState<Record<string, string>>({});
     const [saving, setSaving] = useState(false);
 
-    // â”€â”€â”€ Fetch Groups from teacher/profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€â”€ Fetch Groups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     useEffect(() => {
         (async () => {
             try {
@@ -1446,7 +1430,7 @@ const EditGrade = () => {
                     const cId = c.course?._id || c.course;
                     if (cId !== courseId) return;
 
-                    const gId   = c.group?._id   || c.group?.id   || c.groupId   || '';
+                    const gId   = c.group?._id || c.group?.id || c.groupId || '';
                     const gName = c.group?.groupName || c.group?.name || c.groupName || gId;
 
                     if (gId && !seen.has(gId)) {
@@ -1464,7 +1448,7 @@ const EditGrade = () => {
         })();
     }, [courseId]);
 
-    // â”€â”€â”€ Fetch Students when group is selected â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€â”€ Fetch Students â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const fetchStudents = useCallback(async (isRefresh = false) => {
         if (!selectedGroup) return;
         try {
@@ -1472,7 +1456,7 @@ const EditGrade = () => {
             const res = await API.get(`/teacher/grades/${courseId}`, {
                 params: { groupId: selectedGroup.groupId },
             });
-            const students: StudentGrade[] = res.data?.students || res.data || [];
+            const students: StudentGrade[] = res.data?.students || [];
             setAllStudents(students);
             applySearch(students, searchQuery);
         } catch (err: any) {
@@ -1499,16 +1483,12 @@ const EditGrade = () => {
 
     // â”€â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const applySearch = (students: StudentGrade[], query: string) => {
-        if (!query.trim()) {
-            setFilteredStudents(students);
-            return;
-        }
+        if (!query.trim()) { setFilteredStudents(students); return; }
         const q = query.toLowerCase();
         setFilteredStudents(
-            students.filter(
-                (s) =>
-                    s.studentName?.toLowerCase().includes(q) ||
-                    s.studentId?.toLowerCase().includes(q)
+            students.filter(s =>
+                s.studentName?.toLowerCase().includes(q) ||
+                s.studentId?.toLowerCase().includes(q)
             )
         );
     };
@@ -1521,30 +1501,43 @@ const EditGrade = () => {
     // â”€â”€â”€ Open Edit Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const openEdit = (student: StudentGrade) => {
         setSelectedStudent(student);
-        setEditedGrades({
-            midterm:   student.midterm   != null ? student.midterm   : '',
-            oral:      student.oral      != null ? student.oral      : '',
-            practical: student.practical != null ? student.practical : '',
-            year:      student.year      != null ? student.year      : '',
+        const scores: Record<string, string> = {};
+        student.degrees.forEach(d => {
+            scores[d.title] = d.score !== null && d.score !== undefined ? String(d.score) : '';
         });
+        setEditedScores(scores);
         setModalVisible(true);
+    };
+
+    // â”€â”€â”€ Validate a single field (real-time) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const getFieldError = (degree: Degree, value: string): string | null => {
+        if (value === '' || value === null) return null;
+
+        // Ù„Ø§ ÙŠÙ‚Ø¨Ù„ Ø­Ø±ÙˆÙ
+        if (isNaN(Number(value)) || value.trim() === '')  return 'Numbers only';
+
+        const num = parseFloat(value);
+
+        // Ù„Ø§ ÙŠÙ‚Ù„ Ø¹Ù† ØµÙØ±
+        if (num < 0) return 'Cannot be negative';
+
+        // Ù„Ø§ ÙŠØªØ¬Ø§ÙˆØ² Ø§Ù„Ù€ Max
+        if (degree.outOf !== null && num > degree.outOf)
+            return `Max is ${degree.outOf}`;
+
+        return null;
     };
 
     // â”€â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const handleSave = async () => {
         if (!selectedStudent) return;
 
-        for (const f of GRADE_FIELDS) {
-            const raw = editedGrades[f.key as keyof typeof editedGrades];
-            if (raw === '' || raw == null) continue;
-            const num = parseFloat(String(raw));
-            if (isNaN(num) || num < 0) {
-                Alert.alert('Invalid Grade', `${f.label} must be a positive number.`);
-                return;
-            }
-            const max = selectedStudent[f.maxKey as keyof StudentGrade] as number | undefined;
-            if (max !== undefined && num > max) {
-                Alert.alert('Invalid Grade', `${f.label} cannot exceed ${max}.`);
+        // ØªØ£ÙƒØ¯ Ø¥Ù† Ù…ÙÙŠØ´ Ø£Ø®Ø·Ø§Ø¡ Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„
+        for (const d of selectedStudent.degrees) {
+            const val = editedScores[d.title] ?? '';
+            const err = getFieldError(d, val);
+            if (err) {
+                Alert.alert('Invalid Grade', `${d.label}: ${err}`);
                 return;
             }
         }
@@ -1559,28 +1552,45 @@ const EditGrade = () => {
                     onPress: async () => {
                         try {
                             setSaving(true);
-                            const payload: any = {};
-                            for (const f of GRADE_FIELDS) {
-                                const raw = editedGrades[f.key as keyof typeof editedGrades];
-                                payload[f.key] = raw === '' || raw == null ? null : parseFloat(String(raw));
-                            }
+
+                            const grades = selectedStudent.degrees.map(d => ({
+                                title: d.title,
+                                score: editedScores[d.title] === '' || editedScores[d.title] == null
+                                    ? null
+                                    : parseFloat(editedScores[d.title]),
+                            }));
 
                             await API.patch(
                                 `/teacher/grades/${courseId}/student/${selectedStudent.studentId}`,
-                                { grades: payload }
+                                { grades }
                             );
 
                             Alert.alert('âœ… Success', 'Grades updated successfully.');
                             setModalVisible(false);
 
+                            // Ø­Ø¯Ù‘Ø« Ø§Ù„Ù€ local state
+                            const updatedDegrees = selectedStudent.degrees.map(d => ({
+                                ...d,
+                                score: editedScores[d.title] === '' || editedScores[d.title] == null
+                                    ? null
+                                    : parseFloat(editedScores[d.title]),
+                            }));
+                            const validScores = updatedDegrees
+                                .map(d => d.score)
+                                .filter((v): v is number => v !== null);
+                            const newTotal = validScores.length > 0
+                                ? validScores.reduce((a, b) => a + b, 0)
+                                : null;
+
                             const updater = (prev: StudentGrade[]) =>
-                                prev.map((s) =>
+                                prev.map(s =>
                                     s.studentId === selectedStudent.studentId
-                                        ? { ...s, ...payload }
+                                        ? { ...s, degrees: updatedDegrees, total: newTotal }
                                         : s
                                 );
                             setAllStudents(updater);
                             setFilteredStudents(updater);
+
                         } catch (err: any) {
                             Alert.alert('âŒ Failed', err.response?.data?.message || 'Could not save changes.');
                         } finally {
@@ -1705,20 +1715,16 @@ const EditGrade = () => {
                                     key={student.studentId}
                                     style={[styles.studentRow, index % 2 === 1 && styles.studentRowAlt]}
                                 >
-                                    {/* Avatar */}
                                     <View style={styles.avatarCircle}>
                                         <Text style={styles.avatarLetter}>
                                             {student.studentName?.[0]?.toUpperCase() || '?'}
                                         </Text>
                                     </View>
 
-                                    {/* Info */}
                                     <View style={styles.studentInfo}>
                                         <Text style={styles.studentName} numberOfLines={1}>
                                             {student.studentName}
                                         </Text>
-
-                                        {/* Badges: ID + Group */}
                                         <View style={styles.badgeRow}>
                                             <View style={styles.idBadge}>
                                                 <MaterialCommunityIcons name="identifier" size={11} color="#64748b" />
@@ -1729,15 +1735,11 @@ const EditGrade = () => {
                                                 <Text style={styles.groupBadgeText}>{selectedGroup.groupName}</Text>
                                             </View>
                                         </View>
-
                                         {student.total != null && (
-                                            <Text style={styles.totalBadge}>
-                                                Total: {student.total}{student.totalOutOf ? ` / ${student.totalOutOf}` : ''}
-                                            </Text>
+                                            <Text style={styles.totalBadge}>Total: {student.total}</Text>
                                         )}
                                     </View>
 
-                                    {/* Edit Button */}
                                     <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(student)}>
                                         <MaterialCommunityIcons name="pencil-outline" size={16} color="white" />
                                         <Text style={styles.editBtnText}>Edit</Text>
@@ -1751,12 +1753,7 @@ const EditGrade = () => {
             )}
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â• GROUP PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â• */}
-            <Modal
-                visible={groupPickerVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setGroupPickerVisible(false)}
-            >
+            <Modal visible={groupPickerVisible} animationType="slide" transparent onRequestClose={() => setGroupPickerVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.pickerSheet}>
                         <View style={styles.pickerHeader}>
@@ -1768,7 +1765,6 @@ const EditGrade = () => {
                                 <MaterialCommunityIcons name="close" size={24} color="#64748b" />
                             </TouchableOpacity>
                         </View>
-
                         <FlatList
                             data={groups}
                             keyExtractor={(g) => g.groupId}
@@ -1778,27 +1774,15 @@ const EditGrade = () => {
                                 return (
                                     <TouchableOpacity
                                         style={[styles.pickerItem, isSelected && styles.pickerItemSelected]}
-                                        onPress={() => {
-                                            setSelectedGroup(item);
-                                            setGroupPickerVisible(false);
-                                        }}
+                                        onPress={() => { setSelectedGroup(item); setGroupPickerVisible(false); }}
                                     >
-                                        <View style={[
-                                            styles.groupIconBox,
-                                            { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#f0f4ff' },
-                                        ]}>
-                                            <MaterialCommunityIcons
-                                                name="account-group-outline"
-                                                size={20}
-                                                color={isSelected ? 'white' : 'rgb(23,42,70)'}
-                                            />
+                                        <View style={[styles.groupIconBox, { backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#f0f4ff' }]}>
+                                            <MaterialCommunityIcons name="account-group-outline" size={20} color={isSelected ? 'white' : 'rgb(23,42,70)'} />
                                         </View>
                                         <Text style={[styles.pickerItemText, isSelected && styles.pickerItemTextSelected]}>
                                             {item.groupName}
                                         </Text>
-                                        {isSelected && (
-                                            <MaterialCommunityIcons name="check-circle" size={20} color="white" />
-                                        )}
+                                        {isSelected && <MaterialCommunityIcons name="check-circle" size={20} color="white" />}
                                     </TouchableOpacity>
                                 );
                             }}
@@ -1808,15 +1792,10 @@ const EditGrade = () => {
             </Modal>
 
             {/* â•â•â•â•â•â•â•â•â•â•â•â• EDIT GRADE MODAL â•â•â•â•â•â•â•â•â•â•â•â• */}
-            <Modal
-                visible={modalVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setModalVisible(false)}
-            >
+            <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        {/* Modal Header */}
+                        {/* Header */}
                         <View style={styles.modalHeader}>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.modalTitle}>Edit Grades</Text>
@@ -1829,47 +1808,69 @@ const EditGrade = () => {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Grade Fields */}
+                        {/* Dynamic Grade Fields */}
                         <ScrollView style={styles.modalBody}>
-                            {GRADE_FIELDS.map((field) => {
-                                const maxVal    = selectedStudent?.[field.maxKey as keyof StudentGrade] as number | undefined;
-                                const currentVal = editedGrades[field.key as keyof typeof editedGrades];
-                                const isOver    = maxVal !== undefined && currentVal !== '' && currentVal != null
-                                    && parseFloat(String(currentVal)) > maxVal;
+                            {!selectedStudent?.degrees.length ? (
+                                <View style={styles.noGradesContainer}>
+                                    <MaterialCommunityIcons name="alert-circle-outline" size={40} color="#94a3b8" />
+                                    <Text style={styles.noGradesText}>No grades uploaded yet for this student.</Text>
+                                </View>
+                            ) : (
+                                selectedStudent.degrees.map((degree, idx) => {
+                                    const currentVal = editedScores[degree.title] ?? '';
+                                    const fieldError = getFieldError(degree, currentVal);
+                                    const hasError   = fieldError !== null;
 
-                                return (
-                                    <View key={field.key} style={styles.gradeRow}>
-                                        <View style={[styles.gradeIcon, { backgroundColor: field.color + '20' }]}>
-                                            <MaterialCommunityIcons name={field.icon as any} size={20} color={field.color} />
-                                        </View>
-                                        <View style={styles.gradeInfo}>
-                                            <Text style={styles.gradeLabel}>{field.label}</Text>
-                                            {maxVal !== undefined && (
-                                                <Text style={styles.gradeMax}>Max: {maxVal}</Text>
+                                    const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
+                                    const color  = colors[idx % colors.length];
+
+                                    return (
+                                        <View key={degree.title}>
+                                            <View style={[styles.gradeRow, hasError && styles.gradeRowError]}>
+                                                <View style={[styles.gradeIcon, { backgroundColor: color + '20' }]}>
+                                                    <MaterialCommunityIcons name="pencil-circle-outline" size={20} color={color} />
+                                                </View>
+                                                <View style={styles.gradeInfo}>
+                                                    <Text style={styles.gradeLabel}>{degree.label}</Text>
+                                                    {degree.outOf !== null && (
+                                                        <Text style={styles.gradeMax}>Max: {degree.outOf}</Text>
+                                                    )}
+                                                </View>
+                                                <TextInput
+                                                    style={[styles.gradeInput, hasError && styles.gradeInputError]}
+                                                    keyboardType="decimal-pad"
+                                                    placeholder="â€”"
+                                                    placeholderTextColor="#94a3b8"
+                                                    value={currentVal}
+                                                    onChangeText={(v) => {
+                                                        // Ù…Ù†Ø¹ Ø¥Ø¯Ø®Ø§Ù„ Ø£ÙŠ Ø­Ø±Ù Ù…Ø´ Ø±Ù‚Ù… Ø£Ùˆ Ù†Ù‚Ø·Ø©
+                                                        if (v !== '' && !/^\d*\.?\d*$/.test(v)) return;
+                                                        setEditedScores(prev => ({ ...prev, [degree.title]: v }));
+                                                    }}
+                                                />
+                                            </View>
+                                            {/* Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ø®Ø·Ø£ ØªØ­Øª Ø§Ù„Ù€ field */}
+                                            {hasError && (
+                                                <Text style={styles.errorText}>
+                                                    âš ï¸ {degree.label}: {fieldError}
+                                                </Text>
                                             )}
                                         </View>
-                                        <TextInput
-                                            style={[styles.gradeInput, isOver && styles.gradeInputError]}
-                                            keyboardType="decimal-pad"
-                                            placeholder="â€”"
-                                            placeholderTextColor="#94a3b8"
-                                            value={currentVal !== undefined && currentVal !== null ? String(currentVal) : ''}
-                                            onChangeText={(v) =>
-                                                setEditedGrades((prev) => ({ ...prev, [field.key]: v }))
-                                            }
-                                        />
-                                    </View>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                             <View style={{ height: 20 }} />
                         </ScrollView>
 
                         {/* Save Button */}
                         <View style={styles.modalFooter}>
                             <TouchableOpacity
-                                style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+                                style={[
+                                    styles.saveBtn,
+                                    (saving || !selectedStudent?.degrees.length) && styles.saveBtnDisabled
+                                ]}
                                 onPress={handleSave}
-                                disabled={saving}
+                                disabled={saving || !selectedStudent?.degrees.length}
                             >
                                 {saving ? (
                                     <ActivityIndicator color="white" />
@@ -1925,50 +1926,32 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
     },
     courseIconCircle: {
-        width: 52,
-        height: 52,
-        borderRadius: 14,
+        width: 52, height: 52, borderRadius: 14,
         backgroundColor: 'rgba(255,255,255,0.15)',
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: 'center', alignItems: 'center',
     },
     courseIdLabel:  { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold', letterSpacing: 1 },
     courseNameText: { fontSize: 17, fontWeight: 'bold', color: 'white', marginTop: 2 },
     courseIdSmall:  { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 3 },
 
-    sectionWrapper:      { paddingHorizontal: 16, marginBottom: 12 },
-    stepLabel:           { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6, letterSpacing: 0.5 },
+    sectionWrapper: { paddingHorizontal: 16, marginBottom: 12 },
+    stepLabel:      { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 6, letterSpacing: 0.5 },
 
     selectorBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        paddingVertical: 13,
-        gap: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: 'white', borderRadius: 14,
+        paddingHorizontal: 14, paddingVertical: 13, gap: 10,
+        elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4,
     },
     selectorText:        { flex: 1, fontSize: 14, color: '#1e293b', fontWeight: '600' },
     selectorPlaceholder: { color: '#94a3b8', fontWeight: '400' },
 
     searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderRadius: 14,
-        paddingHorizontal: 14,
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: 'white', marginHorizontal: 16, marginBottom: 12,
+        borderRadius: 14, paddingHorizontal: 14,
         paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        gap: 8,
+        elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, gap: 8,
     },
     searchInput: { flex: 1, fontSize: 14, color: '#1e293b' },
 
@@ -1980,157 +1963,107 @@ const styles = StyleSheet.create({
     countText:       { fontSize: 13, color: '#64748b', marginBottom: 10, marginLeft: 4 },
 
     studentRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        padding: 14,
-        marginBottom: 10,
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-        gap: 12,
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#fff', borderRadius: 14,
+        padding: 14, marginBottom: 10,
+        elevation: 1, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, gap: 12,
     },
     studentRowAlt: { backgroundColor: '#f8fafc' },
 
     avatarCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 44, height: 44, borderRadius: 22,
         backgroundColor: 'rgb(23, 42, 70)',
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: 'center', alignItems: 'center',
     },
     avatarLetter: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
-    studentInfo:  { flex: 1 },
-    studentName:  { fontSize: 14, fontWeight: '700', color: '#0f172a', marginBottom: 5 },
+    studentInfo: { flex: 1 },
+    studentName: { fontSize: 14, fontWeight: '700', color: '#0f172a', marginBottom: 5 },
 
     badgeRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
 
     idBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3,
-        backgroundColor: '#f1f5f9',
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 6,
+        flexDirection: 'row', alignItems: 'center', gap: 3,
+        backgroundColor: '#f1f5f9', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6,
     },
     idBadgeText: { fontSize: 11, color: '#64748b', fontWeight: '600' },
 
     groupBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3,
-        backgroundColor: 'rgba(23,42,70,0.08)',
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 6,
+        flexDirection: 'row', alignItems: 'center', gap: 3,
+        backgroundColor: 'rgba(23,42,70,0.08)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6,
     },
     groupBadgeText: { fontSize: 11, color: 'rgb(23,42,70)', fontWeight: '600' },
 
     totalBadge: { fontSize: 11, color: '#10b981', fontWeight: '700', marginTop: 4 },
 
     editBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
+        flexDirection: 'row', alignItems: 'center', gap: 5,
         backgroundColor: 'rgb(23, 42, 70)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 10,
+        paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
     },
     editBtnText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
 
     modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(15, 23, 42, 0.6)',
-        justifyContent: 'flex-end',
+        flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end',
     },
 
-    // Group Picker
     pickerSheet: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        maxHeight: '55%',
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+        backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30,
+        maxHeight: '55%', paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     pickerHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        padding: 24, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
     },
     pickerTitle:    { fontSize: 18, fontWeight: '800', color: 'rgb(23, 42, 70)' },
     pickerSubtitle: { fontSize: 12, color: '#94a3b8', marginTop: 3 },
-
     pickerItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 14,
-        paddingHorizontal: 14,
-        borderRadius: 14,
-        marginTop: 8,
-        backgroundColor: '#f8fafc',
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        paddingVertical: 14, paddingHorizontal: 14,
+        borderRadius: 14, marginTop: 8, backgroundColor: '#f8fafc',
     },
     pickerItemSelected:     { backgroundColor: 'rgb(23, 42, 70)' },
     pickerItemText:         { flex: 1, fontSize: 15, fontWeight: '600', color: '#1e293b' },
     pickerItemTextSelected: { color: 'white' },
+    groupIconBox: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
 
-    groupIconBox: {
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    // Edit Modal
     modalContent: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        maxHeight: '75%',
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+        backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30,
+        maxHeight: '80%', paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 25,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        padding: 25, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
     },
     modalTitle:    { fontSize: 18, fontWeight: '800', color: 'rgb(23, 42, 70)' },
     modalSubtitle: { fontSize: 13, color: '#64748b', marginTop: 3, maxWidth: 220 },
     modalBody:     { paddingHorizontal: 24, paddingTop: 16 },
     modalFooter:   { paddingHorizontal: 24, paddingTop: 12 },
 
+    noGradesContainer: { alignItems: 'center', paddingVertical: 30, gap: 10 },
+    noGradesText: { fontSize: 14, color: '#94a3b8', textAlign: 'center', fontWeight: '500' },
+
     gradeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-        backgroundColor: '#f8fafc',
-        borderRadius: 14,
-        padding: 14,
-        marginBottom: 12,
+        flexDirection: 'row', alignItems: 'center', gap: 14,
+        backgroundColor: '#f8fafc', borderRadius: 14, padding: 14, marginBottom: 4,
     },
-    gradeIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
+    gradeRowError: {
+        backgroundColor: '#fff5f5',
+        borderWidth: 1,
+        borderColor: '#fca5a5',
     },
-    gradeInfo:  { flex: 1 },
+    gradeIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    gradeInfo: { flex: 1 },
     gradeLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
     gradeMax:   { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+
+    errorText: {
+        fontSize: 11,
+        color: '#ef4444',
+        fontWeight: '600',
+        marginBottom: 10,
+        marginLeft: 8,
+    },
 
     gradeInput: {
         width: 68,
@@ -2149,17 +2082,12 @@ const styles = StyleSheet.create({
 
     saveBtn: {
         backgroundColor: 'rgb(23, 42, 70)',
-        paddingVertical: 16,
-        borderRadius: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        elevation: 4,
-        marginBottom: 10,
+        paddingVertical: 16, borderRadius: 15,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 10, elevation: 4, marginBottom: 10,
     },
     saveBtnDisabled: { backgroundColor: '#94a3b8', elevation: 0 },
-    saveBtnText:     { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    saveBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 });
 // ===== C:\cs303 Project1\Software_Project\Mobile\app\finalResults.tsx =====
 import React, { useCallback, useState } from 'react';
@@ -2595,7 +2523,7 @@ const handleLogout = () => {
                             onPress={() => navigateTo('/attendancecourses')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                         <GridItem id="schedule" icon="calendar-month" label="Schedule"
-                            onPress={() => navigateTo('/teacherschedule')}
+                            onPress={() => navigateTo('/studentschedule')}
                             pressedItem={pressedItem} setPressedItem={setPressedItem} />
                     </View>
                     <View style={styles.rowContainer}>
@@ -2817,14 +2745,11 @@ const HomeTeacher = () => {
     const menuItems = [
         { id: 'attendance', title: 'Attendance', icon: 'calendar-check', path: '/teacherattendance' },
         { id: 'schedule', title: 'Schedule', icon: 'calendar-clock', path: '/teacherschedule' },
-      
         { id: 'quizzes', title: 'Quizzes', icon: 'file-document-edit-outline', path: '/teachergrades' },
-    
         { id: 'notification', title: 'Send Notification', icon: 'bell-ring-outline', path: '/sendnotification' },
        
     ];
-
-    return (
+ return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" backgroundColor="rgb(23, 42, 70)" />
@@ -2834,10 +2759,9 @@ const HomeTeacher = () => {
                 <TouchableOpacity onPress={openDrawer} style={styles.iconBtn}>
                     <MaterialCommunityIcons name="menu" size={28} color="white" />
                 </TouchableOpacity>
+                
+                {/* Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ù‡Ù†Ø§: Ø§Ù„Ù„ÙˆØ¬Ùˆ Ø¨Ù‚Ù‰ Ù‡Ùˆ Ø§Ù„Ø¹Ù†ØµØ± Ø§Ù„ØªØ§Ù†ÙŠ ÙˆØ¨ÙƒØ¯Ù‡ Ù‡ÙŠØ±ÙˆØ­ ÙÙŠ Ø§Ù„ÙŠÙ…ÙŠÙ† Ù…ÙƒØ§Ù† Ø§Ù„Ø¬Ø±Ø³ */}
                 <Image source={require('../assets/images/logo(1).png')} style={styles.logo} />
-                <TouchableOpacity onPress={() => navigateTo('/sendnotification')} style={styles.iconBtn}>
-                    <MaterialCommunityIcons name="bell-outline" size={26} color="white" />
-                </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -4802,6 +4726,438 @@ const styles = StyleSheet.create({
     emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingBottom: 100 },
     emptyText: { fontSize: 16, color: '#aaa', fontWeight: '500' },
 });
+// ===== C:\cs303 Project1\Software_Project\Mobile\app\studentschedule.tsx =====
+// ===== app/studentschedule.tsx =====
+import React, { useCallback, useState } from 'react';
+import {
+    View, Text, StyleSheet, FlatList,
+    ActivityIndicator, StatusBar, TouchableOpacity,
+    RefreshControl, Platform
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Stack, router, useFocusEffect } from 'expo-router';
+import { getStudentProfile } from '../api/studentApi';
+
+// ----------------------------------------------------------------
+// Types
+// ----------------------------------------------------------------
+interface Appointment {
+    day: string;
+    startTime: string;
+    endTime: string;
+}
+
+interface GroupInfo {
+    _id: string;
+    groupName: string;
+    Room: string;
+    type: string;
+    appointment: Appointment;
+}
+
+interface CourseInfo {
+    _id: string;
+    name: string;
+    hours: number;
+}
+
+interface RegisteredCourse {
+    course: CourseInfo;
+    group: GroupInfo;
+}
+
+interface CourseCard {
+    courseId: string;
+    courseName: string;
+    hours: number;
+    groups: GroupInfo[];
+}
+
+// ----------------------------------------------------------------
+// Day order for sorting (Sunday â†’ Saturday)
+// ----------------------------------------------------------------
+const DAY_ORDER: Record<string, number> = {
+    Sunday: 0, Monday: 1, Tuesday: 2,
+    Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
+};
+
+// Convert "HH:MM" to total minutes for numeric comparison
+const toMinutes = (t?: string): number => {
+    if (!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+};
+
+const sortGroups = (groups: GroupInfo[]): GroupInfo[] =>
+    [...groups].sort((a, b) => {
+        const dayDiff =
+            (DAY_ORDER[a.appointment?.day] ?? 99) -
+            (DAY_ORDER[b.appointment?.day] ?? 99);
+        if (dayDiff !== 0) return dayDiff;
+        return toMinutes(a.appointment?.startTime) - toMinutes(b.appointment?.startTime);
+    });
+
+// ----------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------
+const CARD_COLORS = [
+    '#4f46e5', '#0891b2', '#059669', '#d97706',
+    '#dc2626', '#7c3aed', '#0284c7', '#16a34a',
+];
+
+const getTypeStyle = (type: string) => {
+    const t = (type || '').toLowerCase();
+    if (t.includes('lab'))     return { color: '#059669', icon: 'flask-outline' };
+    if (t.includes('lecture')) return { color: '#4f46e5', icon: 'presentation' };
+    if (t.includes('section') || t.includes('tutorial'))
+                               return { color: '#0891b2', icon: 'account-group-outline' };
+    return                            { color: '#64748b', icon: 'account-group-outline' };
+};
+
+const fmt = (t?: string) => {
+    if (!t) return '';
+    // Ù„Ùˆ Ø§Ù„ÙˆÙ‚Øª Ø¬Ø§ÙŠ Ø¨Ù€ AM/PM Ø¨Ø§Ù„ÙØ¹Ù„ØŒ Ø±Ø¬Ø¹Ù‡ Ø²ÙŠ Ù…Ø§ Ù‡Ùˆ
+    if (t.includes('AM') || t.includes('PM')) return t;
+    const [hStr, mStr] = t.split(':');
+    let h = parseInt(hStr, 10);
+    const m = mStr || '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return h + ':' + m + ' ' + ampm;
+};
+
+// ----------------------------------------------------------------
+// Component
+// ----------------------------------------------------------------
+const StudentSchedule = () => {
+    const [cards, setCards]             = useState<CourseCard[]>([]);
+    const [loading, setLoading]         = useState(true);
+    const [refreshing, setRefreshing]   = useState(false);
+    const [studentName, setStudentName] = useState('');
+
+    useFocusEffect(
+        useCallback(() => {
+            let isMounted = true;
+            load(false, isMounted);
+            return () => { isMounted = false; };
+        }, [])
+    );
+
+    const load = async (isRefresh = false, isMounted = true) => {
+        if (isRefresh) setRefreshing(true);
+        else           setLoading(true);
+
+        try {
+            const profile = await getStudentProfile();
+            if (!isMounted) return;
+
+            setStudentName(profile?.name?.split(' ')[0] || '');
+
+            const registered: RegisteredCourse[] = profile?.registeredCourses || [];
+            const map: Record<string, CourseCard> = {};
+
+            registered.forEach((rc) => {
+                const course = rc.course;
+                const group  = rc.group;
+
+                if (!course || typeof course === 'string') return;
+                if (!group  || typeof group  === 'string') return;
+
+                const cId = course._id;
+                if (!map[cId]) {
+                    map[cId] = {
+                        courseId:   cId,
+                        courseName: course.name  || cId,
+                        hours:      course.hours || 0,
+                        groups:     [],
+                    };
+                }
+                map[cId].groups.push(group);
+            });
+
+            // Sort groups inside each course by day â†’ startTime
+            const sorted = Object.values(map).map((card) => ({
+                ...card,
+                groups: sortGroups(card.groups),
+            }));
+
+            // Sort cards themselves by the day of their first group
+            sorted.sort((a, b) => {
+                const dayA = DAY_ORDER[a.groups[0]?.appointment?.day] ?? 99;
+                const dayB = DAY_ORDER[b.groups[0]?.appointment?.day] ?? 99;
+                if (dayA !== dayB) return dayA - dayB;
+                return (
+                    toMinutes(a.groups[0]?.appointment?.startTime) -
+                    toMinutes(b.groups[0]?.appointment?.startTime)
+                );
+            });
+
+            if (isMounted) setCards(sorted);
+
+        } catch (err) {
+            console.log('Schedule error:', err);
+        } finally {
+            if (isMounted) { setLoading(false); setRefreshing(false); }
+        }
+    };
+
+    // ----------------------------------------------------------------
+    // Render one group slot row
+    // ----------------------------------------------------------------
+    const renderGroupRow = (group: GroupInfo, idx: number, accentColor: string) => {
+        const ts   = getTypeStyle(group.type);
+        const day  = group.appointment?.day        || '';
+        const from = fmt(group.appointment?.startTime);
+        const to   = fmt(group.appointment?.endTime);
+        const room = group.Room || '';
+
+        return (
+            <View key={group._id + idx} style={styles.slotRow}>
+
+                {/* Day badge */}
+                <View style={[styles.dayBadge, { backgroundColor: accentColor }]}>
+                    <Text style={styles.dayText}>{day.slice(0, 3) || '---'}</Text>
+                </View>
+
+                <View style={styles.slotInfo}>
+                    {/* Type badge */}
+                    <View style={[styles.typeBadge, { backgroundColor: ts.color + '15' }]}>
+                        <MaterialCommunityIcons name={ts.icon as any} size={12} color={ts.color} />
+                        <Text style={[styles.typeText, { color: ts.color }]}>
+                            {group.type || 'Group'}
+                        </Text>
+                    </View>
+
+                    {/* Time */}
+                    <Text style={styles.timeText}>
+{from && to ? (from + ' â€“ ' + to) : (from || '--:--')}                    </Text>
+
+                    {/* Room */}
+                    {room ? (
+                        <View style={styles.roomRow}>
+                            <MaterialCommunityIcons name="map-marker-outline" size={12} color="#94a3b8" />
+                            <Text style={styles.roomText}>{room}</Text>
+                        </View>
+                    ) : null}
+                </View>
+
+                {/* Group name */}
+                <Text style={styles.groupName} numberOfLines={1}>{group.groupName || ''}</Text>
+            </View>
+        );
+    };
+
+    // ----------------------------------------------------------------
+    // Render one course card
+    // ----------------------------------------------------------------
+    const renderCard = ({ item, index }: { item: CourseCard; index: number }) => {
+        const color = CARD_COLORS[index % CARD_COLORS.length];
+        return (
+            <View style={styles.card}>
+                <View style={[styles.colorBar, { backgroundColor: color }]} />
+                <View style={styles.cardInner}>
+
+                    {/* Course header */}
+                    <View style={styles.cardHeader}>
+                        <View style={[styles.iconBox, { backgroundColor: color + '18' }]}>
+                            <MaterialCommunityIcons name="book-open-variant" size={24} color={color} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.courseIdText}>{item.courseId}</Text>
+                            <Text style={styles.courseNameText} numberOfLines={2}>{item.courseName}</Text>
+                        </View>
+                        {item.hours > 0 ? (
+                            <View style={[styles.hoursBadge, { backgroundColor: color + '15' }]}>
+                                <Text style={[styles.hoursText, { color }]}>
+                                    {String(item.hours) + ' hrs'}
+                                </Text>
+                            </View>
+                        ) : null}
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Sorted group slots */}
+                    <View style={styles.slotsContainer}>
+                        {item.groups.map((g, i) => renderGroupRow(g, i, color))}
+                    </View>
+
+                </View>
+            </View>
+        );
+    };
+
+    // ----------------------------------------------------------------
+    // Main render
+    // ----------------------------------------------------------------
+    return (
+        <View style={styles.container}>
+            <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
+
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    onPress={() => router.replace('/home' as any)}
+                    style={styles.backBtn}
+                >
+                    <MaterialCommunityIcons name="arrow-left" size={26} color="white" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>My Schedule</Text>
+                <View style={{ width: 40 }} />
+            </View>
+
+            {/* Banner */}
+            <View style={styles.banner}>
+                <View>
+                    <Text style={styles.bannerSub}>
+                        {studentName ? ('Hello, ' + studentName + ' \uD83D\uDC4B') : 'Your timetable'}
+                    </Text>
+                    <Text style={styles.bannerMain}>Registered Courses</Text>
+                </View>
+                <View style={styles.countBadge}>
+                    <Text style={styles.countNumber}>{String(cards.length)}</Text>
+                    <Text style={styles.countLabel}>Courses</Text>
+                </View>
+            </View>
+
+            {/* Content */}
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
+                    <Text style={styles.loadingText}>Loading your schedule...</Text>
+                </View>
+            ) : cards.length === 0 ? (
+                <View style={styles.center}>
+                    <MaterialCommunityIcons name="calendar-blank-outline" size={70} color="#cbd5e1" />
+                    <Text style={styles.emptyTitle}>No courses registered</Text>
+                    <Text style={styles.emptySubtitle}>
+                        Register in courses to see your schedule here.
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={cards}
+                    keyExtractor={(item) => item.courseId}
+                    renderItem={renderCard}
+                    contentContainerStyle={styles.list}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={() => load(true)}
+                            colors={['rgb(23, 42, 70)']}
+                        />
+                    }
+                />
+            )}
+        </View>
+    );
+};
+
+export default StudentSchedule;
+
+// ----------------------------------------------------------------
+// Styles
+// ----------------------------------------------------------------
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f8faff' },
+
+    header: {
+        backgroundColor: 'rgb(23, 42, 70)',
+        paddingTop: Platform.OS === 'ios' ? 55 : (StatusBar.currentHeight || 0) + 10,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        elevation: 10,
+    },
+    backBtn:     { padding: 4 },
+    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
+
+    banner: {
+        backgroundColor: 'rgb(23, 42, 70)',
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    bannerSub:  { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 },
+    bannerMain: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+
+    countBadge: {
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 16, paddingHorizontal: 18, paddingVertical: 10,
+        alignItems: 'center',
+    },
+    countNumber: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+    countLabel:  { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: '600' },
+
+    center:        { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 },
+    loadingText:   { color: '#94a3b8', fontSize: 14, marginTop: 10 },
+    emptyTitle:    { color: '#334155', fontSize: 18, fontWeight: 'bold' },
+    emptySubtitle: { color: '#94a3b8', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+
+    list: { padding: 16, gap: 14, paddingBottom: 40 },
+
+    card: {
+        backgroundColor: '#fff', borderRadius: 18,
+        flexDirection: 'row', overflow: 'hidden',
+        elevation: 3, shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.07, shadowRadius: 6,
+    },
+    colorBar:  { width: 5 },
+    cardInner: { flex: 1, padding: 16 },
+
+    cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
+    iconBox:     { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+
+    courseIdText: {
+        fontSize: 11, color: '#94a3b8',
+        fontWeight: '700', letterSpacing: 0.5, marginBottom: 3,
+    },
+    courseNameText: { fontSize: 15, fontWeight: 'bold', color: '#1e293b', lineHeight: 21 },
+
+    hoursBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
+    hoursText:  { fontSize: 12, fontWeight: '700' },
+
+    divider: { height: 1, backgroundColor: '#f1f5f9', marginBottom: 12 },
+
+    slotsContainer: { gap: 10 },
+
+    slotRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        backgroundColor: '#f8faff', borderRadius: 12, padding: 10,
+    },
+    dayBadge: {
+        width: 44, height: 44, borderRadius: 10,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    dayText: { color: 'white', fontSize: 11, fontWeight: 'bold' },
+
+    slotInfo: { flex: 1, gap: 4 },
+
+    typeBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        alignSelf: 'flex-start',
+        paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
+    },
+    typeText: { fontSize: 11, fontWeight: '700' },
+
+    timeText: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
+
+    roomRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+    roomText: { fontSize: 11, color: '#94a3b8' },
+
+    groupName: {
+        fontSize: 11, color: '#64748b', fontWeight: '600',
+        maxWidth: 70, textAlign: 'right',
+    },
+});
 // ===== C:\cs303 Project1\Software_Project\Mobile\app\teacherattendance.tsx =====
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -6239,13 +6595,14 @@ export default function RootLayout() {
         
     }, []);
 
-    return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="home" options={{ headerShown: false }} />
-            <Stack.Screen name="hometeacher" options={{ headerShown: false }} />
-        </Stack>
-    );
+   return (
+    <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="hometeacher" options={{ headerShown: false }} />
+        <Stack.Screen name="studentschedule" options={{ headerShown: false }} />
+    </Stack>
+);
 }
 // ===== C:\cs303 Project1\Software_Project\Mobile\expo-env.d.ts =====
 /// <reference types="expo/types" />
