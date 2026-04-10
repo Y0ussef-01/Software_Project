@@ -38,6 +38,7 @@ import GradesPage from "./pages/GradesPage/GradesPage.jsx";
 import AcademicRecordPage from "./pages/AcademicRecordPage/AcademicRecordPage.jsx";
 import FinalGradesPage from "./pages/AdminPage/FinalGrades/Finalgradespage.jsx";
 import BulkUploadStudentsPage from "./pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx";
+import SubjectSchedulesPage from "./pages/SubjectSchedulesPage/SubjectSchedulesPage.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -63,6 +64,7 @@ function App() {
               <Route path="/Academic" element={<AcademicRecordPage />} />
               <Route path="/appointments" element={<AppointmentsPage />} />
               <Route path="/register-course" element={<RegistrationPage />} />
+              <Route path="/manage-subjects" element={<SubjectSchedulesPage />} />
               <Route
                 path="/reset-password"
                 element={<ResetStudentPasswordPage />}
