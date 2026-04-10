@@ -77,6 +77,7 @@ export default function SubjectSchedulesPage() {
           <FormControl variant="outlined" sx={{ width: "100%", flexGrow: 1 }}>
             <Autocomplete
               multiple
+              disableCloseOnSelect
               options={Array.isArray(availableCourses) ? availableCourses : []}
               getOptionLabel={(option) => {
                 const displayCode = option.courseCode || option.courseId || option._id || "Code";
