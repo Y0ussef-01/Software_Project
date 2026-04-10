@@ -461,7 +461,7 @@ const uploadFinalGrades = async (req, res) => {
     if (!rows || rows.length === 0)
       return res.status(400).json({ message: 'File is empty' });
 
-    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id'];
+    const idPossibleNames = ['id', 'student_id', 'code', 'student id','كود الطالب'];
     const scoreColumns    = ['final', 'final_grade', 'total', 'score', 'final score', 'final grade'];
 
     const ONE_WEEK  = 7 * 24 * 60 * 60 * 1000;
@@ -631,8 +631,8 @@ const uploadStudentsExcel = async (req, res) => {
       return res.status(400).json({ message: 'File is empty' });
     }
 
-    const idPossibleNames = ['id', 'student_id', 'studentid', 'code', 'student id', 'كود', 'رقم الجلوس'];
-    const namePossibleNames = ['name', 'student_name', 'student name', 'الاسم', 'اسم الطالب'];
+    const idPossibleNames = ['id', 'student_id', 'code', 'student id', 'كود الطالب'];
+    const namePossibleNames = ['name', 'student_name', 'الاسم', 'اسم الطالب'];
     const passPossibleNames = ['password', 'pass', 'كلمة السر', 'الباسورد'];
 
     const bulkOps = [];
