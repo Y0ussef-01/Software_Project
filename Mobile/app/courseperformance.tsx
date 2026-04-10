@@ -15,6 +15,7 @@ const CoursePerformance = () => {
 
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedLang, setSelectedLang] = useState<'en' | 'ar'>('en');
 
     useFocusEffect(
         useCallback(() => {
@@ -191,7 +192,6 @@ const CoursePerformance = () => {
                         );
                     })}
 
-                    {/* Quizzes داخل Grades */}
                     {data.quizzes && data.quizzes.length > 0 && (
                         <>
                             <View style={styles.divider} />
@@ -215,6 +215,25 @@ const CoursePerformance = () => {
                     )}
                 </View>
 
+                {/* Language Selector */}
+                <View style={styles.langCard}>
+                    <Text style={styles.langTitle}>🌐 Analysis Language</Text>
+                    <View style={styles.langRow}>
+                        <TouchableOpacity
+                            style={[styles.langBtn, selectedLang === 'en' && styles.langBtnActive]}
+                            onPress={() => setSelectedLang('en')}
+                        >
+                            <Text style={[styles.langBtnText, selectedLang === 'en' && styles.langBtnTextActive]}>English</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.langBtn, selectedLang === 'ar' && styles.langBtnActive]}
+                            onPress={() => setSelectedLang('ar')}
+                        >
+                            <Text style={[styles.langBtnText, selectedLang === 'ar' && styles.langBtnTextActive]}>Arabic </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 {/* AI Analysis Button */}
                 <TouchableOpacity
                     style={styles.aiBtn}
@@ -225,6 +244,7 @@ const CoursePerformance = () => {
                             courseId,
                             courseName,
                             analyticsData: JSON.stringify(data),
+                            language: selectedLang,
                         }
                     })}
                 >
@@ -307,6 +327,21 @@ const styles = StyleSheet.create({
     gradeBarWrapper: { flex: 1 },
     gradeScore: { width: 60, fontSize: 13, fontWeight: 'bold', textAlign: 'right' },
     divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 12 },
+    langCard: {
+        backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 14,
+        borderRadius: 20, padding: 18, elevation: 3,
+        shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6,
+    },
+    langTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b', marginBottom: 12 },
+    langRow: { flexDirection: 'row', gap: 12 },
+    langBtn: {
+        flex: 1, paddingVertical: 12, borderRadius: 14,
+        borderWidth: 2, borderColor: '#e2e8f0',
+        alignItems: 'center', backgroundColor: '#f8faff',
+    },
+    langBtnActive: { borderColor: 'rgb(23, 42, 70)', backgroundColor: 'rgb(23, 42, 70)' },
+    langBtnText: { fontSize: 15, fontWeight: '600', color: '#64748b' },
+    langBtnTextActive: { color: '#fff' },
     aiBtn: {
         backgroundColor: 'rgb(23, 42, 70)', marginHorizontal: 16, marginTop: 4,
         borderRadius: 20, padding: 18, flexDirection: 'row',

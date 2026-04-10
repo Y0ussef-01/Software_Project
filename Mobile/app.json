@@ -9,8 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "6433f018-1d12-4bd2-b056-9153b833fc51"
+        "projectId": "7384e623-43aa-428c-a0cb-f6c5165104fd"
       }
     },
     "ios": {
@@ -26,7 +27,11 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.firstapp"
+      "package": "com.anonymous.firstapp",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -63,6 +68,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "shefoo123"
   }
 }

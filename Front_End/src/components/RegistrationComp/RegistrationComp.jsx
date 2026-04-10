@@ -24,6 +24,12 @@ import {
   DialogActions,
   CircularProgress,
   Tooltip,
+  Autocomplete,
+  TextField,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -36,6 +42,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; // الإضافة اللي كانت بتعمل الـ Crash
 
 import useRegistration from "../../hooks/Student/useRegistration";
 import { useLanguage } from "../../context/LanguageContext";
@@ -83,6 +90,12 @@ export default function RegistrationComp() {
     handleSwapRespond,
     sentSwapRequests,
     handleCancelSwapRequest,
+    selectedCoursesForGen,
+    setSelectedCoursesForGen,
+    generatedSchedules,
+    isGenerating,
+    handleGenerateSchedules,
+    handleConfirmSchedule,
   } = useRegistration();
 
   const { language } = useLanguage();
@@ -160,9 +173,9 @@ export default function RegistrationComp() {
 
     return [...registeredCourses].sort((a, b) => {
       const scheduleA =
-        a.appointment || a.course?.appointment || a.group?.appointment || {};
+          a.appointment || a.course?.appointment || a.group?.appointment || {};
       const scheduleB =
-        b.appointment || b.course?.appointment || b.group?.appointment || {};
+          b.appointment || b.course?.appointment || b.group?.appointment || {};
 
       const dayA = (scheduleA.day || "").toLowerCase();
       const dayB = (scheduleB.day || "").toLowerCase();
@@ -183,16 +196,16 @@ export default function RegistrationComp() {
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "50vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
+        <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "50vh",
+            }}
+        >
+          <CircularProgress />
+        </Box>
     );
   }
 
@@ -206,87 +219,87 @@ export default function RegistrationComp() {
     if (name) {
       if (groupCapacityMap[name] === undefined) {
         const enrolledCount = Array.isArray(g.enrolledStudents)
-          ? g.enrolledStudents.length
-          : 0;
+            ? g.enrolledStudents.length
+            : 0;
         const totalCap = g.capacity || 100;
         groupCapacityMap[name] = totalCap - enrolledCount;
       }
     }
   });
 
-  const uniqueGroups = Object.entries(groupCapacityMap).map(
-    ([name, capacity]) => ({ name, capacity }),
+  const uniqueGroups = (Array.isArray(Object.entries(groupCapacityMap)) ? Object.entries(groupCapacityMap) : []).map(
+      ([name, capacity]) => ({ name, capacity }),
   );
 
   const getGroupScheduleTooltip = (groupName, sourceGroups = rawGroups) => {
     const groupSchedules = sourceGroups.filter(
-      (g) => g.groupName === groupName || g.name === groupName,
+        (g) => g.groupName === groupName || g.name === groupName,
     );
 
     if (groupSchedules.length === 0) return "No schedule available.";
 
     return (
-      <Box sx={{ p: 1, minWidth: "150px" }}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            fontWeight: "bold",
-            mb: 1,
-            color: "#fff",
-            borderBottom: "1px solid rgba(255,255,255,0.2)",
-            pb: 0.5,
-          }}
-        >
-          Group {groupName} Schedule
-        </Typography>
-        {groupSchedules.map((scheduleItem, idx) => (
-          <Box
-            key={idx}
-            sx={{ mb: 1, display: "flex", flexDirection: "column", gap: 0.5 }}
+        <Box sx={{ p: 1, minWidth: "150px" }}>
+          <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: "bold",
+                mb: 1,
+                color: "#fff",
+                borderBottom: "1px solid rgba(255,255,255,0.2)",
+                pb: 0.5,
+              }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Chip
-                label={scheduleItem.type || "TBA"}
-                size="small"
-                sx={{
-                  height: "18px",
-                  fontSize: "0.65rem",
-                  fontWeight: "bold",
-                  bgcolor: "rgba(255,255,255,0.2)",
-                  color: "#fff",
-                }}
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  fontWeight: "bold",
-                  color: "#e2e8f0",
-                  textTransform: "capitalize",
-                }}
+            Group {groupName} Schedule
+          </Typography>
+          {(Array.isArray(groupSchedules) ? groupSchedules : []).map((scheduleItem, idx) => (
+              <Box
+                  key={idx}
+                  sx={{ mb: 1, display: "flex", flexDirection: "column", gap: 0.5 }}
               >
-                {scheduleItem.appointment?.day || "TBA"}
-              </Typography>
-            </Box>
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1, pl: 0.5 }}
-            >
-              <AccessTimeIcon sx={{ fontSize: 12, color: "#cbd5e1" }} />
-              <Typography variant="caption" sx={{ color: "#cbd5e1" }}>
-                {scheduleItem.appointment?.startTime || "TBA"} -{" "}
-                {scheduleItem.appointment?.endTime || "TBA"}
-              </Typography>
-            </Box>
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1, pl: 0.5 }}
-            >
-              <LocationOnIcon sx={{ fontSize: 12, color: "#cbd5e1" }} />
-              <Typography variant="caption" sx={{ color: "#cbd5e1" }}>
-                Room: {scheduleItem.Room || "TBA"}
-              </Typography>
-            </Box>
-          </Box>
-        ))}
-      </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Chip
+                      label={scheduleItem.type || "TBA"}
+                      size="small"
+                      sx={{
+                        height: "18px",
+                        fontSize: "0.65rem",
+                        fontWeight: "bold",
+                        bgcolor: "rgba(255,255,255,0.2)",
+                        color: "#fff",
+                      }}
+                  />
+                  <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#e2e8f0",
+                        textTransform: "capitalize",
+                      }}
+                  >
+                    {scheduleItem.appointment?.day || "TBA"}
+                  </Typography>
+                </Box>
+                <Box
+                    sx={{ display: "flex", alignItems: "center", gap: 1, pl: 0.5 }}
+                >
+                  <AccessTimeIcon sx={{ fontSize: 12, color: "#cbd5e1" }} />
+                  <Typography variant="caption" sx={{ color: "#cbd5e1" }}>
+                    {scheduleItem.appointment?.startTime || "TBA"} -{" "}
+                    {scheduleItem.appointment?.endTime || "TBA"}
+                  </Typography>
+                </Box>
+                <Box
+                    sx={{ display: "flex", alignItems: "center", gap: 1, pl: 0.5 }}
+                >
+                  <LocationOnIcon sx={{ fontSize: 12, color: "#cbd5e1" }} />
+                  <Typography variant="caption" sx={{ color: "#cbd5e1" }}>
+                    Room: {scheduleItem.Room || "TBA"}
+                  </Typography>
+                </Box>
+              </Box>
+          ))}
+        </Box>
     );
   };
 
@@ -298,1170 +311,1390 @@ export default function RegistrationComp() {
       if (name) {
         if (uGroupMap[name] === undefined) {
           const enrolledCount = Array.isArray(g.enrolledStudents)
-            ? g.enrolledStudents.length
-            : 0;
+              ? g.enrolledStudents.length
+              : 0;
           const totalCap = g.capacity || 100;
           uGroupMap[name] = totalCap - enrolledCount;
         }
       }
     });
-    updateGroupOptions = Object.entries(uGroupMap).map(([name, capacity]) => ({
+    updateGroupOptions = (Array.isArray(Object.entries(uGroupMap)) ? Object.entries(uGroupMap) : []).map(([name, capacity]) => ({
       name,
       capacity,
     }));
   }
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        maxWidth: "1200px",
-        margin: "0 auto",
-        gap: 4,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: "24px",
-          borderLeft: "8px solid #152b48",
-          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1.5 }}>
-          <AccessTimeIcon sx={{ color: "#152b48", fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 800, color: "#152b48" }}>
-            {t.hoursTracker}
-          </Typography>
-        </Box>
-        <Typography variant="body1" sx={{ color: "text.secondary", mb: 3 }}>
-          {t.youHaveReg} <strong>{registeredHours}</strong> {t.hoursReg}
-          <strong>{remainingHours}</strong> {t.moreHoursOut}
-          <strong>{maxHours}</strong> {t.totalAllowed}
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ width: "100%", mr: 1 }}>
-            <LinearProgress
-              variant="determinate"
-              value={progressPercentage > 100 ? 100 : progressPercentage}
-              sx={{
-                height: 12,
-                borderRadius: 5,
-                backgroundColor: "#e2e8f0",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor:
-                    progressPercentage > 90 ? "#e11d48" : "#152b48",
-                  transition:
-                    "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important",
-                },
-              }}
-            />
-          </Box>
-          <Box sx={{ minWidth: 50 }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              fontWeight="bold"
-            >
-              {registeredHours}/{maxHours}
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: "24px",
-          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 800, mb: 3, color: "#152b48" }}
-        >
-          {t.regNewCourse}
-        </Typography>
-        <Box
+      <Box
           sx={{
+            width: "100%",
+            maxWidth: "1200px",
+            margin: "0 auto",
+            gap: 4,
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            alignItems: "center",
+            flexDirection: "column",
           }}
-        >
-          <FormControl
-            variant="outlined"
-            sx={{ width: { xs: "100%", md: "450px" } }}
-          >
-            <InputLabel shrink={true}>{t.selectCourse}</InputLabel>
-            <Select
-              value={selectedCourseId}
-              onChange={(e) => {
-                setSelectedCourseId(e.target.value);
-                setSelectedGroup("");
-              }}
-              label={t.selectCourse}
-              displayEmpty
-              sx={{ borderRadius: "12px", height: "56px" }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    mt: 0.5,
-                    borderRadius: "12px",
-                    boxShadow: "0px 8px 24px rgba(21, 43, 72, 0.15)",
-                    maxHeight: 250,
-                    "& .MuiList-root": { padding: 0 },
-                  },
-                },
-              }}
-            >
-              <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>{t.chooseCourse}</em>
-              </MenuItem>
-              {availableCourses.map((course) => {
-                const cId = course._id || course.courseId;
-                const displayCode =
-                  course.courseCode || course.courseId || course._id || "Code";
-                const displayName = course.courseName || course.name || "Name";
-                return (
-                  <MenuItem
-                    key={cId}
-                    value={cId}
-                    sx={{
-                      px: 2,
-                      py: 1.5,
-                      borderBottom: "1px solid #f1f5f9",
-                      "&:last-child": { borderBottom: "none" },
-                      "&:hover": { backgroundColor: "#f8fafc" },
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 500 }}>
-                      <strong>{displayCode}</strong> - {displayName}
-                    </Typography>
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-
-          <FormControl
-            variant="outlined"
-            disabled={!selectedCourseId}
-            sx={{ width: { xs: "100%", md: "250px" } }}
-          >
-            <InputLabel shrink={true} id="select-group-label">
-              {t.selectGroup}
-            </InputLabel>
-            <Select
-              labelId="select-group-label"
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(e.target.value)}
-              label={t.selectGroup}
-              displayEmpty
-              sx={{ borderRadius: "12px", height: "56px" }}
-              renderValue={(selected) =>
-                selected ? selected : <em>{t.chooseGroup}</em>
-              }
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    mt: 0.5,
-                    borderRadius: "12px",
-                    boxShadow: "0px 8px 24px rgba(21, 43, 72, 0.15)",
-                    maxHeight: 250,
-                    "& .MuiList-root": { padding: 0 },
-                  },
-                },
-              }}
-            >
-              <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>{t.chooseGroup}</em>
-              </MenuItem>
-              {uniqueGroups.map((grp, index) => {
-                const isFull = grp.capacity <= 0;
-
-                return (
-                  <MenuItem
-                    key={index}
-                    value={grp.name}
-                    disabled={isFull}
-                    sx={{
-                      p: 0,
-                      "& .group-row": {
-                        borderBottom:
-                          index === uniqueGroups.length - 1
-                            ? "none"
-                            : "1px solid #f1f5f9",
-                      },
-                    }}
-                  >
-                    <Tooltip
-                      title={getGroupScheduleTooltip(grp.name)}
-                      placement="right"
-                      arrow
-                      componentsProps={{
-                        tooltip: {
-                          sx: {
-                            bgcolor: "rgba(21, 43, 72, 0.95)",
-                            boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
-                            borderRadius: "8px",
-                            p: 1,
-                          },
-                        },
-                        arrow: {
-                          sx: { color: "rgba(21, 43, 72, 0.95)" },
-                        },
-                      }}
-                    >
-                      <Box
-                        className="group-row"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          width: "100%",
-                          px: 2,
-                          py: 1.5,
-                          "&:hover": { backgroundColor: "#f8fafc" },
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          sx={{ flexGrow: 1, fontWeight: 600 }}
-                        >
-                          {grp.name}
-                        </Typography>
-
-                        <Box sx={{ minWidth: "65px", textAlign: "right" }}>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: isFull ? "error.main" : "text.secondary",
-                              bgcolor: isFull ? "#ffe4e6" : "#f1f5f9",
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: "6px",
-                              fontWeight: "bold",
-                              display: "inline-block",
-                              width: "100%",
-                              textAlign: "center",
-                            }}
-                          >
-                            {isFull ? "Full" : `Cap: ${grp.capacity}`}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Tooltip>
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            disabled={
-              !selectedCourseId ||
-              !selectedGroup ||
-              remainingHours <= 0 ||
-              isActionLoading
-            }
-            onClick={handleRegister}
-            startIcon={
-              isActionLoading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <AddCircleOutlineIcon />
-              )
-            }
-            sx={{
-              height: "56px",
-              px: 4,
-              borderRadius: "12px",
-              backgroundColor: "#152b48",
-              fontWeight: "bold",
-              fontSize: "0.95rem",
-              width: { xs: "100%", md: "auto" },
-              "&:hover": { backgroundColor: "#0f1e33" },
-            }}
-          >
-            {isActionLoading ? t.registering : t.register}
-          </Button>
-        </Box>
-      </Paper>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: "24px",
-          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-          overflow: "hidden",
-        }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
-          <MenuBookIcon sx={{ color: "#152b48", fontSize: 30 }} />
-          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            {t.mySchedule}
-          </Typography>
-        </Box>
-
-        {sortedRegisteredCourses.length === 0 ? (
-          <Box
+        <Paper
+            elevation={0}
             sx={{
-              textAlign: "center",
-              py: 5,
-              bgcolor: "#f8fafc",
-              borderRadius: "16px",
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              borderLeft: "8px solid #152b48",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
             }}
-          >
-            <Typography variant="subtitle1" color="text.secondary">
-              {t.noCoursesReg}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1.5 }}>
+            <AccessTimeIcon sx={{ color: "#152b48", fontSize: 30 }} />
+            <Typography variant="h5" sx={{ fontWeight: 800, color: "#152b48" }}>
+              {t.hoursTracker}
             </Typography>
           </Box>
-        ) : (
-          <TableContainer
-            sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}
+          <Typography variant="body1" sx={{ color: "text.secondary", mb: 3 }}>
+            {t.youHaveReg} <strong>{registeredHours}</strong> {t.hoursReg}
+            <strong>{remainingHours}</strong> {t.moreHoursOut}
+            <strong>{maxHours}</strong> {t.totalAllowed}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box sx={{ width: "100%", mr: 1 }}>
+              <LinearProgress
+                  variant="determinate"
+                  value={progressPercentage > 100 ? 100 : progressPercentage}
+                  sx={{
+                    height: 12,
+                    borderRadius: 5,
+                    backgroundColor: "#e2e8f0",
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor:
+                          progressPercentage > 90 ? "#e11d48" : "#152b48",
+                      transition:
+                          "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important",
+                    },
+                  }}
+              />
+            </Box>
+            <Box sx={{ minWidth: 50 }}>
+              <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight="bold"
+              >
+                {registeredHours}/{maxHours}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+
+        <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+            }}
+        >
+          <Typography
+              variant="h6"
+              sx={{ fontWeight: 800, mb: 3, color: "#152b48" }}
           >
-            <Table sx={{ minWidth: 800 }}>
-              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    {t.courseInfo}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    {t.schedule}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
-                    {t.locationType}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ fontWeight: "bold", color: "#152b48" }}
-                  >
-                    {t.hours}
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}
-                  >
-                    {t.actions}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedRegisteredCourses.map((row, index) => {
-                  const courseObj = row.course || row;
-                  const groupObj = row.group || row;
-
-                  const baseCourseCode =
-                    typeof row.course === "string"
-                      ? row.course
-                      : row.courseId ||
-                        courseObj.courseId ||
-                        courseObj._id ||
-                        "N/A";
-
-                  const matchedCourse = availableCourses.find(
-                    (c) =>
-                      c._id === baseCourseCode || c.courseId === baseCourseCode,
+            {t.regNewCourse}
+          </Typography>
+          <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: 2,
+                alignItems: "center",
+              }}
+          >
+            <FormControl
+                variant="outlined"
+                sx={{ width: { xs: "100%", md: "450px" } }}
+            >
+              <InputLabel shrink={true}>{t.selectCourse}</InputLabel>
+              <Select
+                  value={selectedCourseId}
+                  onChange={(e) => {
+                    setSelectedCourseId(e.target.value);
+                    setSelectedGroup("");
+                  }}
+                  label={t.selectCourse}
+                  displayEmpty
+                  sx={{ borderRadius: "12px", height: "56px" }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        mt: 0.5,
+                        borderRadius: "12px",
+                        boxShadow: "0px 8px 24px rgba(21, 43, 72, 0.15)",
+                        maxHeight: 250,
+                        "& .MuiList-root": { padding: 0 },
+                      },
+                    },
+                  }}
+              >
+                <MenuItem disabled value="" sx={{ display: "none" }}>
+                  <em>{t.chooseCourse}</em>
+                </MenuItem>
+                {(Array.isArray(availableCourses) ? availableCourses : []).map((course) => {
+                  const cId = course._id || course.courseId;
+                  const displayCode =
+                      course.courseCode || course.courseId || course._id || "Code";
+                  const displayName = course.courseName || course.name || "Name";
+                  return (
+                      <MenuItem
+                          key={cId}
+                          value={cId}
+                          sx={{
+                            px: 2,
+                            py: 1.5,
+                            borderBottom: "1px solid #f1f5f9",
+                            "&:last-child": { borderBottom: "none" },
+                            "&:hover": { backgroundColor: "#f8fafc" },
+                          }}
+                      >
+                        <Typography sx={{ fontWeight: 500 }}>
+                          <strong>{displayCode}</strong> - {displayName}
+                        </Typography>
+                      </MenuItem>
                   );
-                  const displayName = matchedCourse
-                    ? matchedCourse.courseName || matchedCourse.name
-                    : courseObj.courseName || courseObj.name || "N/A";
+                })}
+              </Select>
+            </FormControl>
 
-                  const dropId = baseCourseCode;
-
-                  let displayGroup = "N/A";
-                  if (typeof row.groupName === "string")
-                    displayGroup = row.groupName;
-                  else if (typeof groupObj === "string")
-                    displayGroup = groupObj;
-                  else if (groupObj.groupName)
-                    displayGroup = groupObj.groupName;
-                  else if (groupObj.name) displayGroup = groupObj.name;
-
-                  const hours = courseObj.hours || row.hours || 3;
-
-                  const schedule =
-                    row.appointment ||
-                    courseObj.appointment ||
-                    groupObj.appointment;
+            <FormControl
+                variant="outlined"
+                disabled={!selectedCourseId}
+                sx={{ width: { xs: "100%", md: "250px" } }}
+            >
+              <InputLabel shrink={true} id="select-group-label">
+                {t.selectGroup}
+              </InputLabel>
+              <Select
+                  labelId="select-group-label"
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  label={t.selectGroup}
+                  displayEmpty
+                  sx={{ borderRadius: "12px", height: "56px" }}
+                  renderValue={(selected) =>
+                      selected ? selected : <em>{t.chooseGroup}</em>
+                  }
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        mt: 0.5,
+                        borderRadius: "12px",
+                        boxShadow: "0px 8px 24px rgba(21, 43, 72, 0.15)",
+                        maxHeight: 250,
+                        "& .MuiList-root": { padding: 0 },
+                      },
+                    },
+                  }}
+              >
+                <MenuItem disabled value="" sx={{ display: "none" }}>
+                  <em>{t.chooseGroup}</em>
+                </MenuItem>
+                {(Array.isArray(uniqueGroups) ? uniqueGroups : []).map((grp, index) => {
+                  const isFull = grp.capacity <= 0;
 
                   return (
-                    <TableRow
-                      key={index}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                        "&:hover": { backgroundColor: "#f1f5f9" },
-                        animation: "fadeInRow 0.5s ease-in-out",
-                      }}
-                    >
-                      <TableCell>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 800, color: "#152b48" }}
-                        >
-                          {baseCourseCode}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ mb: 1 }}
-                        >
-                          {displayName}
-                        </Typography>
-                        <Chip
-                          label={`Grp: ${displayGroup}`}
-                          size="small"
+                      <MenuItem
+                          key={index}
+                          value={grp.name}
+                          disabled={isFull}
                           sx={{
-                            fontWeight: "bold",
-                            bgcolor: "#e0f2fe",
-                            color: "#0284c7",
-                            fontSize: "0.75rem",
+                            p: 0,
+                            "& .group-row": {
+                              borderBottom:
+                                  index === uniqueGroups.length - 1
+                                      ? "none"
+                                      : "1px solid #f1f5f9",
+                            },
                           }}
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        {schedule ? (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 0.5,
+                      >
+                        <Tooltip
+                            title={getGroupScheduleTooltip(grp.name)}
+                            placement="right"
+                            arrow
+                            componentsProps={{
+                              tooltip: {
+                                sx: {
+                                  bgcolor: "rgba(21, 43, 72, 0.95)",
+                                  boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+                                  borderRadius: "8px",
+                                  p: 1,
+                                },
+                              },
+                              arrow: {
+                                sx: { color: "rgba(21, 43, 72, 0.95)" },
+                              },
                             }}
-                          >
-                            <Box
+                        >
+                          <Box
+                              className="group-row"
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                width: "100%",
+                                px: 2,
+                                py: 1.5,
+                                "&:hover": { backgroundColor: "#f8fafc" },
                               }}
+                          >
+                            <Typography
+                                variant="body1"
+                                sx={{ flexGrow: 1, fontWeight: 600 }}
                             >
-                              <CalendarTodayIcon
-                                sx={{ fontSize: 16, color: "text.secondary" }}
-                              />
+                              {grp.name}
+                            </Typography>
+
+                            <Box sx={{ minWidth: "65px", textAlign: "right" }}>
                               <Typography
-                                variant="body2"
-                                fontWeight="bold"
-                                sx={{ textTransform: "capitalize" }}
+                                  variant="caption"
+                                  sx={{
+                                    color: isFull ? "error.main" : "text.secondary",
+                                    bgcolor: isFull ? "#ffe4e6" : "#f1f5f9",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    borderRadius: "6px",
+                                    fontWeight: "bold",
+                                    display: "inline-block",
+                                    width: "100%",
+                                    textAlign: "center",
+                                  }}
                               >
-                                {schedule.day || "TBA"}
+                                {isFull ? "Full" : `Cap: ${grp.capacity}`}
                               </Typography>
                             </Box>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ ml: 3 }}
-                            >
-                              {schedule.startTime || "TBA"} -{" "}
-                              {schedule.endTime || "TBA"}
-                            </Typography>
                           </Box>
-                        ) : (
-                          <Typography variant="caption" color="text.disabled">
-                            TBA
-                          </Typography>
-                        )}
-                      </TableCell>
-
-                      <TableCell>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 0.5,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <LocationOnIcon
-                              sx={{ fontSize: 16, color: "error.light" }}
-                            />
-                            <Typography variant="body2" fontWeight="bold">
-                              {row.Room ||
-                                courseObj.Room ||
-                                groupObj.Room ||
-                                "TBA"}
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              ml: 3,
-                              color: "primary.main",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {row.type ||
-                              courseObj.type ||
-                              groupObj.type ||
-                              "Lecture"}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: "bold",
-                            color: "#152b48",
-                            bgcolor: "#f1f5f9",
-                            py: 0.5,
-                            borderRadius: "8px",
-                          }}
-                        >
-                          {hours} Hrs
-                        </Typography>
-                      </TableCell>
-
-                      <TableCell align="right" sx={{ pr: 3 }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 1,
-                          }}
-                        >
-                          <IconButton
-                            onClick={() =>
-                              handleOpenUpdateDialog({
-                                courseId: baseCourseCode,
-                                courseName: displayName,
-                                currentGroup: displayGroup,
-                                availableGroupsData:
-                                  matchedCourse?.groups ||
-                                  courseObj?.groups ||
-                                  [],
-                              })
-                            }
-                            disabled={isActionLoading}
-                            sx={{
-                              bgcolor: "#ffffff",
-                              color: "#0284c7",
-                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                              width: 40,
-                              height: 40,
-                              transition: "all 0.2s ease-in-out",
-                              "&:hover": {
-                                bgcolor: "#e0f2fe",
-                                transform: "scale(1.05)",
-                              },
-                            }}
-                          >
-                            <EditOutlinedIcon fontSize="small" />
-                          </IconButton>
-
-                          <IconButton
-                            onClick={() =>
-                              handleOpenSwapDialog({
-                                courseId: baseCourseCode,
-                                courseName: displayName,
-                                currentGroup: displayGroup,
-                                availableGroupsData:
-                                  matchedCourse?.groups ||
-                                  courseObj?.groups ||
-                                  [],
-                              })
-                            }
-                            disabled={isActionLoading}
-                            sx={{
-                              bgcolor: "#ffffff",
-                              color: "#1d4ed8",
-                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                              width: 40,
-                              height: 40,
-                              transition: "all 0.2s ease-in-out",
-                              "&:hover": {
-                                bgcolor: "#dbeafe",
-                                transform: "scale(1.05)",
-                              },
-                            }}
-                          >
-                            <SwapHorizIcon fontSize="small" />
-                          </IconButton>
-
-                          <IconButton
-                            onClick={() =>
-                              handleOpenDeleteDialog({
-                                dropId,
-                                courseName: displayName,
-                              })
-                            }
-                            disabled={isActionLoading}
-                            sx={{
-                              bgcolor: "#ffffff",
-                              color: "#e11d48",
-                              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                              width: 40,
-                              height: 40,
-                              transition: "all 0.2s ease-in-out",
-                              "&:hover": {
-                                bgcolor: "#ffe4e6",
-                                transform: "scale(1.05)",
-                              },
-                            }}
-                          >
-                            <DeleteOutlineIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
+                        </Tooltip>
+                      </MenuItem>
                   );
                 })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Paper>
+              </Select>
+            </FormControl>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        PaperProps={{
-          sx: {
-            borderRadius: "20px",
-            p: 1,
-            minWidth: { xs: "300px", sm: "450px" },
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "error.main",
-            fontWeight: "900",
-            pb: 1,
-          }}
-        >
-          <WarningRoundedIcon fontSize="large" /> {t.dropCourse}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText
-            sx={{ fontSize: "1.1rem", color: "text.primary", fontWeight: 500 }}
-          >
-            {t.dropConfirm1}{" "}
-            <strong>{courseToDelete?.courseName}</strong>?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            disabled={isActionLoading}
-            sx={{
-              color: "text.secondary",
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            {t.cancel}
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            disabled={isActionLoading}
-            variant="contained"
-            color="error"
-            disableElevation
-            sx={{
-              borderRadius: "10px",
-              fontWeight: "bold",
-              px: 3,
-              textTransform: "none",
-              "&:hover": { backgroundColor: "#be123c" },
-            }}
-          >
-            {isActionLoading ? t.dropping : t.yesDrop}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={updateDialogOpen}
-        onClose={handleCloseUpdateDialog}
-        PaperProps={{
-          sx: {
-            borderRadius: "20px",
-            p: 1,
-            minWidth: { xs: "300px", sm: "450px" },
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "#152b48",
-            fontWeight: "900",
-            pb: 1,
-          }}
-        >
-          <SyncIcon fontSize="large" /> {t.switchGroup}
-        </DialogTitle>
-        <DialogContent sx={{ pb: 1 }}>
-          <DialogContentText
-            sx={{
-              fontSize: "1rem",
-              color: "#152b48",
-              fontWeight: 500,
-              mb: 3,
-            }}
-          >
-            {t.selectNewGroup} <strong>{courseToUpdate?.courseName}</strong>
-            .
-            <br />
-            <Typography variant="caption" color="text.secondary">
-              {t.currentGroup} {courseToUpdate?.currentGroup}
-            </Typography>
-          </DialogContentText>
-
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink={true} id="switch-group-label">
-              {t.newGroup}
-            </InputLabel>
-            <Select
-              labelId="switch-group-label"
-              value={newSelectedGroup}
-              onChange={(e) => setNewSelectedGroup(e.target.value)}
-              displayEmpty
-              label={t.newGroup}
-              sx={{ borderRadius: "12px" }}
-              renderValue={(selected) =>
-                selected ? selected : <em>{t.chooseNewGroup}</em>
-              }
-            >
-              <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>{t.chooseNewGroup}</em>
-              </MenuItem>
-              {updateGroupOptions.map((grp, index) => {
-                const isFull = grp.capacity <= 0;
-                const isCurrent = grp.name === courseToUpdate?.currentGroup;
-
-                return (
-                  <MenuItem
-                    key={index}
-                    value={grp.name}
-                    disabled={isFull || isCurrent}
-                    sx={{
-                      p: 0,
-                      "& .group-row": {
-                        borderBottom:
-                          index === updateGroupOptions.length - 1
-                            ? "none"
-                            : "1px solid #f1f5f9",
-                      },
-                    }}
-                  >
-                    <Tooltip
-                      title={getGroupScheduleTooltip(
-                        grp.name,
-                        courseToUpdate?.availableGroupsData,
-                      )}
-                      placement="right"
-                      arrow
-                      componentsProps={{
-                        tooltip: {
-                          sx: {
-                            bgcolor: "rgba(21, 43, 72, 0.95)",
-                            borderRadius: "8px",
-                            p: 1,
-                          },
-                        },
-                        arrow: { sx: { color: "rgba(21, 43, 72, 0.95)" } },
-                      }}
-                    >
-                      <Box
-                        className="group-row"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          width: "100%",
-                          px: 2,
-                          py: 1.5,
-                          "&:hover": { backgroundColor: "#f8fafc" },
-                        }}
-                      >
-                        <Typography
-                          variant="body1"
-                          sx={{ flexGrow: 1, fontWeight: 600 }}
-                        >
-                          {grp.name} {isCurrent && "(Current)"}
-                        </Typography>
-                        <Box sx={{ minWidth: "65px", textAlign: "right" }}>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: isFull ? "error.main" : "text.secondary",
-                              bgcolor: isFull ? "#ffe4e6" : "#f1f5f9",
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: "6px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {isFull ? "Full" : `Cap: ${grp.capacity}`}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Tooltip>
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 1 }}>
-          <Button
-            onClick={handleCloseUpdateDialog}
-            disabled={isActionLoading}
-            sx={{
-              color: "text.secondary",
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            {t.cancel}
-          </Button>
-          <Button
-            onClick={handleConfirmUpdate}
-            disabled={isActionLoading || !newSelectedGroup}
-            variant="contained"
-            disableElevation
-            sx={{
-              borderRadius: "10px",
-              fontWeight: "bold",
-              px: 3,
-              backgroundColor: "#152b48",
-              textTransform: "none",
-              "&:hover": { backgroundColor: "#152b48" },
-            }}
-          >
-            {isActionLoading ? t.updating : t.updateGroup}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* INCOMING PENDING SWAPS UI */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: "24px",
-          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-          overflow: "hidden",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
-          <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
-          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            {t.incomingSwaps} ({pendingSwapRequests?.length || 0})
-          </Typography>
-        </Box>
-
-        {pendingSwapRequests?.length === 0 || !pendingSwapRequests ? (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 5,
-              bgcolor: "#f8fafc",
-              borderRadius: "16px",
-            }}
-          >
-            <Typography variant="subtitle1" color="text.secondary">
-              {t.noIncomingSwaps}
-            </Typography>
-          </Box>
-        ) : (
-          <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-            <Table sx={{ minWidth: 600 }}>
-              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.reqBy}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {pendingSwapRequests.map((req) => (
-                  <TableRow key={req._id}>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <img 
-                          src={req.sender?.profileImg || "/default.jpg"} 
-                          alt="avatar" 
-                          style={{ width: 32, height: 32, borderRadius: "50%" }}
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {req.sender?.name || "Unknown"}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>{req.courseId?.name || "Unknown"} ({req.courseId?._id})</TableCell>
-                    <TableCell>
-                      <Chip label={req.senderGroupName} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          disabled={isActionLoading}
-                          onClick={() => handleSwapRespond(req._id, 'Rejected')}
-                          startIcon={<CancelOutlinedIcon />}
-                          sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
-                        >
-                          {t.reject}
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          disabled={isActionLoading}
-                          onClick={() => handleSwapRespond(req._id, 'Accepted')}
-                          startIcon={<CheckCircleOutlineIcon />}
-                          sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
-                        >
-                          {t.acceptSwap}
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Paper>
-
-      {/* SENT SWAP REQUESTS UI */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: "24px",
-          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
-          overflow: "hidden",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
-          <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
-          <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-            {t.sentSwapReqs} ({sentSwapRequests?.length || 0})
-          </Typography>
-        </Box>
-
-        {sentSwapRequests?.length === 0 || !sentSwapRequests ? (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 5,
-              bgcolor: "#f8fafc",
-              borderRadius: "16px",
-            }}
-          >
-            <Typography variant="subtitle1" color="text.secondary">
-              {t.noSentSwaps}
-            </Typography>
-          </Box>
-        ) : (
-          <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-            <Table sx={{ minWidth: 600 }}>
-              <TableHead sx={{ backgroundColor: "#f8fafc" }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.status}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sentSwapRequests.map((req) => (
-                  <TableRow key={req._id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {req.courseId?.name || "Unknown"} ({req.courseId?._id || req.courseId || "Unknown"})
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={req.senderGroupName} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
-                    </TableCell>
-                    <TableCell>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight="bold" 
-                        color={req.status === 'Pending' ? "warning.main" : req.status === 'Accepted' ? "success.main" : "error.main"}
-                      >
-                        {req.status}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      {req.status === 'Pending' && (
-                        <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            disabled={isActionLoading}
-                            onClick={() => handleCancelSwapRequest(req.relatedIds)}
-                            startIcon={<DeleteOutlineIcon />}
-                            sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
-                          >
-                            {t.cancelReq}
-                          </Button>
-                        </Box>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Paper>
-
-      {/* SWAP DIALOG */}
-      <Dialog
-        open={swapDialogOpen}
-        onClose={handleCloseSwapDialog}
-        PaperProps={{
-          sx: {
-            borderRadius: "20px",
-            p: 1,
-            minWidth: { xs: "300px", sm: "450px" },
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: "#152b48",
-            fontWeight: "900",
-            pb: 1,
-          }}
-        >
-          <SwapHorizIcon fontSize="large" /> {t.broadSwap}
-        </DialogTitle>
-        <DialogContent sx={{ pb: 1 }}>
-          <DialogContentText
-            sx={{
-              fontSize: "1rem",
-              color: "#152b48",
-              fontWeight: 500,
-              mb: 3,
-            }}
-          >
-            {t.broadSwapReq} <strong>{courseToSwap?.courseName}</strong>.
-            <br />
-            <Typography variant="caption" color="text.secondary">
-              {t.currentGroup} {courseToSwap?.currentGroup}
-            </Typography>
-          </DialogContentText>
-
-          <FormControl fullWidth variant="outlined">
-            <InputLabel shrink={true} id="swap-group-label">
-              {t.targetGroup}
-            </InputLabel>
-            <Select
-              labelId="swap-group-label"
-              value={targetGroupSwap}
-              onChange={(e) => setTargetGroupSwap(e.target.value)}
-              displayEmpty
-              label={t.targetGroup}
-              sx={{ borderRadius: "12px" }}
-              renderValue={(selected) =>
-                selected ? selected : <em>{t.chooseNewGroup}</em>
-              }
-            >
-              <MenuItem disabled value="" sx={{ display: "none" }}>
-                <em>{t.chooseNewGroup}</em>
-              </MenuItem>
-              {(() => {
-                const sGroupMap = {};
-                if (courseToSwap) {
-                  courseToSwap.availableGroupsData.forEach((g) => {
-                    const name = g.groupName || g.name || (typeof g === "string" ? g : "");
-                    if (name) {
-                      sGroupMap[name] = true;
-                    }
-                  });
+            <Button
+                variant="contained"
+                disabled={
+                    !selectedCourseId ||
+                    !selectedGroup ||
+                    remainingHours <= 0 ||
+                    isActionLoading
                 }
-                const options = Object.keys(sGroupMap);
+                onClick={handleRegister}
+                startIcon={
+                  isActionLoading ? (
+                      <CircularProgress size={20} color="inherit" />
+                  ) : (
+                      <AddCircleOutlineIcon />
+                  )
+                }
+                sx={{
+                  height: "56px",
+                  px: 4,
+                  borderRadius: "12px",
+                  backgroundColor: "#152b48",
+                  fontWeight: "bold",
+                  fontSize: "0.95rem",
+                  width: { xs: "100%", md: "auto" },
+                  "&:hover": { backgroundColor: "#0f1e33" },
+                }}
+            >
+              {isActionLoading ? t.registering : t.register}
+            </Button>
+          </Box>
+        </Paper>
 
-                return options.map((grpName, index) => {
-                  const isCurrent = grpName === courseToSwap?.currentGroup;
-                  return (
-                    <MenuItem
-                      key={index}
-                      value={grpName}
-                      disabled={isCurrent}
-                      sx={{ p: 2, borderBottom: "1px solid #f1f5f9" }}
+        {/* NEW SECTION: Generate Ready-Made Schedules */}
+        <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+            }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+            <CalendarTodayIcon sx={{ color: "#152b48", fontSize: 30 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+              {t.generateReadySchedules}
+            </Typography>
+          </Box>
+          <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: 2,
+                alignItems: "center",
+              }}
+          >
+            <FormControl variant="outlined" sx={{ width: "100%", flexGrow: 1 }}>
+              <Autocomplete
+                  multiple
+                  options={Array.isArray(availableCourses) ? availableCourses : []}
+                  getOptionLabel={(option) => {
+                    const displayCode = option.courseCode || option.courseId || option._id || "Code";
+                    const displayName = option.courseName || option.name || "Name";
+                    return `${displayCode} - ${displayName}`;
+                  }}
+                  value={(Array.isArray(availableCourses) ? availableCourses : []).filter(c => 
+                      (Array.isArray(selectedCoursesForGen) ? selectedCoursesForGen : []).includes(c._id || c.courseId)
+                  )}
+                  onChange={(event, newValue) => {
+                    setSelectedCoursesForGen(
+                        (Array.isArray(newValue) ? newValue : []).map((c) => c._id || c.courseId)
+                    );
+                  }}
+                  renderInput={(params) => (
+                      <TextField
+                          {...params}
+                          variant="outlined"
+                          label={t.selectCoursesForGen}
+                          placeholder={t.chooseCourse}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: "12px",
+                            },
+                          }}
+                      />
+                  )}
+                  renderTags={(value, getTagProps) =>
+                    (Array.isArray(value) ? value : []).map((option, index) => {
+                      const { key, ...tagProps } = getTagProps({ index });
+                      return (
+                        <Chip
+                          key={key}
+                          variant="outlined"
+                          label={option.courseCode || option.courseId || option._id}
+                          {...tagProps}
+                        />
+                      );
+                    })
+                  }
+              />
+            </FormControl>
+
+            <Button
+                variant="contained"
+                disabled={
+                    !Array.isArray(selectedCoursesForGen) ||
+                    selectedCoursesForGen.length === 0 ||
+                    isGenerating ||
+                    isActionLoading
+                }
+                onClick={handleGenerateSchedules}
+                startIcon={
+                  isGenerating ? (
+                      <CircularProgress size={20} color="inherit" />
+                  ) : (
+                      <SyncIcon />
+                  )
+                }
+                sx={{
+                  height: "56px",
+                  px: 4,
+                  borderRadius: "12px",
+                  backgroundColor: "#152b48",
+                  fontWeight: "bold",
+                  fontSize: "0.95rem",
+                  width: { xs: "100%", md: "auto" },
+                  "&:hover": { backgroundColor: "#0f1e33" },
+                }}
+            >
+              {isGenerating ? t.generatingSchedules : t.generateSchedulesBtn}
+            </Button>
+          </Box>
+
+          {Array.isArray(generatedSchedules) && generatedSchedules.length > 0 && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "#152b48", mb: 2 }}>
+                {t.validSchedulesFound}: {generatedSchedules.length}
+              </Typography>
+              <Grid container spacing={3}>
+                {(Array.isArray(generatedSchedules) ? generatedSchedules : []).map((schedule, sIdx) => (
+                  <Grid item xs={12} md={6} lg={4} key={sIdx}>
+                    <Card
+                        elevation={0}
+                        sx={{
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "16px",
+                          p: 2,
+                          display: "flex",
+                          flexDirection: "column",
+                          height: "100%",
+                        }}
                     >
-                      <Typography sx={{ fontWeight: 600 }}>{grpName} {isCurrent && "(Current)"}</Typography>
-                    </MenuItem>
-                  );
-                });
-              })()}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 1 }}>
-          <Button
-            onClick={handleCloseSwapDialog}
-            disabled={isActionLoading}
-            sx={{
-              color: "text.secondary",
-              fontWeight: "bold",
-              textTransform: "none",
-            }}
-          >
-            {t.cancel}
-          </Button>
-          <Button
-            onClick={handleConfirmSwap}
-            disabled={isActionLoading || !targetGroupSwap}
-            variant="contained"
-            disableElevation
-            sx={{
-              borderRadius: "10px",
-              fontWeight: "bold",
-              px: 3,
-              backgroundColor: "#152b48",
-              textTransform: "none",
-              "&:hover": { backgroundColor: "#152b48" },
-            }}
-          >
-            {isActionLoading ? t.sending : t.reqSwap}
-          </Button>
-        </DialogActions>
-      </Dialog>
+                      <CardContent sx={{ flexGrow: 1, p: 1, mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1d4ed8", mb: 2 }}>
+                          {t.schedule} #{sIdx + 1}
+                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          {(Array.isArray(schedule) ? schedule : []).map((item, iIdx) => {
+                            const courseObj = (Array.isArray(availableCourses) ? availableCourses : []).find(c => c._id === item.courseId || c.courseId === item.courseId);
+                            const displayName = courseObj?.courseName || courseObj?.name || "";
+                            const courseAppointments = Array.isArray(item?.appointments) 
+                              ? item.appointments 
+                              : Array.isArray(item?.schedule) 
+                                ? item.schedule 
+                                : courseObj 
+                                  ? (Array.isArray(courseObj.groups) ? courseObj.groups : []).filter(g => g.groupName === item.groupName || g.name === item.groupName)
+                                  : [];
 
-      <style>
-        {`
+                            return (
+                              <Paper
+                                key={iIdx}
+                                elevation={0}
+                                sx={{
+                                  p: 2,
+                                  borderRadius: "12px",
+                                  bgcolor: "#f8fafc",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#152b48" }}>
+                                    {item.courseId} {displayName && `- ${displayName}`}
+                                  </Typography>
+                                  <Chip
+                                    label={`${t.grp}: ${item.groupName}`}
+                                    size="small"
+                                    color="primary"
+                                    sx={{ fontWeight: "bold", height: "24px", fontSize: "0.75rem" }}
+                                  />
+                                </Box>
+                                
+                                {courseAppointments.length === 0 ? (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {t.tba || "TBA"}
+                                  </Typography>
+                                ) : (
+                                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                                    {(Array.isArray(courseAppointments) ? courseAppointments : []).map((appt, aIdx) => (
+                                      <Box key={aIdx} sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2, p: 1, bgcolor: "#ffffff", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "80px" }}>
+                                          <Chip 
+                                            label={appt.type || "TBA"} 
+                                            size="small" 
+                                            sx={{ height: "20px", fontSize: "0.65rem", fontWeight: "bold", bgcolor: "#e0f2fe", color: "#0284c7" }} 
+                                          />
+                                        </Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "100px" }}>
+                                          <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                          <Typography variant="caption" sx={{ fontWeight: "bold", textTransform: "capitalize", color: "#475569" }}>
+                                            {appt.day || appt.appointment?.day || "TBA"}
+                                          </Typography>
+                                        </Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "110px" }}>
+                                          <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                          <Typography variant="caption" sx={{ color: "#475569" }}>
+                                            {appt.startTime || appt.appointment?.startTime || "TBA"} - {appt.endTime || appt.appointment?.endTime || "TBA"}
+                                          </Typography>
+                                        </Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                          <LocationOnIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                          <Typography variant="caption" sx={{ color: "#475569" }}>
+                                            Room: {appt.Room || "TBA"}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    ))}
+                                  </Box>
+                                )}
+                              </Paper>
+                            );
+                          })}
+                        </Box>
+                      </CardContent>
+                      <CardActions sx={{ p: 0 }}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          color="primary"
+                          disabled={isActionLoading}
+                          onClick={() => handleConfirmSchedule(Array.isArray(schedule) ? schedule : [])}
+                          sx={{ borderRadius: "8px", fontWeight: "bold", textTransform: "none" }}
+                        >
+                          {t.confirmThisSchedule}
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+        </Paper>
+
+        <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+              overflow: "hidden",
+            }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+            <MenuBookIcon sx={{ color: "#152b48", fontSize: 30 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+              {t.mySchedule}
+            </Typography>
+          </Box>
+
+          {sortedRegisteredCourses.length === 0 ? (
+              <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 5,
+                    bgcolor: "#f8fafc",
+                    borderRadius: "16px",
+                  }}
+              >
+                <Typography variant="subtitle1" color="text.secondary">
+                  {t.noCoursesReg}
+                </Typography>
+              </Box>
+          ) : (
+              <TableContainer
+                  sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}
+              >
+                <Table sx={{ minWidth: 800 }}>
+                  <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
+                        {t.courseInfo}
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
+                        {t.schedule}
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>
+                        {t.locationType}
+                      </TableCell>
+                      <TableCell
+                          align="center"
+                          sx={{ fontWeight: "bold", color: "#152b48" }}
+                      >
+                        {t.hours}
+                      </TableCell>
+                      <TableCell
+                          align="right"
+                          sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}
+                      >
+                        {t.actions}
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(Array.isArray(sortedRegisteredCourses) ? sortedRegisteredCourses : []).map((row, index) => {
+                      const courseObj = row.course || row;
+                      const groupObj = row.group || row;
+
+                      const baseCourseCode =
+                          typeof row.course === "string"
+                              ? row.course
+                              : row.courseId ||
+                              courseObj.courseId ||
+                              courseObj._id ||
+                              "N/A";
+
+                      const matchedCourse = availableCourses.find(
+                          (c) =>
+                              c._id === baseCourseCode || c.courseId === baseCourseCode,
+                      );
+                      const displayName = matchedCourse
+                          ? matchedCourse.courseName || matchedCourse.name
+                          : courseObj.courseName || courseObj.name || "N/A";
+
+                      const dropId = baseCourseCode;
+
+                      let displayGroup = "N/A";
+                      if (typeof row.groupName === "string")
+                        displayGroup = row.groupName;
+                      else if (typeof groupObj === "string")
+                        displayGroup = groupObj;
+                      else if (groupObj.groupName)
+                        displayGroup = groupObj.groupName;
+                      else if (groupObj.name) displayGroup = groupObj.name;
+
+                      const hours = courseObj.hours || row.hours || 3;
+
+                      const schedule =
+                          row.appointment ||
+                          courseObj.appointment ||
+                          groupObj.appointment;
+
+                      return (
+                          <TableRow
+                              key={index}
+                              sx={{
+                                "&:last-child td, &:last-child th": { border: 0 },
+                                "&:hover": { backgroundColor: "#f1f5f9" },
+                                animation: "fadeInRow 0.5s ease-in-out",
+                              }}
+                          >
+                            <TableCell>
+                              <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 800, color: "#152b48" }}
+                              >
+                                {baseCourseCode}
+                              </Typography>
+                              <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mb: 1 }}
+                              >
+                                {displayName}
+                              </Typography>
+                              <Chip
+                                  label={`Grp: ${displayGroup}`}
+                                  size="small"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    bgcolor: "#e0f2fe",
+                                    color: "#0284c7",
+                                    fontSize: "0.75rem",
+                                  }}
+                              />
+                            </TableCell>
+
+                            <TableCell>
+                              {schedule ? (
+                                  <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 0.5,
+                                      }}
+                                  >
+                                    <Box
+                                        sx={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 1,
+                                        }}
+                                    >
+                                      <CalendarTodayIcon
+                                          sx={{ fontSize: 16, color: "text.secondary" }}
+                                      />
+                                      <Typography
+                                          variant="body2"
+                                          fontWeight="bold"
+                                          sx={{ textTransform: "capitalize" }}
+                                      >
+                                        {schedule.day || "TBA"}
+                                      </Typography>
+                                    </Box>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ ml: 3 }}
+                                    >
+                                      {schedule.startTime || "TBA"} -{" "}
+                                      {schedule.endTime || "TBA"}
+                                    </Typography>
+                                  </Box>
+                              ) : (
+                                  <Typography variant="caption" color="text.disabled">
+                                    TBA
+                                  </Typography>
+                              )}
+                            </TableCell>
+
+                            <TableCell>
+                              <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 0.5,
+                                  }}
+                              >
+                                <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                >
+                                  <LocationOnIcon
+                                      sx={{ fontSize: 16, color: "error.light" }}
+                                  />
+                                  <Typography variant="body2" fontWeight="bold">
+                                    {row.Room ||
+                                        courseObj.Room ||
+                                        groupObj.Room ||
+                                        "TBA"}
+                                  </Typography>
+                                </Box>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                      ml: 3,
+                                      color: "primary.main",
+                                      fontWeight: "bold",
+                                    }}
+                                >
+                                  {row.type ||
+                                      courseObj.type ||
+                                      groupObj.type ||
+                                      "Lecture"}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+
+                            <TableCell align="center">
+                              <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#152b48",
+                                    bgcolor: "#f1f5f9",
+                                    py: 0.5,
+                                    borderRadius: "8px",
+                                  }}
+                              >
+                                {hours} Hrs
+                              </Typography>
+                            </TableCell>
+
+                            <TableCell align="right" sx={{ pr: 3 }}>
+                              <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: 1,
+                                  }}
+                              >
+                                <IconButton
+                                    onClick={() =>
+                                        handleOpenUpdateDialog({
+                                          courseId: baseCourseCode,
+                                          courseName: displayName,
+                                          currentGroup: displayGroup,
+                                          availableGroupsData:
+                                              matchedCourse?.groups ||
+                                              courseObj?.groups ||
+                                              [],
+                                        })
+                                    }
+                                    disabled={isActionLoading}
+                                    sx={{
+                                      bgcolor: "#ffffff",
+                                      color: "#0284c7",
+                                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                      width: 40,
+                                      height: 40,
+                                      transition: "all 0.2s ease-in-out",
+                                      "&:hover": {
+                                        bgcolor: "#e0f2fe",
+                                        transform: "scale(1.05)",
+                                      },
+                                    }}
+                                >
+                                  <EditOutlinedIcon fontSize="small" />
+                                </IconButton>
+
+                                <IconButton
+                                    onClick={() =>
+                                        handleOpenSwapDialog({
+                                          courseId: baseCourseCode,
+                                          courseName: displayName,
+                                          currentGroup: displayGroup,
+                                          availableGroupsData:
+                                              matchedCourse?.groups ||
+                                              courseObj?.groups ||
+                                              [],
+                                        })
+                                    }
+                                    disabled={isActionLoading}
+                                    sx={{
+                                      bgcolor: "#ffffff",
+                                      color: "#1d4ed8",
+                                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                      width: 40,
+                                      height: 40,
+                                      transition: "all 0.2s ease-in-out",
+                                      "&:hover": {
+                                        bgcolor: "#dbeafe",
+                                        transform: "scale(1.05)",
+                                      },
+                                    }}
+                                >
+                                  <SwapHorizIcon fontSize="small" />
+                                </IconButton>
+
+                                <IconButton
+                                    onClick={() =>
+                                        handleOpenDeleteDialog({
+                                          dropId,
+                                          courseName: displayName,
+                                        })
+                                    }
+                                    disabled={isActionLoading}
+                                    sx={{
+                                      bgcolor: "#ffffff",
+                                      color: "#e11d48",
+                                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                      width: 40,
+                                      height: 40,
+                                      transition: "all 0.2s ease-in-out",
+                                      "&:hover": {
+                                        bgcolor: "#ffe4e6",
+                                        transform: "scale(1.05)",
+                                      },
+                                    }}
+                                >
+                                  <DeleteOutlineIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+          )}
+        </Paper>
+
+        <Dialog
+            open={deleteDialogOpen}
+            onClose={handleCloseDeleteDialog}
+            PaperProps={{
+              sx: {
+                borderRadius: "20px",
+                p: 1,
+                minWidth: { xs: "300px", sm: "450px" },
+              },
+            }}
+        >
+          <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "error.main",
+                fontWeight: "900",
+                pb: 1,
+              }}
+          >
+            <WarningRoundedIcon fontSize="large" /> {t.dropCourse}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText
+                sx={{ fontSize: "1.1rem", color: "text.primary", fontWeight: 500 }}
+            >
+              {t.dropConfirm1}{" "}
+              <strong>{courseToDelete?.courseName}</strong>?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 0 }}>
+            <Button
+                onClick={handleCloseDeleteDialog}
+                disabled={isActionLoading}
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                }}
+            >
+              {t.cancel}
+            </Button>
+            <Button
+                onClick={handleConfirmDelete}
+                disabled={isActionLoading}
+                variant="contained"
+                color="error"
+                disableElevation
+                sx={{
+                  borderRadius: "10px",
+                  fontWeight: "bold",
+                  px: 3,
+                  textTransform: "none",
+                  "&:hover": { backgroundColor: "#be123c" },
+                }}
+            >
+              {isActionLoading ? t.dropping : t.yesDrop}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+            open={updateDialogOpen}
+            onClose={handleCloseUpdateDialog}
+            PaperProps={{
+              sx: {
+                borderRadius: "20px",
+                p: 1,
+                minWidth: { xs: "300px", sm: "450px" },
+              },
+            }}
+        >
+          <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#152b48",
+                fontWeight: "900",
+                pb: 1,
+              }}
+          >
+            <SyncIcon fontSize="large" /> {t.switchGroup}
+          </DialogTitle>
+          <DialogContent sx={{ pb: 1 }}>
+            <DialogContentText
+                sx={{
+                  fontSize: "1rem",
+                  color: "#152b48",
+                  fontWeight: 500,
+                  mb: 3,
+                }}
+            >
+              {t.selectNewGroup} <strong>{courseToUpdate?.courseName}</strong>
+              .
+              <br />
+              <Typography variant="caption" color="text.secondary">
+                {t.currentGroup} {courseToUpdate?.currentGroup}
+              </Typography>
+            </DialogContentText>
+
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink={true} id="switch-group-label">
+                {t.newGroup}
+              </InputLabel>
+              <Select
+                  labelId="switch-group-label"
+                  value={newSelectedGroup}
+                  onChange={(e) => setNewSelectedGroup(e.target.value)}
+                  displayEmpty
+                  label={t.newGroup}
+                  sx={{ borderRadius: "12px" }}
+                  renderValue={(selected) =>
+                      selected ? selected : <em>{t.chooseNewGroup}</em>
+                  }
+              >
+                <MenuItem disabled value="" sx={{ display: "none" }}>
+                  <em>{t.chooseNewGroup}</em>
+                </MenuItem>
+                {(Array.isArray(updateGroupOptions) ? updateGroupOptions : []).map((grp, index) => {
+                  const isFull = grp.capacity <= 0;
+                  const isCurrent = grp.name === courseToUpdate?.currentGroup;
+
+                  return (
+                      <MenuItem
+                          key={index}
+                          value={grp.name}
+                          disabled={isFull || isCurrent}
+                          sx={{
+                            p: 0,
+                            "& .group-row": {
+                              borderBottom:
+                                  index === updateGroupOptions.length - 1
+                                      ? "none"
+                                      : "1px solid #f1f5f9",
+                            },
+                          }}
+                      >
+                        <Tooltip
+                            title={getGroupScheduleTooltip(
+                                grp.name,
+                                courseToUpdate?.availableGroupsData,
+                            )}
+                            placement="right"
+                            arrow
+                            componentsProps={{
+                              tooltip: {
+                                sx: {
+                                  bgcolor: "rgba(21, 43, 72, 0.95)",
+                                  borderRadius: "8px",
+                                  p: 1,
+                                },
+                              },
+                              arrow: { sx: { color: "rgba(21, 43, 72, 0.95)" } },
+                            }}
+                        >
+                          <Box
+                              className="group-row"
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                width: "100%",
+                                px: 2,
+                                py: 1.5,
+                                "&:hover": { backgroundColor: "#f8fafc" },
+                              }}
+                          >
+                            <Typography
+                                variant="body1"
+                                sx={{ flexGrow: 1, fontWeight: 600 }}
+                            >
+                              {grp.name} {isCurrent && "(Current)"}
+                            </Typography>
+                            <Box sx={{ minWidth: "65px", textAlign: "right" }}>
+                              <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: isFull ? "error.main" : "text.secondary",
+                                    bgcolor: isFull ? "#ffe4e6" : "#f1f5f9",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    borderRadius: "6px",
+                                    fontWeight: "bold",
+                                  }}
+                              >
+                                {isFull ? "Full" : `Cap: ${grp.capacity}`}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Tooltip>
+                      </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 1 }}>
+            <Button
+                onClick={handleCloseUpdateDialog}
+                disabled={isActionLoading}
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                }}
+            >
+              {t.cancel}
+            </Button>
+            <Button
+                onClick={handleConfirmUpdate}
+                disabled={isActionLoading || !newSelectedGroup}
+                variant="contained"
+                disableElevation
+                sx={{
+                  borderRadius: "10px",
+                  fontWeight: "bold",
+                  px: 3,
+                  backgroundColor: "#152b48",
+                  textTransform: "none",
+                  "&:hover": { backgroundColor: "#152b48" },
+                }}
+            >
+              {isActionLoading ? t.updating : t.updateGroup}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* INCOMING PENDING SWAPS UI */}
+        <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+              overflow: "hidden",
+            }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+            <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+              {t.incomingSwaps} ({pendingSwapRequests?.length || 0})
+            </Typography>
+          </Box>
+
+          {pendingSwapRequests?.length === 0 || !pendingSwapRequests ? (
+              <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 5,
+                    bgcolor: "#f8fafc",
+                    borderRadius: "16px",
+                  }}
+              >
+                <Typography variant="subtitle1" color="text.secondary">
+                  {t.noIncomingSwaps}
+                </Typography>
+              </Box>
+          ) : (
+              <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                <Table sx={{ minWidth: 600 }}>
+                  <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.reqBy}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(Array.isArray(pendingSwapRequests) ? pendingSwapRequests : []).map((req) => (
+                        <TableRow key={req._id}>
+                          <TableCell>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <img
+                                  src={req.sender?.profileImg || "/default.jpg"}
+                                  alt="avatar"
+                                  style={{ width: 32, height: 32, borderRadius: "50%" }}
+                              />
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                {req.sender?.name || "Unknown"}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>{req.courseId?.name || "Unknown"} ({req.courseId?._id})</TableCell>
+                          <TableCell>
+                            <Chip label={req.senderGroupName} size="small" />
+                          </TableCell>
+                          <TableCell>
+                            <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                              <Button
+                                  variant="outlined"
+                                  color="error"
+                                  size="small"
+                                  disabled={isActionLoading}
+                                  onClick={() => handleSwapRespond(req._id, 'Rejected')}
+                                  startIcon={<CancelOutlinedIcon />}
+                                  sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                              >
+                                {t.reject}
+                              </Button>
+                              <Button
+                                  variant="contained"
+                                  color="success"
+                                  size="small"
+                                  disabled={isActionLoading}
+                                  onClick={() => handleSwapRespond(req._id, 'Accepted')}
+                                  startIcon={<CheckCircleOutlineIcon />}
+                                  sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                              >
+                                {t.acceptSwap}
+                              </Button>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+          )}
+        </Paper>
+
+        {/* SENT SWAP REQUESTS UI */}
+        <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 4 },
+              borderRadius: "24px",
+              boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+              overflow: "hidden",
+            }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+            <SwapHorizIcon sx={{ color: "#152b48", fontSize: 30 }} />
+            <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
+              {t.sentSwapReqs} ({sentSwapRequests?.length || 0})
+            </Typography>
+          </Box>
+
+          {sentSwapRequests?.length === 0 || !sentSwapRequests ? (
+              <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 5,
+                    bgcolor: "#f8fafc",
+                    borderRadius: "16px",
+                  }}
+              >
+                <Typography variant="subtitle1" color="text.secondary">
+                  {t.noSentSwaps}
+                </Typography>
+              </Box>
+          ) : (
+              <TableContainer sx={{ borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                <Table sx={{ minWidth: 600 }}>
+                  <TableHead sx={{ backgroundColor: "#f8fafc" }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.course}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.fromGroup}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.targetGroup}</TableCell>
+                      <TableCell sx={{ fontWeight: "bold", color: "#152b48" }}>{t.status}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: "bold", color: "#152b48", pr: 4 }}>{t.actions}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(Array.isArray(sentSwapRequests) ? sentSwapRequests : []).map((req) => (
+                        <TableRow key={req._id}>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {req.courseId?.name || "Unknown"} ({req.courseId?._id || req.courseId || "Unknown"})
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip label={req.senderGroupName} size="small" />
+                          </TableCell>
+                          <TableCell>
+                            <Chip label={req.receiverGroupName || req.targetGroupName} size="small" color="primary" />
+                          </TableCell>
+                          <TableCell>
+                            <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                color={req.status === 'Pending' ? "warning.main" : req.status === 'Accepted' ? "success.main" : "error.main"}
+                            >
+                              {req.status}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            {req.status === 'Pending' && (
+                                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                                  <Button
+                                      variant="outlined"
+                                      color="error"
+                                      size="small"
+                                      disabled={isActionLoading}
+                                      onClick={() => handleCancelSwapRequest(req.relatedIds)}
+                                      startIcon={<DeleteOutlineIcon />}
+                                      sx={{ textTransform: "none", borderRadius: "8px", fontWeight: "bold" }}
+                                  >
+                                    {t.cancelReq}
+                                  </Button>
+                                </Box>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+          )}
+        </Paper>
+
+        {/* SWAP DIALOG */}
+        <Dialog
+            open={swapDialogOpen}
+            onClose={handleCloseSwapDialog}
+            PaperProps={{
+              sx: {
+                borderRadius: "20px",
+                p: 1,
+                minWidth: { xs: "300px", sm: "450px" },
+              },
+            }}
+        >
+          <DialogTitle
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#152b48",
+                fontWeight: "900",
+                pb: 1,
+              }}
+          >
+            <SwapHorizIcon fontSize="large" /> {t.broadSwap}
+          </DialogTitle>
+          <DialogContent sx={{ pb: 1 }}>
+            <DialogContentText
+                sx={{
+                  fontSize: "1rem",
+                  color: "#152b48",
+                  fontWeight: 500,
+                  mb: 3,
+                }}
+            >
+              {t.broadSwapReq} <strong>{courseToSwap?.courseName}</strong>.
+              <br />
+              <Typography variant="caption" color="text.secondary">
+                {t.currentGroup} {courseToSwap?.currentGroup}
+              </Typography>
+            </DialogContentText>
+
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink={true} id="swap-group-label">
+                {t.targetGroup}
+              </InputLabel>
+              <Select
+                  labelId="swap-group-label"
+                  value={targetGroupSwap}
+                  onChange={(e) => setTargetGroupSwap(e.target.value)}
+                  displayEmpty
+                  label={t.targetGroup}
+                  sx={{ borderRadius: "12px" }}
+                  renderValue={(selected) =>
+                      selected ? selected : <em>{t.chooseNewGroup}</em>
+                  }
+              >
+                <MenuItem disabled value="" sx={{ display: "none" }}>
+                  <em>{t.chooseNewGroup}</em>
+                </MenuItem>
+                {(() => {
+                  const sGroupMap = {};
+                  if (courseToSwap) {
+                    courseToSwap.availableGroupsData.forEach((g) => {
+                      const name = g.groupName || g.name || (typeof g === "string" ? g : "");
+                      if (name) {
+                        sGroupMap[name] = true;
+                      }
+                    });
+                  }
+                  const options = Object.keys(sGroupMap);
+
+                  return (Array.isArray(options) ? options : []).map((grpName, index) => {
+                    const isCurrent = grpName === courseToSwap?.currentGroup;
+                    return (
+                        <MenuItem
+                            key={index}
+                            value={grpName}
+                            disabled={isCurrent}
+                            sx={{ p: 2, borderBottom: "1px solid #f1f5f9" }}
+                        >
+                          <Typography sx={{ fontWeight: 600 }}>{grpName} {isCurrent && "(Current)"}</Typography>
+                        </MenuItem>
+                    );
+                  });
+                })()}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, pt: 1 }}>
+            <Button
+                onClick={handleCloseSwapDialog}
+                disabled={isActionLoading}
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                }}
+            >
+              {t.cancel}
+            </Button>
+            <Button
+                onClick={handleConfirmSwap}
+                disabled={isActionLoading || !targetGroupSwap}
+                variant="contained"
+                disableElevation
+                sx={{
+                  borderRadius: "10px",
+                  fontWeight: "bold",
+                  px: 3,
+                  backgroundColor: "#152b48",
+                  textTransform: "none",
+                  "&:hover": { backgroundColor: "#152b48" },
+                }}
+            >
+              {isActionLoading ? t.sending : t.reqSwap}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <style>
+          {`
           @keyframes fadeInRow {
             from {
               opacity: 0;
@@ -1473,7 +1706,7 @@ export default function RegistrationComp() {
             }
           }
         `}
-      </style>
-    </Box>
+        </style>
+      </Box>
   );
 }

@@ -62,7 +62,12 @@ const TeacherAttendance = () => {
                 if (!groupId || seen.has(groupId)) return;
                 seen.add(groupId);
 
-                const label = `${courseName} - ${groupNum} (${groupType})`;
+                // --- التعديل هنا: إزالة كلمة lecture من الاختيارات ---
+                let label = `${courseName} - ${groupNum}`;
+                if (groupType && groupType.toLowerCase() !== 'lecture') {
+                    label += ` (${groupType})`;
+                }
+
                 list.push({ groupId, label });
             });
 
@@ -132,7 +137,8 @@ const TeacherAttendance = () => {
                 <View style={{ flex: 1 }}>
                     {/* Filter Card */}
                     <View style={styles.filtersCard}>
-                        <Text style={styles.label}>Select Group / Lecture</Text>
+                        {/* --- التعديل هنا: إزالة كلمة Lecture من العنوان --- */}
+                        <Text style={styles.label}>Select Group</Text>
                         <TouchableOpacity
                             style={styles.dropdown}
                             onPress={() => setModalVisible(true)}
