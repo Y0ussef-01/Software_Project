@@ -1,57 +1,60 @@
 import React from 'react';
-import { Info, CheckCircle, X } from 'lucide-react';
 
 export default function ExcelInstructionsCard() {
-  const acceptedNames = ["id", "student_id", "code", "student id", "كود الطالب"];
-  const ignoredNames = ["name", "student name", "student_name", "email", "department", "serial", "الاسم"];
-
   return (
-    <div className="max-w-4xl mx-auto border-2 border-blue-950 rounded-xl shadow-md overflow-hidden mb-8 bg-white">
-      {/* Solid Header */}
-      <div className="bg-blue-950 text-white p-4 flex items-center justify-center gap-2">
-        <Info className="w-5 h-5 flex-shrink-0" />
-        <h3 className="text-lg font-bold">Excel Sheet Guidelines</h3>
-      </div>
-
-      {/* Split Body Area */}
-      <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 divide-gray-200">
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '40px 10px' }}>
+      
+      {/* Mobile-Sized Wrapper with Fixed Dimensions */}
+      <div style={{ position: 'relative', width: '100%', maxWidth: '400px', minWidth: '300px', flexShrink: 0 }}>
         
-        {/* Left Half (Accepted Names) */}
-        <div className="p-6 bg-white">
-          <h4 className="text-blue-950 font-bold mb-4 text-center border-b pb-2">
-            Accepted Primary Key Names
-          </h4>
-          <div className="flex flex-col">
-            {acceptedNames.map((name, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-3 mb-2 bg-blue-50/50 border border-blue-100 rounded-lg text-blue-800 font-mono text-sm font-bold shadow-sm"
-              >
-                <span>{name}</span>
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-              </div>
-            ))}
+        {/* Glow Background */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-[32px] blur-xl opacity-50"></div>
+        
+        {/* Main Glass Card */}
+        <div 
+          className="relative bg-slate-900 border border-slate-700 shadow-2xl"
+          style={{ borderRadius: '32px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px', backdropFilter: 'blur(16px)' }}
+        >
+          
+          <h2 style={{ margin: 0, textAlign: 'center', fontSize: '22px', fontWeight: 'bold', color: '#ffffff' }}>
+            ✨ Column Rules
+          </h2>
+          
+          {/* Valid Names Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Valid Names
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {['id', 'student_id', 'code', 'student id', 'كود الطالب'].map((name) => (
+                <span 
+                  key={name} 
+                  style={{ backgroundColor: 'rgba(6,182,212,0.15)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.3)', padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Right Half (Ignored Columns) */}
-        <div className="p-6 bg-slate-50">
-          <h4 className="text-slate-700 font-bold mb-4 text-center border-b pb-2">
-            Ignored Columns
-          </h4>
-          <div className="flex flex-col">
-            {ignoredNames.map((name, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-3 mb-2 bg-white border border-gray-200 rounded-lg text-gray-500 font-mono text-sm shadow-sm"
-              >
-                <span>{name}</span>
-                <X className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              </div>
-            ))}
+          {/* Ignored Columns Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f472b6', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Ignored Columns
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {['name', 'student name', 'student_name', 'email', 'department', 'serial', 'الاسم'].map((name) => (
+                <span 
+                  key={name} 
+                  style={{ backgroundColor: 'rgba(236,72,153,0.15)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.3)', padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
   );

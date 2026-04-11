@@ -154,6 +154,7 @@ console.log("Stripping comments completed.");
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "jwt-decode": "^4.0.0",
+    "lucide-react": "^1.8.0",
     "ra-data-simple-rest": "^5.14.2",
     "react": "^19.2.0",
     "react-admin": "^5.14.2",
@@ -219,6 +220,7 @@ console.log("Stripping comments completed.");
         "jspdf": "^4.2.0",
         "jspdf-autotable": "^5.0.7",
         "jwt-decode": "^4.0.0",
+        "lucide-react": "^1.8.0",
         "ra-data-simple-rest": "^5.14.2",
         "react": "^19.2.0",
         "react-admin": "^5.14.2",
@@ -3845,6 +3847,15 @@ console.log("Stripping comments completed.");
       "dev": true,
       "dependencies": {
         "yallist": "^3.0.2"
+      }
+    },
+    "node_modules/lucide-react": {
+      "version": "1.8.0",
+      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.8.0.tgz",
+      "integrity": "sha512-WuvlsjngSk7TnTBJ1hsCy3ql9V9VOdcPkd3PKcSmM34vJD8KG6molxz7m7zbYFgICwsanQWmJ13JlYs4Zp7Arw==",
+      "license": "ISC",
+      "peerDependencies": {
+        "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
       }
     },
     "node_modules/math-intrinsics": {
@@ -13889,6 +13900,7 @@ export default function ProtectedRoute({ allowedRoles }) {
 
 === File: ./Front_End/src/components/RegistrationComp/RegistrationComp.jsx ===
 import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -14497,224 +14509,39 @@ export default function RegistrationComp() {
           </Box>
         </Paper>
 
-        {/* NEW SECTION: Generate Ready-Made Schedules */}
+        {/* Navigation to Manage Subjects */}
         <Paper
             elevation={0}
             sx={{
               p: { xs: 3, md: 4 },
               borderRadius: "24px",
               boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+              textAlign: "center",
+              bgcolor: "#f8fafc",
+              border: "1px dashed #cbd5e1"
             }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
-            <CalendarTodayIcon sx={{ color: "#152b48", fontSize: 30 }} />
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#152b48" }}>
-              {t.generateReadySchedules}
-            </Typography>
-          </Box>
-          <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: 2,
-                alignItems: "center",
-              }}
+          <Button
+            component={Link}
+            to="/manage-subjects"
+            sx={{
+              backgroundColor: "#152b48",
+              color: "#fff",
+              fontWeight: 500,
+              borderRadius: "8px",
+              px: 5,
+              py: 1.5,
+              boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+              transition: "all 0.2s",
+              textTransform: "none",
+              fontSize: "1.05rem",
+              "&:hover": {
+                backgroundColor: "#0f1e33",
+              }
+            }}
           >
-            <FormControl variant="outlined" sx={{ width: "100%", flexGrow: 1 }}>
-              <Autocomplete
-                  multiple
-                  options={Array.isArray(availableCourses) ? availableCourses : []}
-                  getOptionLabel={(option) => {
-                    const displayCode = option.courseCode || option.courseId || option._id || "Code";
-                    const displayName = option.courseName || option.name || "Name";
-                    return `${displayCode} - ${displayName}`;
-                  }}
-                  value={(Array.isArray(availableCourses) ? availableCourses : []).filter(c => 
-                      (Array.isArray(selectedCoursesForGen) ? selectedCoursesForGen : []).includes(c._id || c.courseId)
-                  )}
-                  onChange={(event, newValue) => {
-                    setSelectedCoursesForGen(
-                        (Array.isArray(newValue) ? newValue : []).map((c) => c._id || c.courseId)
-                    );
-                  }}
-                  renderInput={(params) => (
-                      <TextField
-                          {...params}
-                          variant="outlined"
-                          label={t.selectCoursesForGen}
-                          placeholder={t.chooseCourse}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: "12px",
-                            },
-                          }}
-                      />
-                  )}
-                  renderTags={(value, getTagProps) =>
-                    (Array.isArray(value) ? value : []).map((option, index) => {
-                      const { key, ...tagProps } = getTagProps({ index });
-                      return (
-                        <Chip
-                          key={key}
-                          variant="outlined"
-                          label={option.courseCode || option.courseId || option._id}
-                          {...tagProps}
-                        />
-                      );
-                    })
-                  }
-              />
-            </FormControl>
-
-            <Button
-                variant="contained"
-                disabled={
-                    !Array.isArray(selectedCoursesForGen) ||
-                    selectedCoursesForGen.length === 0 ||
-                    isGenerating ||
-                    isActionLoading
-                }
-                onClick={handleGenerateSchedules}
-                startIcon={
-                  isGenerating ? (
-                      <CircularProgress size={20} color="inherit" />
-                  ) : (
-                      <SyncIcon />
-                  )
-                }
-                sx={{
-                  height: "56px",
-                  px: 4,
-                  borderRadius: "12px",
-                  backgroundColor: "#152b48",
-                  fontWeight: "bold",
-                  fontSize: "0.95rem",
-                  width: { xs: "100%", md: "auto" },
-                  "&:hover": { backgroundColor: "#0f1e33" },
-                }}
-            >
-              {isGenerating ? t.generatingSchedules : t.generateSchedulesBtn}
-            </Button>
-          </Box>
-
-          {Array.isArray(generatedSchedules) && generatedSchedules.length > 0 && (
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "#152b48", mb: 2 }}>
-                {t.validSchedulesFound}: {generatedSchedules.length}
-              </Typography>
-              <Grid container spacing={3}>
-                {(Array.isArray(generatedSchedules) ? generatedSchedules : []).map((schedule, sIdx) => (
-                  <Grid item xs={12} md={6} lg={4} key={sIdx}>
-                    <Card
-                        elevation={0}
-                        sx={{
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "16px",
-                          p: 2,
-                          display: "flex",
-                          flexDirection: "column",
-                          height: "100%",
-                        }}
-                    >
-                      <CardContent sx={{ flexGrow: 1, p: 1, mb: 2 }}>
-                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1d4ed8", mb: 2 }}>
-                          {t.schedule} #{sIdx + 1}
-                        </Typography>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          {(Array.isArray(schedule) ? schedule : []).map((item, iIdx) => {
-                            const courseObj = (Array.isArray(availableCourses) ? availableCourses : []).find(c => c._id === item.courseId || c.courseId === item.courseId);
-                            const displayName = courseObj?.courseName || courseObj?.name || "";
-                            const courseAppointments = Array.isArray(item?.appointments) 
-                              ? item.appointments 
-                              : Array.isArray(item?.schedule) 
-                                ? item.schedule 
-                                : courseObj 
-                                  ? (Array.isArray(courseObj.groups) ? courseObj.groups : []).filter(g => g.groupName === item.groupName || g.name === item.groupName)
-                                  : [];
-
-                            return (
-                              <Paper
-                                key={iIdx}
-                                elevation={0}
-                                sx={{
-                                  p: 2,
-                                  borderRadius: "12px",
-                                  bgcolor: "#f8fafc",
-                                  border: "1px solid #e2e8f0",
-                                }}
-                              >
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#152b48" }}>
-                                    {item.courseId} {displayName && `- ${displayName}`}
-                                  </Typography>
-                                  <Chip
-                                    label={`${t.grp}: ${item.groupName}`}
-                                    size="small"
-                                    color="primary"
-                                    sx={{ fontWeight: "bold", height: "24px", fontSize: "0.75rem" }}
-                                  />
-                                </Box>
-                                
-                                {courseAppointments.length === 0 ? (
-                                  <Typography variant="caption" color="text.secondary">
-                                    {t.tba || "TBA"}
-                                  </Typography>
-                                ) : (
-                                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                                    {(Array.isArray(courseAppointments) ? courseAppointments : []).map((appt, aIdx) => (
-                                      <Box key={aIdx} sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2, p: 1, bgcolor: "#ffffff", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "80px" }}>
-                                          <Chip 
-                                            label={appt.type || "TBA"} 
-                                            size="small" 
-                                            sx={{ height: "20px", fontSize: "0.65rem", fontWeight: "bold", bgcolor: "#e0f2fe", color: "#0284c7" }} 
-                                          />
-                                        </Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "100px" }}>
-                                          <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                                          <Typography variant="caption" sx={{ fontWeight: "bold", textTransform: "capitalize", color: "#475569" }}>
-                                            {appt.day || appt.appointment?.day || "TBA"}
-                                          </Typography>
-                                        </Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "110px" }}>
-                                          <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                                          <Typography variant="caption" sx={{ color: "#475569" }}>
-                                            {appt.startTime || appt.appointment?.startTime || "TBA"} - {appt.endTime || appt.appointment?.endTime || "TBA"}
-                                          </Typography>
-                                        </Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                          <LocationOnIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                                          <Typography variant="caption" sx={{ color: "#475569" }}>
-                                            Room: {appt.Room || "TBA"}
-                                          </Typography>
-                                        </Box>
-                                      </Box>
-                                    ))}
-                                  </Box>
-                                )}
-                              </Paper>
-                            );
-                          })}
-                        </Box>
-                      </CardContent>
-                      <CardActions sx={{ p: 0 }}>
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          color="primary"
-                          disabled={isActionLoading}
-                          onClick={() => handleConfirmSchedule(Array.isArray(schedule) ? schedule : [])}
-                          sx={{ borderRadius: "8px", fontWeight: "bold", textTransform: "none" }}
-                        >
-                          {t.confirmThisSchedule}
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
+            Generate Ready-Made Schedules
+          </Button>
         </Paper>
 
         <Paper
@@ -18223,6 +18050,7 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
 import { useTeacherGrades } from "../../hooks/Teacher/useTeacherGrades";     
+import ExcelInstructionsCard from "./ExcelInstructionsCard";
 
 function TeacherGradesArea({ courseId, courseName }) {
   const {
@@ -18238,6 +18066,7 @@ function TeacherGradesArea({ courseId, courseName }) {
 
   return (
     <Box sx={{ width: "100%", mt: 4 }}>
+      <ExcelInstructionsCard />
       <Box
         sx={{
           display: "flex",
@@ -18500,6 +18329,70 @@ export default function ManageGradesContainer() {
         />
       )}
     </Paper>
+  );
+}
+-e 
+
+=== File: ./Front_End/src/components/TeacherGradesComp/ExcelInstructionsCard.jsx ===
+import React from 'react';
+import { FileSpreadsheet, CheckCircle, Minus } from 'lucide-react';
+
+export default function ExcelInstructionsCard() {
+  const acceptedNames = ["id", "student_id", "code", "student id", "كود الطالب"];
+  const ignoredNames = ["name", "student name", "student_name", "email", "department", "serial", "الاسم"];
+
+  return (
+    <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-5 mb-6 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-start gap-4 border-b border-gray-100 pb-4 mb-4">
+        <div className="bg-blue-50 p-2.5 rounded-lg flex-shrink-0">
+          <FileSpreadsheet className="w-6 h-6 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Excel Column Naming Rules
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Please ensure your primary key column is named correctly before uploading.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content Layout Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {/* Section A: Accepted */}
+        <div className="bg-green-50/30 border border-green-100 rounded-lg p-5">
+          <h4 className="text-sm font-semibold text-green-800 mb-4 border-b border-green-200 pb-2">
+            Accepted Names (Primary Key)
+          </h4>
+          <ul className="space-y-3">
+            {acceptedNames.map((name, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span className="font-mono text-sm text-green-700 font-medium">{name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Section B: Ignored */}
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-5">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
+            Ignored Names (Do Not Use for ID)
+          </h4>
+          <ul className="space-y-3">
+            {ignoredNames.map((name, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <Minus className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span className="font-mono text-sm text-gray-500">{name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+      </div>
+    </div>
   );
 }
 -e 
@@ -18858,6 +18751,7 @@ import GradesPage from "./pages/GradesPage/GradesPage.jsx";
 import AcademicRecordPage from "./pages/AcademicRecordPage/AcademicRecordPage.jsx";
 import FinalGradesPage from "./pages/AdminPage/FinalGrades/Finalgradespage.jsx";
 import BulkUploadStudentsPage from "./pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx";
+import SubjectSchedulesPage from "./pages/SubjectSchedulesPage/SubjectSchedulesPage.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -18883,6 +18777,7 @@ function App() {
               <Route path="/Academic" element={<AcademicRecordPage />} />
               <Route path="/appointments" element={<AppointmentsPage />} />
               <Route path="/register-course" element={<RegistrationPage />} />
+              <Route path="/manage-subjects" element={<SubjectSchedulesPage />} />
               <Route
                 path="/reset-password"
                 element={<ResetStudentPasswordPage />}
@@ -19034,6 +18929,293 @@ export default function LoginPage() {
       </Box>
 
       <Footer />
+    </Box>
+  );
+}
+-e 
+
+=== File: ./Front_End/src/pages/SubjectSchedulesPage/SubjectSchedulesPage.jsx ===
+import React from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  FormControl,
+  CircularProgress,
+  Autocomplete,
+  TextField,
+  Chip,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+} from "@mui/material";
+import SyncIcon from "@mui/icons-material/Sync";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+
+import useRegistration from "../../hooks/Student/useRegistration";
+import { useLanguage } from "../../context/LanguageContext";
+import { REGISTRATION_TRANS } from "../../utils/studentTranslations";
+
+export default function SubjectSchedulesPage() {
+  const {
+    availableCourses,
+    selectedCoursesForGen,
+    setSelectedCoursesForGen,
+    generatedSchedules,
+    isGenerating,
+    isActionLoading,
+    handleGenerateSchedules,
+    handleConfirmSchedule,
+  } = useRegistration();
+
+  const { language } = useLanguage();
+  const t = REGISTRATION_TRANS[language] || REGISTRATION_TRANS["en"];
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        p: { xs: 2, md: 4, lg: 5 },
+        animation: "fadeInUp 0.6s ease-out",
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: "24px",
+          boxShadow: "0px 10px 40px rgba(21, 43, 72, 0.08)",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 1.5 }}>
+          <CalendarTodayIcon sx={{ color: "#152b48", fontSize: 30 }} />
+          <Typography variant="h5" sx={{ fontWeight: 800, color: "#152b48" }}>
+            {t.generateReadySchedules || "Manage Subjects & Schedules"}
+          </Typography>
+        </Box>
+        <Typography variant="body1" sx={{ color: "text.secondary", mb: 4 }}>
+          Select the subjects you want to manage. The system will automatically compute combinations and find the best schedule for you.
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            alignItems: "center",
+          }}
+        >
+          <FormControl variant="outlined" sx={{ width: "100%", flexGrow: 1 }}>
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              options={Array.isArray(availableCourses) ? availableCourses : []}
+              getOptionLabel={(option) => {
+                const displayCode = option.courseCode || option.courseId || option._id || "Code";
+                const displayName = option.courseName || option.name || "Name";
+                return `${displayCode} - ${displayName}`;
+              }}
+              value={(Array.isArray(availableCourses) ? availableCourses : []).filter(c => 
+                  (Array.isArray(selectedCoursesForGen) ? selectedCoursesForGen : []).includes(c._id || c.courseId)
+              )}
+              onChange={(event, newValue) => {
+                setSelectedCoursesForGen(
+                    (Array.isArray(newValue) ? newValue : []).map((c) => c._id || c.courseId)
+                );
+              }}
+              renderInput={(params) => (
+                  <TextField
+                      {...params}
+                      variant="outlined"
+                      label={t.selectCoursesForGen || "Select courses"}
+                      placeholder={t.chooseCourse || "Choose a course"}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "12px",
+                        },
+                      }}
+                  />
+              )}
+              renderTags={(value, getTagProps) =>
+                (Array.isArray(value) ? value : []).map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return (
+                    <Chip
+                      key={key}
+                      variant="outlined"
+                      label={option.courseCode || option.courseId || option._id}
+                      {...tagProps}
+                    />
+                  );
+                })
+              }
+            />
+          </FormControl>
+
+          <Button
+              variant="contained"
+              disabled={
+                  !Array.isArray(selectedCoursesForGen) ||
+                  selectedCoursesForGen.length === 0 ||
+                  isGenerating ||
+                  isActionLoading
+              }
+              onClick={handleGenerateSchedules}
+              startIcon={
+                isGenerating ? (
+                    <CircularProgress size={20} color="inherit" />
+                ) : (
+                    <SyncIcon />
+                )
+              }
+              sx={{
+                height: "56px",
+                px: 4,
+                borderRadius: "12px",
+                backgroundColor: "#152b48",
+                fontWeight: "bold",
+                fontSize: "0.95rem",
+                width: { xs: "100%", md: "auto" },
+                "&:hover": { backgroundColor: "#0f1e33" },
+              }}
+          >
+            {isGenerating ? (t.generatingSchedules || "Generating...") : (t.generateSchedulesBtn || "Generate")}
+          </Button>
+        </Box>
+
+        {Array.isArray(generatedSchedules) && generatedSchedules.length > 0 && (
+          <Box sx={{ mt: 5 }}>
+            <Typography variant="h6" sx={{ fontWeight: "800", color: "#152b48", mb: 3 }}>
+              {t.validSchedulesFound || "Generated Schedules"}: {generatedSchedules.length}
+            </Typography>
+            <Grid container spacing={3}>
+              {(Array.isArray(generatedSchedules) ? generatedSchedules : []).map((schedule, sIdx) => (
+                <Grid item xs={12} md={6} lg={4} key={sIdx}>
+                  <Card
+                      elevation={0}
+                      sx={{
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "16px",
+                        p: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                      }}
+                  >
+                    <CardContent sx={{ flexGrow: 1, p: 1, mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1d4ed8", mb: 2 }}>
+                        {t.schedule || "Schedule"} #{sIdx + 1}
+                      </Typography>
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        {(Array.isArray(schedule) ? schedule : []).map((item, iIdx) => {
+                          const courseObj = (Array.isArray(availableCourses) ? availableCourses : []).find(c => c._id === item.courseId || c.courseId === item.courseId);
+                          const displayName = courseObj?.courseName || courseObj?.name || "";
+                          const courseAppointments = Array.isArray(item?.appointments) 
+                            ? item.appointments 
+                            : Array.isArray(item?.schedule) 
+                              ? item.schedule 
+                              : courseObj 
+                                ? (Array.isArray(courseObj.groups) ? courseObj.groups : []).filter(g => g.groupName === item.groupName || g.name === item.groupName)
+                                : [];
+
+                          return (
+                            <Paper
+                              key={iIdx}
+                              elevation={0}
+                              sx={{
+                                p: 2,
+                                borderRadius: "12px",
+                                bgcolor: "#f8fafc",
+                                border: "1px solid #e2e8f0",
+                              }}
+                            >
+                              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "#152b48" }}>
+                                  {item.courseId} {displayName && `- ${displayName}`}
+                                </Typography>
+                                <Chip
+                                  label={`${t.grp || "Group"}: ${item.groupName}`}
+                                  size="small"
+                                  color="primary"
+                                  sx={{ fontWeight: "bold", height: "24px", fontSize: "0.75rem" }}
+                                />
+                              </Box>
+                              
+                              {courseAppointments.length === 0 ? (
+                                <Typography variant="caption" color="text.secondary">
+                                  {t.tba || "TBA"}
+                                </Typography>
+                              ) : (
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                                  {(Array.isArray(courseAppointments) ? courseAppointments : []).map((appt, aIdx) => (
+                                    <Box key={aIdx} sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2, p: 1, bgcolor: "#ffffff", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "80px" }}>
+                                        <Chip 
+                                          label={appt.type || "TBA"} 
+                                          size="small" 
+                                          sx={{ height: "20px", fontSize: "0.65rem", fontWeight: "bold", bgcolor: "#e0f2fe", color: "#0284c7" }} 
+                                        />
+                                      </Box>
+                                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "100px" }}>
+                                        <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                        <Typography variant="caption" sx={{ fontWeight: "bold", textTransform: "capitalize", color: "#475569" }}>
+                                          {appt.day || appt.appointment?.day || "TBA"}
+                                        </Typography>
+                                      </Box>
+                                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: "110px" }}>
+                                        <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                        <Typography variant="caption" sx={{ color: "#475569" }}>
+                                          {appt.startTime || appt.appointment?.startTime || "TBA"} - {appt.endTime || appt.appointment?.endTime || "TBA"}
+                                        </Typography>
+                                      </Box>
+                                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                        <LocationOnIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                        <Typography variant="caption" sx={{ color: "#475569" }}>
+                                          Room: {appt.Room || "TBA"}
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              )}
+                            </Paper>
+                          );
+                        })}
+                      </Box>
+                    </CardContent>
+                    <CardActions sx={{ p: 0 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="primary"
+                        disabled={isActionLoading}
+                        onClick={() => handleConfirmSchedule(Array.isArray(schedule) ? schedule : [])}
+                        sx={{ borderRadius: "8px", fontWeight: "bold", textTransform: "none", mt: 1 }}
+                      >
+                        {t.confirmThisSchedule || "Confirm Schedule"}
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+      </Paper>
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
     </Box>
   );
 }
