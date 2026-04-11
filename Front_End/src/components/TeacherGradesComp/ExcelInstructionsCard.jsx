@@ -1,60 +1,60 @@
 import React from 'react';
+import { FileSpreadsheet, CheckCircle, Minus } from 'lucide-react';
 
 export default function ExcelInstructionsCard() {
+  const acceptedNames = ["id", "student_id", "code", "student id", "كود الطالب"];
+  const ignoredNames = ["name", "student name", "student_name", "email", "department", "serial", "الاسم"];
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '40px 10px' }}>
-      
-      {/* Mobile-Sized Wrapper with Fixed Dimensions */}
-      <div style={{ position: 'relative', width: '100%', maxWidth: '400px', minWidth: '300px', flexShrink: 0 }}>
-        
-        {/* Glow Background */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-[32px] blur-xl opacity-50"></div>
-        
-        {/* Main Glass Card */}
-        <div 
-          className="relative bg-slate-900 border border-slate-700 shadow-2xl"
-          style={{ borderRadius: '32px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px', backdropFilter: 'blur(16px)' }}
-        >
-          
-          <h2 style={{ margin: 0, textAlign: 'center', fontSize: '22px', fontWeight: 'bold', color: '#ffffff' }}>
-            ✨ Column Rules
-          </h2>
-          
-          {/* Valid Names Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Valid Names
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {['id', 'student_id', 'code', 'student id', 'كود الطالب'].map((name) => (
-                <span 
-                  key={name} 
-                  style={{ backgroundColor: 'rgba(6,182,212,0.15)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.3)', padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-                >
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Ignored Columns Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#f472b6', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Ignored Columns
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {['name', 'student name', 'student_name', 'email', 'department', 'serial', 'الاسم'].map((name) => (
-                <span 
-                  key={name} 
-                  style={{ backgroundColor: 'rgba(236,72,153,0.15)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.3)', padding: '8px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-                >
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-
+    <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-5 mb-6 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-start gap-4 border-b border-gray-100 pb-4 mb-4">
+        <div className="bg-blue-50 p-2.5 rounded-lg flex-shrink-0">
+          <FileSpreadsheet className="w-6 h-6 text-blue-600" />
         </div>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Excel Column Naming Rules
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Please ensure your primary key column is named correctly before uploading.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content Layout Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        {/* Section A: Accepted */}
+        <div className="bg-green-50/30 border border-green-100 rounded-lg p-5">
+          <h4 className="text-sm font-semibold text-green-800 mb-4 border-b border-green-200 pb-2">
+            Accepted Names (Primary Key)
+          </h4>
+          <ul className="space-y-3">
+            {acceptedNames.map((name, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span className="font-mono text-sm text-green-700 font-medium">{name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Section B: Ignored */}
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-5">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
+            Ignored Names (Do Not Use for ID)
+          </h4>
+          <ul className="space-y-3">
+            {ignoredNames.map((name, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <Minus className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span className="font-mono text-sm text-gray-500">{name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
       </div>
     </div>
   );
