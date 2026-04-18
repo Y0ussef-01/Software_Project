@@ -3,15 +3,15 @@ import { Stack, router } from "expo-router";
 import { I18nManager } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { getToken, getRole } from '../api/storage';
+import { registerPushToken } from '../api/notifications';
 
 // استيراد الـ APIs الخاصة بك
 import { getStudentProfile } from '../api/studentApi';
 import { getTeacherProfile } from '../api/teacherApi';
 
 /**
- * 1. إعداد معالج النوتيفيكيشن (خارج الـ Component)
+ * إعداد معالج النوتيفيكيشن (خارج الـ Component)
  * ده أهم جزء عشان النوتيفيكيشن "اللي من بره" تشتغل والموبايل مقفول
- * بدون أي اعتماد على الـ AsyncStorage أو الكاش.
  */
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -30,21 +30,23 @@ I18nManager.allowRTL(false);
 export default function RootLayout() {
     useEffect(() => {
         /**
-         * 2. مستمعات النوتيفيكيشن (تشتغل فوراً وبشكل مستقل)
+         * 1. تسجيل الـ Push Token وبعته للسيرفر
          */
-        // مستمع للاستقبال والتطبيق مفتوح أو في الخلفية
+        registerPushToken();
+
+        /**
+         * 2. مستمعات النوتيفيكيشن
+         */
         const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-            console.log("🔔 Notification Received (Direct System Path)");
+            console.log("🔔 Notification Received");
         });
 
-        // مستمع للتعامل مع "الضغط" على الإشعار والموبايل مقفول
         const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
             console.log("📩 User opened notification from background/quit state");
-            // هنا النظام القديم: الإشعار بيفتح التطبيق مباشرة
         });
 
         /**
-         * 3. نظام التوجيه (هنا فقط نستخدم الكاش)
+         * 3. نظام التوجيه
          */
         const checkAuthAndNavigate = async () => {
             try {
@@ -52,9 +54,8 @@ export default function RootLayout() {
                 const role = await getRole();
 
                 if (token && role) {
-                    // جلب بيانات البروفايل (فريش)
                     if (role === 'student') {
-                        getStudentProfile().catch(() => {}); 
+                        getStudentProfile().catch(() => {});
                         router.replace('/home' as any);
                     } else if (role === 'teacher') {
                         getTeacherProfile().catch(() => {});
@@ -68,20 +69,20 @@ export default function RootLayout() {
 
         checkAuthAndNavigate();
 
-        // تنظيف المستمعات عند قفل الصفحة
+        // تنظيف المستمعات
         return () => {
             notificationListener.remove();
             responseListener.remove();
         };
-        
+
     }, []);
 
-   return (
-    <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="home" options={{ headerShown: false }} />
-        <Stack.Screen name="hometeacher" options={{ headerShown: false }} />
-        <Stack.Screen name="studentschedule" options={{ headerShown: false }} />
-    </Stack>
-);
+    return (
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="home" options={{ headerShown: false }} />
+            <Stack.Screen name="hometeacher" options={{ headerShown: false }} />
+            <Stack.Screen name="studentschedule" options={{ headerShown: false }} />
+        </Stack>
+    );
 }
