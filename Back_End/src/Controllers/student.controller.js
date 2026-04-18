@@ -660,13 +660,15 @@ const getAcademicRecord = async (req, res) => {
         const studentId = req.user.id;
 
         const records = await AcademicRecord.find({ student: studentId })
-            .populate('course', 'name hours')
+            .populate('course')
             .sort({ uploadedAt: -1 });
+
+        const safeRecords = records.filter(r => r.course != null);
 
         res.status(200).json({
             message: 'Academic record retrieved successfully',
-            totalCourses: records.length,
-            records: records.map(r => ({
+            totalCourses: safeRecords.length,
+            records: safeRecords.map(r => ({
                 courseId:   r.course._id,
                 courseName: r.course.name,
                 hours:      r.course.hours,
@@ -677,7 +679,8 @@ const getAcademicRecord = async (req, res) => {
             }))
         });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error("Error in getAcademicRecord:", err);
+        res.status(500).json({ message: "Internal Server Error: " + err.message });
     }
 };
 

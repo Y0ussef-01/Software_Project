@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/Bulkuploadstudentscomp.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/components/AdminComp/StudentManagement/Bulkuploadstudentscomp.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/full_project.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -261,6 +259,10 @@
       <workItem from="1775817652991" duration="5279000" />
       <workItem from="1775833401022" duration="6486000" />
       <workItem from="1775849075402" duration="1017000" />
+      <workItem from="1776462397358" duration="1000" />
+      <workItem from="1776500539981" duration="2645000" />
+      <workItem from="1776509311517" duration="56000" />
+      <workItem from="1776513318816" duration="5141000" />
     </task>
     <servers />
   </component>
