@@ -11,7 +11,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7384e623-43aa-428c-a0cb-f6c5165104fd"
+        "projectId": "6433f018-1d12-4bd2-b056-9153b833fc51"
       }
     },
     "ios": {
@@ -69,6 +69,6 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "owner": "shefoo123"
+    "owner": "mahmoud_mosad21"
   }
 }
