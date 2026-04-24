@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 export default function useStudentManagement() {
@@ -18,11 +18,6 @@ export default function useStudentManagement() {
     }
   }, [searchId]);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
   const handleSearch = async () => {
     const cleanSearchId = String(searchId).trim();
     if (!cleanSearchId) {
@@ -31,10 +26,7 @@ export default function useStudentManagement() {
     }
     setIsLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5000/admin/student/${encodeURIComponent(cleanSearchId)}`,
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.get(`/admin/student/${encodeURIComponent(cleanSearchId)}`);
       setStudentData(response.data);
       setShowCard(true);
       toast.success("Student found successfully");
@@ -44,7 +36,7 @@ export default function useStudentManagement() {
         toast.error("Student not found in database.");
       } else if (error.response?.status === 500) {
         toast.error(
-          `Backend Error 500: ${error.response?.data?.message || "Unknown Server Crash"}`,
+            `Backend Error 500: ${error.response?.data?.message || "Unknown Server Crash"}`,
         );
       } else {
         toast.error(error.response?.data?.message || "Failed to fetch student");
@@ -60,11 +52,11 @@ export default function useStudentManagement() {
     try {
       if (updatedData.password && String(updatedData.password).trim() !== "") {
         const strongPasswordRegex =
-          /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+            /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
         if (!strongPasswordRegex.test(updatedData.password)) {
           toast.warning(
-            "Password must be at least 8 characters long and include letters, numbers, and symbols.",
-            { autoClose: 4000 },
+              "Password must be at least 8 characters long and include letters, numbers, and symbols.",
+              { autoClose: 4000 },
           );
           setIsLoading(false);
           return false;
@@ -101,11 +93,7 @@ export default function useStudentManagement() {
       });
 
       const studentStringId = String(studentData._id).trim();
-      const response = await axios.put(
-        `http://localhost:5000/admin/update-student/${studentStringId}`,
-        payload,
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.put(`/admin/update-student/${studentStringId}`, payload);
 
       setStudentData(response.data.student || { ...studentData, ...payload });
       toast.success(response.data.message || "Student updated successfully", {
@@ -125,18 +113,15 @@ export default function useStudentManagement() {
 
   const handleDeleteClick = async () => {
     if (
-      !window.confirm(
-        "Are you sure you want to delete this student permanently?",
-      )
+        !window.confirm(
+            "Are you sure you want to delete this student permanently?",
+        )
     )
       return;
     setIsLoading(true);
     try {
       const studentStringId = String(studentData._id).trim();
-      await axios.delete(
-        `http://localhost:5000/admin/delete-student/${studentStringId}`,
-        getAuthHeaders(),
-      );
+      await axiosInstance.delete(`/admin/delete-student/${studentStringId}`);
       toast.success("Student deleted successfully", { position: "top-right" });
       setShowCard(false);
       setSearchId("");

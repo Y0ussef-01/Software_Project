@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 const convertTo12Hour = (time24) => {
   if (!time24) return "";
   if (
-    time24.toLowerCase().includes("am") ||
-    time24.toLowerCase().includes("pm")
+      time24.toLowerCase().includes("am") ||
+      time24.toLowerCase().includes("pm")
   ) {
     return time24;
   }
@@ -27,18 +27,10 @@ export default function useClassManagement() {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
   const fetchCourses = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(
-        "http://localhost:5000/admin/courses",
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.get("/admin/courses");
       setCourses(response.data?.courses || response.data || []);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to fetch courses");
@@ -51,8 +43,8 @@ export default function useClassManagement() {
     setIsLoading(true);
     try {
       const preReqArray = Array.isArray(courseData.prerequisites)
-        ? courseData.prerequisites
-        : [];
+          ? courseData.prerequisites
+          : [];
 
       const payload = {
         _id: courseData._id.trim(),
@@ -61,11 +53,7 @@ export default function useClassManagement() {
         prerequisites: preReqArray,
       };
 
-      const response = await axios.post(
-        "http://localhost:5000/admin/add-course",
-        payload,
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.post("/admin/add-course", payload);
 
       toast.success(response.data?.message || "Course added successfully", {
         position: "top-right",
@@ -82,17 +70,14 @@ export default function useClassManagement() {
 
   const deleteCourse = async (courseId) => {
     if (
-      !window.confirm(
-        "Are you sure you want to delete this course permanently?",
-      )
+        !window.confirm(
+            "Are you sure you want to delete this course permanently?",
+        )
     )
       return;
     setIsLoading(true);
     try {
-      await axios.delete(
-        `http://localhost:5000/admin/delete-course/${courseId}`,
-        getAuthHeaders(),
-      );
+      await axiosInstance.delete(`/admin/delete-course/${courseId}`);
       toast.success("Course deleted successfully");
       fetchCourses();
     } catch (error) {
@@ -115,11 +100,7 @@ export default function useClassManagement() {
         },
       };
 
-      const response = await axios.post(
-        "http://localhost:5000/admin/add-group",
-        formattedGroupData,
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.post("/admin/add-group", formattedGroupData);
       toast.success(response.data?.message || "Group added successfully");
       fetchCourses();
       return true;
@@ -136,10 +117,7 @@ export default function useClassManagement() {
     setIsLoading(true);
     try {
       const groupId = `${courseId}-${groupName}-${type}`;
-      const response = await axios.delete(
-        `http://localhost:5000/admin/delete-group/${groupId}`,
-        getAuthHeaders(),
-      );
+      const response = await axiosInstance.delete(`/admin/delete-group/${groupId}`);
       toast.success(response.data?.message || "Group deleted successfully");
       fetchCourses();
     } catch (error) {
