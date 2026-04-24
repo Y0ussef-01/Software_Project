@@ -8,7 +8,7 @@ const { debuggerHost } = Constants.expoConfig?.hostUri
   : { debuggerHost: 'localhost' };
 
 const API = axios.create({
-  baseURL: `http://${debuggerHost}:5000`,
+  baseURL: "https://software-project-5413.onrender.com",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

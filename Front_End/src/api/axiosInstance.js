@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+    baseURL: import.meta.env.VITE_API_BASE_URL || "https://software-project-5413.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },

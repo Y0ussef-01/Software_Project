@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/api/axiosInstance.js" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/api/axiosInstance.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mobile/api/axiosConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Mobile/api/axiosConfig.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +117,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.23567.141" />
       </set>
     </attachedChunks>
   </component>
@@ -263,6 +266,10 @@
       <workItem from="1776500539981" duration="2645000" />
       <workItem from="1776509311517" duration="56000" />
       <workItem from="1776513318816" duration="5141000" />
+      <workItem from="1776526101604" duration="1507000" />
+      <workItem from="1776553481294" duration="3000" />
+      <workItem from="1776729198315" duration="14000" />
+      <workItem from="1777031736162" duration="656000" />
     </task>
     <servers />
   </component>
