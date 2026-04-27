@@ -11,7 +11,7 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import FeedbackIcon from "@mui/icons-material/Feedback";
+import RateReviewIcon from "@mui/icons-material/RateReview";
 import RestStud from "../../assets/images/restStud.jpg";
 import ComplaintDialog from "./ComplaintDialog";
 
@@ -86,7 +86,7 @@ export default function Footer() {
                   gap: 0.5,
                 }}
               >
-                <FeedbackIcon fontSize="small" />
+                <RateReviewIcon fontSize="small" />
                 Complaints & Suggestions
               </Link>
             </Stack>

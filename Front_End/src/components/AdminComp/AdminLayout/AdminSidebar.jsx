@@ -22,6 +22,7 @@ import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import ClassOutlinedIcon from "@mui/icons-material/ClassOutlined";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
+import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 
 import AdminAvatarSection from "../../AdminComp/AdminLayout/AdminAvatarSection";
 
@@ -41,6 +42,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
     { title: "Enrollments", icon: <ReceiptOutlinedIcon />, path: "/adminPanel/enrollments" },
     { title: "Teacher Assignments", icon: <AssignmentOutlinedIcon />, path: "/adminPanel/teacher-assignments" },
     { title: "Final Grades", icon: <GradingOutlinedIcon />, path: "/adminPanel/final-grades" },
+    { title: "Complaints", icon: <FeedbackOutlinedIcon />, path: "/adminPanel/complaints" },
   ];
 
   const handleNavigate = (path) => {

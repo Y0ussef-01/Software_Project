@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,45 +6,32 @@ import {
   Button,
   useTheme,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { toast } from "react-toastify";
-import axiosInstance from "../../../api/axiosInstance";
+import CloseIcon from "@mui/icons-material/Close";
+import { useAdminComplaints } from "../../../hooks/Admin/useAdminComplaints";
 
 export default function ComplaintsPage() {
   const theme = useTheme();
-  const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { complaints, loading, updateComplaintStatus } = useAdminComplaints();
+  
+  // State for the "View More" Modal
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchComplaints = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get("/api/admin/complaints");
-      let data = response.data?.complaints || response.data || [];
-      // Map _id to id for DataGrid
-      data = data.map((item) => ({ ...item, id: item._id || item.id }));
-      setComplaints(data);
-    } catch (error) {
-      toast.error("Failed to fetch complaints");
-    } finally {
-      setLoading(false);
-    }
+  const handleOpenModal = (message) => {
+    setSelectedMessage(message);
+    setModalOpen(true);
   };
-
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
-
-  const handleReview = async (id) => {
-    try {
-      await axiosInstance.patch(`/api/admin/complaint/${id}`);
-      toast.success("Complaint status updated to Reviewed");
-      setComplaints((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: "Reviewed" } : c))
-      );
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
+  
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedMessage(null);
   };
 
   const columns = [
@@ -57,13 +44,27 @@ export default function ComplaintsPage() {
       renderCell: (params) => (
         <Chip 
           label={params.value} 
-          color={params.value === "Complaint" ? "error" : "primary"} 
+          color={params.value?.toLowerCase() === "complaint" ? "error" : "primary"} 
           size="small" 
           variant="outlined" 
         />
       ),
     },
-    { field: "message", headerName: "Message", flex: 2 },
+    { 
+      field: "message", 
+      headerName: "Message", 
+      flex: 2,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+          <Typography noWrap sx={{ maxWidth: '70%', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+            {params.value}
+          </Typography>
+          <Button size="small" variant="text" onClick={() => handleOpenModal(params.value)}>
+            View
+          </Button>
+        </Box>
+      )
+    },
     {
       field: "date",
       headerName: "Date",
@@ -80,7 +81,7 @@ export default function ComplaintsPage() {
       renderCell: (params) => (
         <Chip
           label={params.value}
-          color={params.value === "Reviewed" ? "success" : "warning"}
+          color={params.value?.toLowerCase() === "reviewed" ? "success" : "warning"}
           size="small"
         />
       ),
@@ -93,10 +94,10 @@ export default function ComplaintsPage() {
         <Button
           variant="contained"
           size="small"
-          disabled={params.row.status === "Reviewed"}
-          onClick={() => handleReview(params.row.id)}
+          disabled={params.row.status?.toLowerCase() === "reviewed"}
+          onClick={() => updateComplaintStatus(params.row.id)}
         >
-          {params.row.status === "Reviewed" ? "Reviewed" : "Mark Reviewed"}
+          {params.row.status?.toLowerCase() === "reviewed" ? "Reviewed" : "Mark Reviewed"}
         </Button>
       ),
     },
@@ -132,6 +133,26 @@ export default function ComplaintsPage() {
           disableRowSelectionOnClick
         />
       </Paper>
+
+      {/* View More Modal */}
+      <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" fontWeight="bold">Full Message</Typography>
+          <IconButton onClick={handleCloseModal}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+            {selectedMessage}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleCloseModal} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
