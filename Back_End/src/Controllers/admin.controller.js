@@ -729,6 +729,42 @@ const uploadStudentsExcel = async (req, res) => {
   }
 };
 
+const getStudentsInGroup = async (req, res) => {
+  try {
+    const { courseId, groupName } = req.query;
+
+    if (!courseId || !groupName) {
+      return res.status(400).json({ message: "Course ID and Group Name are required" });
+    }
+
+    let students = [];
+
+    if (groupName.toLowerCase() === 'all') {
+      students = await Student.find({ "registeredCourses.course": courseId })
+          .select('_id name profileImg');
+
+    } else {
+      const group = await Group.findOne({ course: courseId, groupName: groupName })
+          .populate('enrolledStudents', '_id name profileImg');
+
+      if (!group) {
+        return res.status(404).json({ message: "Group not found for this course" });
+      }
+
+      students = group.enrolledStudents;
+    }
+
+    res.status(200).json({
+      message: "Students retrieved successfully",
+      count: students.length,
+      students: students
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   addStudent,
   deleteStudent,
@@ -748,5 +784,6 @@ module.exports = {
   removeTeacherCourse,
   getDashboardStats,
   uploadFinalGrades,
-  uploadStudentsExcel
+  uploadStudentsExcel,
+  getStudentsInGroup
 };
