@@ -11,6 +11,7 @@ const Attendance = require('../models/Attendance');
 const SwapRequest = require('../models/SwapRequest');
 const AcademicRecord = require('../models/AcademicRecord');
 const FinalResult    = require('../models/FinalResult');
+const Complaint = require('../models/Complaint');
 const sendPushNotification = require('../utils/sendPushNotification');
 const {isTimeConflict} = require('../utils/Test_Conflict');
 
@@ -949,6 +950,28 @@ const getStudentCourseAnalytics = async (req, res) => {
     }
 };
 
+const submitComplaint = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { type, message } = req.body;
+
+        if (!type || !message) {
+            return res.status(400).json({ message: "Type and message are required" });
+        }
+
+        const newSubmission = new Complaint({
+            student: studentId,
+            type,
+            message
+        });
+
+        await newSubmission.save();
+        res.status(201).json({ message: "Submitted successfully" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
@@ -970,5 +993,6 @@ module.exports = {
     getAcademicRecord,
     getFinalResults,
     generateSchedules,
-    getStudentCourseAnalytics
+    getStudentCourseAnalytics,
+    submitComplaint
 };

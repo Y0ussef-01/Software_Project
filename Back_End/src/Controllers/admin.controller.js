@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const AcademicRecord = require('../models/AcademicRecord');
 const FinalResult = require('../models/FinalResult');
 const Notification = require('../models/Notification');
+const Complaint = require('../models/Complaint');
 const sendEmail = require('../utils/sendEmail');
 const { getLetterGrade, getCourseGPA } = require("../utils/gradeCalculator");const sendPushNotification = require('../utils/sendPushNotification');
 const bcrypt = require("bcrypt");
@@ -765,6 +766,39 @@ const getStudentsInGroup = async (req, res) => {
   }
 };
 
+const getAllComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find()
+        .populate('student', '_id name')
+        .sort({ createdAt: -1 });
+
+    res.status(200).json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const updateComplaintStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.status(200).json({ message: "Status updated successfully", complaint: updatedComplaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   addStudent,
   deleteStudent,
@@ -785,5 +819,7 @@ module.exports = {
   getDashboardStats,
   uploadFinalGrades,
   uploadStudentsExcel,
-  getStudentsInGroup
+  getStudentsInGroup,
+  getAllComplaints,
+  updateComplaintStatus
 };
