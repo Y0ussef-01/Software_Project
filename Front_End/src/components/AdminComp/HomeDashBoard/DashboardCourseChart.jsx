@@ -5,6 +5,7 @@ import {
   Typography,
   CircularProgress,
   useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   BarChart,
@@ -21,6 +22,7 @@ import useDashboardStats from "../../../hooks/Admin/Dashboard/useDashboardStats"
 export default function DashboardCourseChart() {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { stats, isLoading, error } = useDashboardStats();
 
   const COLORS = [
@@ -113,6 +115,7 @@ export default function DashboardCourseChart() {
         overflow: "hidden",
       }}
     >
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -150,7 +153,14 @@ export default function DashboardCourseChart() {
         </Box>
       ) : (
         <Box sx={{ width: "100%", overflowX: "auto" }}>
-          <Box sx={{ minWidth: `${minChartWidth}px`, width: "100%" }}>
+          <Box
+            sx={{
+              // ✅ على الموبايل: كل العرض
+              // على الديسك توب: 55% بس عشان الأعمدة مش واسعة أوي
+              width: isMobile ? `${minChartWidth}px` : "55%",
+              minWidth: isMobile ? `${minChartWidth}px` : "300px",
+            }}
+          >
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
                 data={chartData}
