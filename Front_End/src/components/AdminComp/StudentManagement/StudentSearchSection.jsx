@@ -42,12 +42,12 @@ export default function StudentSearchSection({
       }}
       sx={{
         display: "flex",
-        flexDirection: { xs: "column", md: "row" },
+        // ✅ على الموبايل: كل حاجة تحت بعض
+        flexDirection: "column",
         gap: 2,
-        alignItems: "center",
         width: "100%",
         maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" },
-        p: { xs: 2.5, md: 3 },
+        p: { xs: 2, sm: 2.5, md: 3 },
         mb: 4,
         borderRadius: "24px",
         backgroundColor: theme.palette.background.paper,
@@ -57,6 +57,7 @@ export default function StudentSearchSection({
             : "0px 10px 40px rgba(21, 43, 72, 0.05)",
       }}
     >
+      {/* Search Input */}
       <TextField
         fullWidth
         placeholder="Enter Student ID (e.g. 2327999)..."
@@ -98,20 +99,27 @@ export default function StudentSearchSection({
         }}
       />
 
-      <Box sx={{ display: "flex", gap: 2, width: { xs: "100%", md: "auto" } }}>
-        {/* Search */}
+      {/* ✅ الأزرار في صف واحد - بتـ wrap لو مفيش مساحة */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap", // ✅ مهم - بيخلي الأزرار تنزل تحت بعض لو مفيش مساحة
+          gap: 1.5,
+        }}
+      >
+        {/* Get Student */}
         <Button
           type="submit"
           variant="contained"
           startIcon={<ManageSearchIcon />}
           sx={{
-            px: { xs: 2, lg: 4 },
+            flex: "1 1 auto", // ✅ بياخد المساحة المتاحة
+            minWidth: { xs: "100px", sm: "130px" },
             py: 1.5,
             borderRadius: "14px",
             fontWeight: "bold",
             textTransform: "none",
-            flexGrow: { xs: 1, md: 0 },
-            whiteSpace: "nowrap",
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             boxShadow:
               theme.palette.mode === "dark"
                 ? "0 8px 20px rgba(0,0,0,0.5)"
@@ -121,19 +129,19 @@ export default function StudentSearchSection({
           Get Student
         </Button>
 
-        {/* Add single student */}
+        {/* Add Student */}
         <Button
           variant="outlined"
           startIcon={<PersonAddAlt1Icon />}
           onClick={() => navigate("/adminPanel/add-student")}
           sx={{
-            px: { xs: 2, lg: 3 },
+            flex: "1 1 auto",
+            minWidth: { xs: "100px", sm: "130px" },
             py: 1.5,
             borderRadius: "14px",
             fontWeight: "bold",
             textTransform: "none",
-            flexGrow: { xs: 1, md: 0 },
-            whiteSpace: "nowrap",
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             borderWidth: "2px",
             "&:hover": { borderWidth: "2px" },
           }}
@@ -141,20 +149,20 @@ export default function StudentSearchSection({
           Add Student
         </Button>
 
-        {/* Bulk upload */}
+        {/* Bulk Upload */}
         <Button
           variant="outlined"
           color="success"
           startIcon={<UploadFileIcon />}
           onClick={() => navigate("/adminPanel/bulk-upload-students")}
           sx={{
-            px: { xs: 2, lg: 3 },
+            flex: "1 1 auto",
+            minWidth: { xs: "100px", sm: "130px" },
             py: 1.5,
             borderRadius: "14px",
             fontWeight: "bold",
             textTransform: "none",
-            flexGrow: { xs: 1, md: 0 },
-            whiteSpace: "nowrap",
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
             borderWidth: "2px",
             "&:hover": { borderWidth: "2px" },
           }}
