@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شرح MPI بالعامية المصرية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1f2937;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --accent3: #56d364;
+    --accent4: #e3b341;
+    --accent5: #bc8cff;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --code-bg: #0d1117;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f3a 50%, #0d1117 100%);
+    padding: 60px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(88,166,255,0.12) 0%, transparent 70%);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--accent), var(--accent5), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .hero p { color: var(--text-muted); font-size: 1.1rem; position: relative; }
+
+  /* NAV */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; gap: 4px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a {
+    color: var(--text-muted); text-decoration: none;
+    padding: 14px 16px; font-size: 0.85rem; font-weight: 600;
+    white-space: nowrap; border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* CONTAINER */
+  .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 60px;
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.6rem; font-weight: 900; }
+  .section-header .sub { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* CONCEPT BOX */
+  .concept {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .concept h3 {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .concept p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 10px; }
+  .concept p:last-child { margin-bottom: 0; }
+
+  /* HIGHLIGHT COLORS */
+  .hl-blue { color: var(--accent); }
+  .hl-red { color: var(--accent2); }
+  .hl-green { color: var(--accent3); }
+  .hl-yellow { color: var(--accent4); }
+  .hl-purple { color: var(--accent5); }
+
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 700; margin-right: 6px;
+  }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-red { background: rgba(247,129,102,0.15); color: var(--accent2); }
+  .badge-green { background: rgba(86,211,100,0.15); color: var(--accent3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent4); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent5); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .code-header {
+    background: var(--surface2);
+    padding: 10px 16px;
+    font-size: 0.8rem; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-header .dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  pre {
+    padding: 20px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.88rem;
+    overflow-x: auto;
+    line-height: 1.7;
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* SYNTAX COLORS */
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .num { color: #bd93f9; }
+  .cm { color: #6272a4; font-style: italic; }
+  .type { color: #8be9fd; }
+  .var { color: #f8f8f2; }
+
+  /* LINE EXPLANATION TABLE */
+  .line-table {
+    width: 100%; border-collapse: collapse; margin-top: 16px;
+    font-size: 0.9rem;
+  }
+  .line-table th {
+    background: var(--surface2); padding: 10px 14px;
+    text-align: right; font-weight: 700; color: var(--accent);
+    border-bottom: 2px solid var(--border);
+  }
+  .line-table td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .line-table tr:hover td { background: rgba(88,166,255,0.04); }
+  .line-table .code-cell {
+    font-family: 'Fira Code', monospace; font-size: 0.82rem;
+    color: var(--accent3); direction: ltr; text-align: left;
+    white-space: nowrap;
+  }
+  .line-table .explain-cell { color: var(--text-muted); }
+
+  /* COMPARISON GRID */
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin: 16px 0;
+  }
+  @media(max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+  }
+  .compare-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+  .compare-card ul { list-style: none; }
+  .compare-card ul li { color: var(--text-muted); font-size: 0.9rem; padding: 4px 0; }
+  .compare-card ul li::before { content: '← '; color: var(--accent); }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 8px; margin: 16px 0; justify-content: center;
+  }
+  .flow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 18px;
+    font-size: 0.9rem; font-weight: 600; text-align: center;
+  }
+  .flow-arrow { color: var(--accent); font-size: 1.4rem; }
+
+  /* NOTE BOX */
+  .note {
+    border-radius: 10px; padding: 16px 20px; margin: 16px 0;
+    border-left: 4px solid; direction: rtl;
+  }
+  .note-info { background: rgba(88,166,255,0.08); border-color: var(--accent); }
+  .note-warn { background: rgba(227,179,65,0.08); border-color: var(--accent4); }
+  .note-success { background: rgba(86,211,100,0.08); border-color: var(--accent3); }
+  .note p { font-size: 0.9rem; }
+  .note strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  /* SIMILAR CONCEPT */
+  .similar-box {
+    background: linear-gradient(135deg, rgba(188,140,255,0.08), rgba(88,166,255,0.08));
+    border: 1px solid rgba(188,140,255,0.3);
+    border-radius: 12px; padding: 20px; margin: 16px 0;
+  }
+  .similar-box h4 { color: var(--accent5); font-size: 1rem; margin-bottom: 10px; }
+  .similar-box p { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* FILE TABS */
+  .file-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .file-tab {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 14px;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
+    cursor: default;
+  }
+  .file-tab.active { background: rgba(88,166,255,0.15); color: var(--accent); border-color: var(--accent); }
+
+  /* SUMMARY TABLE */
+  .summary-table {
+    width: 100%; border-collapse: collapse; font-size: 0.9rem;
+  }
+  .summary-table th {
+    background: var(--surface2); padding: 12px 16px;
+    text-align: right; color: var(--accent); font-weight: 700;
+    border-bottom: 2px solid var(--border);
+  }
+  .summary-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    color: var(--text-muted); vertical-align: middle;
+  }
+  .summary-table tr:hover td { background: rgba(88,166,255,0.04); }
+  .summary-table .fn-name {
+    font-family: 'Fira Code', monospace; font-size: 0.82rem;
+    color: var(--accent3); direction: ltr; text-align: left;
+  }
+
+  /* SCROLL TOP */
+  .scroll-top {
+    position: fixed; bottom: 30px; left: 30px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 50%; width: 44px; height: 44px;
+    font-size: 1.2rem; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(88,166,255,0.4);
+    transition: transform 0.2s;
+  }
+  .scroll-top:hover { transform: scale(1.1); }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 30px 0; }
+
+  /* CALLOUT */
+  .callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface); border-radius: 10px;
+    padding: 16px 20px; margin: 16px 0;
+    border: 1px solid var(--border);
+  }
+  .callout-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+  .callout p { font-size: 0.9rem; color: var(--text-muted); }
+  .callout strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>🚀 شرح MPI بالعامية المصرية</h1>
+  <p>كل الملفات، كل سطر، كل مفهوم — شرح تفصيلي بالكامل</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#basics">الأساسيات</a>
+  <a href="#quiz1">Quiz 1</a>
+  <a href="#quiz2">Quiz 2-3</a>
+  <a href="#quiz4">Quiz 4</a>
+  <a href="#quiz5">Quiz 5</a>
+  <a href="#quiz6">Quiz 6</a>
+  <a href="#quiz7">Quiz 7</a>
+  <a href="#quiz8">Quiz 8</a>
+  <a href="#quiz9">Quiz 9</a>
+  <a href="#mpi1">MPI Send/Recv</a>
+  <a href="#mpi2">MPI Reduce</a>
+  <a href="#mpi3">Broadcast</a>
+  <a href="#mpi4">Reduce</a>
+  <a href="#tasks">Tasks</a>
+  <a href="#cheatsheet">Cheatsheet</a>
+  <a href="#similar">التشابهات</a>
+</nav>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 0: BASICS -->
+<!-- ============================================================ -->
+<section class="section" id="basics">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(88,166,255,0.15)">🧠</div>
+    <div>
+      <h2 class="hl-blue">المفاهيم الأساسية الأول</h2>
+      <div class="sub">قبل ما تبدأ تقرأ أي كود</div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>🏭 إيه هو MPI؟</h3>
+    <p><strong class="hl-blue">MPI = Message Passing Interface</strong> — يعني <strong>بروتوكول</strong> بيخلي برامج كتير تشتغل في نفس الوقت وتتكلم مع بعض بالرسائل.</p>
+    <p>تخيل مصنع فيه <strong>مدير ومجموعة موظفين</strong>. المدير بيوزع الشغل على الموظفين، كل واحد بيشتغل في الجزء بتاعه، وبعدين بيرجعوا النتيجة للمدير. ده بالضبط اللي بيحصل في MPI.</p>
+    <div class="flow">
+      <div class="flow-box" style="border-color:var(--accent4)">🧑‍💼 Process 0 (المدير)</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-box">👷 Process 1</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-box">👷 Process 2</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-box">👷 Process 3</div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>📌 أهم 4 مفاهيم لازم تعرفهم</h3>
+    <table class="line-table">
+      <tr><th>المفهوم</th><th>المعنى</th><th>تشبيه</th></tr>
+      <tr>
+        <td class="code-cell">Rank</td>
+        <td class="explain-cell">رقم الـ Process — زي رقم الموظف</td>
+        <td class="explain-cell">رقم الباج اللي عليه الموظف</td>
+      </tr>
+      <tr>
+        <td class="code-cell">Size</td>
+        <td class="explain-cell">إجمالي عدد الـ Processes اللي شغالة</td>
+        <td class="explain-cell">عدد الموظفين في المصنع</td>
+      </tr>
+      <tr>
+        <td class="code-cell">MPI_COMM_WORLD</td>
+        <td class="explain-cell">القناة اللي الكل بيتكلم عليها</td>
+        <td class="explain-cell">جروب الواتساب اللي فيه الكل</td>
+      </tr>
+      <tr>
+        <td class="code-cell">Tag</td>
+        <td class="explain-cell">رقم تعريفي للرسالة عشان ميتشالش رسالة غلط</td>
+        <td class="explain-cell">الرقم اللي بتكتبه على الجواب</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="concept">
+    <h3>🔁 هيكل أي برنامج MPI</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>template.cpp</span>
+      </div>
+      <pre><span class="fn">MPI_Init</span>(<span class="var">&argc, &argv</span>);         <span class="cm">// 1. الأول دايماً</span>
+
+<span class="fn">MPI_Comm_rank</span>(<span class="var">MPI_COMM_WORLD, &rank</span>);  <span class="cm">// 2. اعرف رقمك</span>
+<span class="fn">MPI_Comm_size</span>(<span class="var">MPI_COMM_WORLD, &size</span>);  <span class="cm">// 3. اعرف الكل كام</span>
+
+<span class="cm">// 4. الشغل الحقيقي هنا</span>
+
+<span class="fn">MPI_Finalize</span>();                         <span class="cm">// 5. الآخر دايماً</span></pre>
+    </div>
+    <div class="note note-warn">
+      <p><strong>⚠️ قاعدة ذهبية:</strong> MPI_Init أول سطر، MPI_Finalize آخر سطر — دايماً بدون استثناء!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 1 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz1">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(86,211,100,0.15)">1️⃣</div>
+    <div>
+      <h2 class="hl-green">Quiz 1 — المدير والموظفين الفردي/الزوجي</h2>
+      <div class="sub">أول برنامج: كل Process بتعرف دورها</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz1.cpp</span>
+    </div>
+    <pre><span class="kw">#include</span> <span class="str">&lt;mpi.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="type">int</span> <span class="fn">main</span>(<span class="type">int</span> <span class="var">argc</span>, <span class="type">char</span>** <span class="var">argv</span>) {
+    <span class="type">int</span> <span class="var">world_rank</span>;
+
+    <span class="fn">MPI_Init</span>(<span class="var">&argc, &argv</span>);
+    <span class="fn">MPI_Comm_rank</span>(<span class="var">MPI_COMM_WORLD, &world_rank</span>);
+
+    <span class="kw">if</span> (<span class="var">world_rank</span> == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"My master node (Rank %d)\n"</span>, <span class="var">world_rank</span>);
+    } 
+    <span class="kw">else if</span> (<span class="var">world_rank</span> % <span class="num">2</span> == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"My even worker node (Rank %d)\n"</span>, <span class="var">world_rank</span>);
+    } 
+    <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"My odd worker node (Rank %d)\n"</span>, <span class="var">world_rank</span>);
+    }
+
+    <span class="fn">MPI_Finalize</span>();
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>السطر</th><th>الشرح بالعامية</th></tr>
+    <tr>
+      <td class="code-cell">MPI_Init(&argc, &argv)</td>
+      <td class="explain-cell">🔑 افتح بيئة MPI — زي ما تقول "يلا الكل يحضر"</td>
+    </tr>
+    <tr>
+      <td class="code-cell">MPI_Comm_rank(..., &world_rank)</td>
+      <td class="explain-cell">🏷️ كل Process بتسأل "أنا رقم كام؟" — الجواب يتحط في world_rank</td>
+    </tr>
+    <tr>
+      <td class="code-cell">if (world_rank == 0)</td>
+      <td class="explain-cell">👑 لو أنا المدير (رقم 0)، اطبع "master"</td>
+    </tr>
+    <tr>
+      <td class="code-cell">world_rank % 2 == 0</td>
+      <td class="explain-cell">🔢 لو رقمي زوجي (2، 4، 6...) اطبع "even worker"</td>
+    </tr>
+    <tr>
+      <td class="code-cell">else</td>
+      <td class="explain-cell">🔢 الباقي (1، 3، 5...) اطبع "odd worker"</td>
+    </tr>
+    <tr>
+      <td class="code-cell">MPI_Finalize()</td>
+      <td class="explain-cell">🔒 سكر بيئة MPI — زي "الكل يمشي"</td>
+    </tr>
+  </table>
+
+  <div class="note note-info">
+    <p><strong>🎯 الفكرة الأساسية:</strong> البرنامج ده بيتشغل على كل Process في نفس الوقت، بس كل واحد بيتصرف حسب رقمه. الكود واحد، السلوك مختلف.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 2 & 3 - SIMILAR -->
+<!-- ============================================================ -->
+<section class="section" id="quiz2">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(227,179,65,0.15)">2️⃣</div>
+    <div>
+      <h2 class="hl-yellow">Quiz 2 و 3 — تقسيم الأرقام على Processes</h2>
+      <div class="sub">فكرة مشتركة: كل Process بتشتغل على نطاق أرقام مختلف</div>
+    </div>
+  </div>
+
+  <div class="similar-box">
+    <h4>🔗 التشابه بين Quiz 2 و Quiz 3</h4>
+    <p>الاتنين بيقسموا نطاق أرقام على الـ Processes، الفرق بس إن Quiz 2 بتطبع 5 أرقام ثابتة لكل process، وQuiz 3 بتقسم N=20 بالتساوي وبتجمع.</p>
+  </div>
+
+  <h3 style="margin-bottom:12px; color:var(--accent4)">Quiz 2 — كل Process تطبع 5 أرقام</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz2.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">start_num</span> = (<span class="var">rank</span> * <span class="num">5</span>) + <span class="num">1</span>;
+
+<span class="fn">printf</span>(<span class="str">"Processor %d display : %d %d %d %d %d\n"</span>, 
+       <span class="var">rank</span>, 
+       <span class="var">start_num</span>, <span class="var">start_num</span> + <span class="num">1</span>, <span class="var">start_num</span> + <span class="num">2</span>, 
+       <span class="var">start_num</span> + <span class="num">3</span>, <span class="var">start_num</span> + <span class="num">4</span>);</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الـ Rank</th><th>start_num = (rank*5)+1</th><th>النطاق</th></tr>
+    <tr><td class="code-cell">0</td><td class="code-cell">(0*5)+1 = 1</td><td class="explain-cell">1 2 3 4 5</td></tr>
+    <tr><td class="code-cell">1</td><td class="code-cell">(1*5)+1 = 6</td><td class="explain-cell">6 7 8 9 10</td></tr>
+    <tr><td class="code-cell">2</td><td class="code-cell">(2*5)+1 = 11</td><td class="explain-cell">11 12 13 14 15</td></tr>
+    <tr><td class="code-cell">3</td><td class="code-cell">(3*5)+1 = 16</td><td class="explain-cell">16 17 18 19 20</td></tr>
+  </table>
+
+  <hr>
+
+  <h3 style="margin: 20px 0 12px; color:var(--accent4)">Quiz 3 — تقسيم N=20 وجمع كل جزء</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz3.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">chunk_size</span> = <span class="var">N</span> / <span class="var">size</span>;           <span class="cm">// حجم كل جزء = 20/4 = 5</span>
+
+<span class="type">int</span> <span class="var">start_num</span> = (<span class="var">rank</span> * <span class="var">chunk_size</span>) + <span class="num">1</span>;   <span class="cm">// بداية نطاقي</span>
+<span class="type">int</span> <span class="var">end_num</span>   = (<span class="var">rank</span> + <span class="num">1</span>) * <span class="var">chunk_size</span>;      <span class="cm">// نهاية نطاقي</span>
+
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="var">size</span> - <span class="num">1</span>) {
+    <span class="var">end_num</span> = <span class="var">N</span>;  <span class="cm">// آخر process بياخد الباقي</span>
+}
+
+<span class="type">int</span> <span class="var">local_sum</span> = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">start_num</span>; <span class="var">i</span> &lt;= <span class="var">end_num</span>; <span class="var">i</span>++) {
+    <span class="var">local_sum</span> += <span class="var">i</span>;
+}</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>السطر</th><th>الشرح</th></tr>
+    <tr>
+      <td class="code-cell">N / size</td>
+      <td class="explain-cell">بنقسم الشغل: 20 رقم على 4 processes = كل واحد بياخد 5</td>
+    </tr>
+    <tr>
+      <td class="code-cell">(rank * chunk_size) + 1</td>
+      <td class="explain-cell">بداية نطاقي: لو أنا rank 2، يبدأ من (2*5)+1 = 11</td>
+    </tr>
+    <tr>
+      <td class="code-cell">(rank + 1) * chunk_size</td>
+      <td class="explain-cell">نهاية نطاقي: لو أنا rank 2، ينتهي عند (3*5) = 15</td>
+    </tr>
+    <tr>
+      <td class="code-cell">if (rank == size - 1)</td>
+      <td class="explain-cell">آخر process بياخد لحد N عشان لو في باقي قسمة ميتضيعش</td>
+    </tr>
+    <tr>
+      <td class="code-cell">local_sum += i</td>
+      <td class="explain-cell">كل process بتجمع أرقامها لوحدها (local)</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 4 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz4">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(247,129,102,0.15)">4️⃣</div>
+    <div>
+      <h2 class="hl-red">Quiz 4 — Process 0 بتجمع، Process 1 بتطرح</h2>
+      <div class="sub">أبسط تقسيم دوار: كل process بتعمل عملية مختلفة</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz4.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">A</span> = <span class="num">10</span>;
+<span class="type">int</span> <span class="var">B</span> = <span class="num">20</span>;
+<span class="type">int</span> <span class="var">res</span> = <span class="num">0</span>;
+
+<span class="kw">if</span>(<span class="var">rank</span> == <span class="num">0</span>){
+    <span class="var">res</span> = <span class="var">A</span> + <span class="var">B</span>;    <span class="cm">// Process 0: تجمع  → 30</span>
+} <span class="kw">else if</span> (<span class="var">rank</span> == <span class="num">1</span>){
+    <span class="var">res</span> = <span class="var">A</span> - <span class="var">B</span>;    <span class="cm">// Process 1: تطرح  → -10</span>
+}
+
+<span class="fn">printf</span>(<span class="str">"Processor %d and the res is : %d \n"</span>, <span class="var">rank</span>, <span class="var">res</span>);</pre>
+  </div>
+
+  <div class="note note-info">
+    <p><strong>💡 الفكرة:</strong> نفس المتغيرات A و B موجودين في كل الـ Processes، بس كل واحدة بتعمل عملية مختلفة عليهم. الـ processes مبتكلمش مع بعض هنا.</p>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الـ Rank</th><th>اللي بيحصل</th><th>النتيجة</th></tr>
+    <tr><td class="code-cell">0</td><td class="explain-cell">A + B</td><td class="code-cell">30</td></tr>
+    <tr><td class="code-cell">1</td><td class="explain-cell">A - B</td><td class="code-cell">-10</td></tr>
+    <tr><td class="code-cell">2, 3, ...</td><td class="explain-cell">res فضل 0 (مفيش if ليه)</td><td class="code-cell">0</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 5 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz5">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(86,211,100,0.15)">5️⃣</div>
+    <div>
+      <h2 class="hl-green">Quiz 5 — مجموع الأرقام الزوجية فقط</h2>
+      <div class="sub">نفس Quiz 3 بالضبط + شرط إضافي: if (i % 2 == 0)</div>
+    </div>
+  </div>
+
+  <div class="similar-box">
+    <h4>🔗 التشابه مع Quiz 3</h4>
+    <p>Quiz 5 هي Quiz 3 بالظبط، الفرق الوحيد إنها بتجمع الأرقام الزوجية بس، يعني بضيفوا شرط <code style="color:var(--accent3)">if(i % 2 == 0)</code> جوه الـ loop.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz5.cpp — الجزء المختلف عن Quiz 3</span>
+    </div>
+    <pre><span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">start_num</span>; <span class="var">i</span> &lt;= <span class="var">end_num</span>; <span class="var">i</span>++) {
+    <span class="kw">if</span>(<span class="var">i</span> % <span class="num">2</span> == <span class="num">0</span>){     <span class="cm">// ← الفرق الوحيد</span>
+        <span class="var">local_sum</span> += <span class="var">i</span>;
+    }
+}</pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 6 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz6">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(188,140,255,0.15)">6️⃣</div>
+    <div>
+      <h2 class="hl-purple">Quiz 6 — إيجاد الأعداد الأولية</h2>
+      <div class="sub">نفس فكرة التقسيم + دالة isPrime</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz6.cpp</span>
+    </div>
+    <pre><span class="kw">bool</span> <span class="fn">isPrime</span>(<span class="type">int</span> <span class="var">n</span>) {
+    <span class="kw">if</span> (<span class="var">n</span> &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="kw">false</span>; <span class="cm">// 0 و 1 مش أعداد أولية</span>
+    <span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="num">2</span>; <span class="var">i</span> &lt; <span class="var">n</span>; <span class="var">i</span>++) {
+        <span class="kw">if</span> (<span class="var">n</span> % <span class="var">i</span> == <span class="num">0</span>) <span class="kw">return</span> <span class="kw">false</span>; <span class="cm">// لو انقسم على حاجة → مش أولي</span>
+    }
+    <span class="kw">return</span> <span class="kw">true</span>; <span class="cm">// لو ماحدش قسمه → أولي</span>
+}
+
+<span class="cm">// في main:</span>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">start_num</span>; <span class="var">i</span> &lt;= <span class="var">end_num</span>; <span class="var">i</span>++) {
+    <span class="kw">if</span> (<span class="fn">isPrime</span>(<span class="var">i</span>)) {
+        <span class="var">message</span> += <span class="fn">NumberToString</span>(<span class="var">i</span>) + <span class="str">" "</span>; <span class="cm">// اضيفه للرسالة</span>
+        <span class="var">primes_count</span>++;
+    }
+}
+
+<span class="kw">if</span> (<span class="var">primes_count</span> == <span class="num">0</span>) {
+    <span class="var">message</span> += <span class="str">"None"</span>; <span class="cm">// لو مفيش أعداد أولية</span>
+}</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الجزء</th><th>الشرح</th></tr>
+    <tr>
+      <td class="code-cell">isPrime(n)</td>
+      <td class="explain-cell">دالة بتشيك: الرقم n عدد أولي ولا لأ؟ بتجرب تقسمه على كل حاجة من 2 للـ n-1</td>
+    </tr>
+    <tr>
+      <td class="code-cell">NumberToString(i)</td>
+      <td class="explain-cell">بتحول الرقم لـ string عشان نضمه في الرسالة (زي to_string)</td>
+    </tr>
+    <tr>
+      <td class="code-cell">message += ...</td>
+      <td class="explain-cell">بنبني string طويل فيه كل الأعداد الأولية اللي لقيناها</td>
+    </tr>
+    <tr>
+      <td class="code-cell">primes_count == 0</td>
+      <td class="explain-cell">لو Process دي ملقتش أي عدد أولي في نطاقها، تطبع "None"</td>
+    </tr>
+  </table>
+
+  <div class="similar-box">
+    <h4>🔗 التشابه مع Quiz 3 و 5</h4>
+    <p>الهيكل الأساسي (حساب start_num وend_num) هو نفسه في كل quiz من 3 لـ 9. الفرق بس في الشرط اللي جوه الـ loop.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 7 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz7">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(88,166,255,0.15)">7️⃣</div>
+    <div>
+      <h2 class="hl-blue">Quiz 7 — كل Process بتجمع بطريقة مختلفة</h2>
+      <div class="sub">المدير يجمع الكل، الزوجي يجمع الزوجي، الفردي يجمع الفردي</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz7.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">start</span> = (<span class="var">rank</span> * <span class="num">5</span>) + <span class="num">1</span>;  <span class="cm">// زي Quiz 2</span>
+<span class="type">int</span> <span class="var">end</span>   = (<span class="var">rank</span> + <span class="num">1</span>) * <span class="num">5</span>;
+<span class="type">int</span> <span class="var">res</span> = <span class="num">0</span>;
+
+<span class="kw">if</span>(<span class="var">rank</span> == <span class="num">0</span>) {
+    <span class="cm">// المدير يجمع كل الأرقام</span>
+    <span class="kw">for</span>(<span class="type">int</span> <span class="var">i</span> = <span class="var">start</span>; <span class="var">i</span> &lt;= <span class="var">end</span>; <span class="var">i</span>++) <span class="var">res</span> += <span class="var">i</span>;
+
+} <span class="kw">else if</span> (<span class="var">rank</span> % <span class="num">2</span> == <span class="num">0</span>) {
+    <span class="cm">// الزوجيين يجمعوا الأرقام الزوجية بس</span>
+    <span class="kw">for</span>(<span class="type">int</span> <span class="var">i</span> = <span class="var">start</span>; <span class="var">i</span> &lt;= <span class="var">end</span>; <span class="var">i</span>++)
+        <span class="kw">if</span> (<span class="var">i</span> % <span class="num">2</span> == <span class="num">0</span>) <span class="var">res</span> += <span class="var">i</span>;
+
+} <span class="kw">else</span> {
+    <span class="cm">// الفرديين يجمعوا الأرقام الفردية بس</span>
+    <span class="kw">for</span>(<span class="type">int</span> <span class="var">i</span> = <span class="var">start</span>; <span class="var">i</span> &lt;= <span class="var">end</span>; <span class="var">i</span>++)
+        <span class="kw">if</span> (<span class="var">i</span> % <span class="num">2</span> != <span class="num">0</span>) <span class="var">res</span> += <span class="var">i</span>;
+}</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الـ Rank</th><th>نوعه</th><th>بيجمع إيه؟</th><th>مثال (rank=2, نطاق 11-15)</th></tr>
+    <tr><td class="code-cell">0</td><td class="explain-cell">مدير</td><td class="explain-cell">كل الأرقام</td><td class="code-cell">1+2+3+4+5 = 15</td></tr>
+    <tr><td class="code-cell">2</td><td class="explain-cell">زوجي</td><td class="explain-cell">الزوجية فقط</td><td class="code-cell">12+14 = 26</td></tr>
+    <tr><td class="code-cell">1</td><td class="explain-cell">فردي</td><td class="explain-cell">الفردية فقط</td><td class="code-cell">7+9 = 16</td></tr>
+    <tr><td class="code-cell">3</td><td class="explain-cell">فردي</td><td class="explain-cell">الفردية فقط</td><td class="code-cell">17+19 = 36</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 8 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz8">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(227,179,65,0.15)">8️⃣</div>
+    <div>
+      <h2 class="hl-yellow">Quiz 8 — جدول الضرب</h2>
+      <div class="sub">المدير بيطبع رسالة، كل worker بيطبع جدول ضربه</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz8.cpp</span>
+    </div>
+    <pre><span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>){
+    <span class="fn">printf</span>(<span class="str">"hello sur this is for multiple table"</span>);
+} <span class="kw">else</span> {
+    <span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="num">1</span>; <span class="var">i</span> &lt;= <span class="num">5</span>; <span class="var">i</span>++){
+        <span class="fn">printf</span>(<span class="str">"my rank is %d x %d is %d \n"</span>, <span class="var">rank</span>, <span class="var">i</span>, <span class="var">rank</span> * <span class="var">i</span>);
+    }
+}</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>السطر</th><th>الشرح</th></tr>
+    <tr>
+      <td class="code-cell">if (rank == 0)</td>
+      <td class="explain-cell">Process 0 (المدير) بتطبع رسالة ترحيب بس</td>
+    </tr>
+    <tr>
+      <td class="code-cell">for i from 1 to 5</td>
+      <td class="explain-cell">كل worker بيطبع جدول ضربه من 1 لـ 5</td>
+    </tr>
+    <tr>
+      <td class="code-cell">rank * i</td>
+      <td class="explain-cell">الناتج = رقم الـ process × i</td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <div class="callout-icon">📋</div>
+    <p><strong>مثال:</strong> لو عندنا 4 processes، هتشوف جدول ضرب 1، جدول ضرب 2، جدول ضرب 3 — كلهم في نفس الوقت!</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- QUIZ 9 -->
+<!-- ============================================================ -->
+<section class="section" id="quiz9">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(86,211,100,0.15)">9️⃣</div>
+    <div>
+      <h2 class="hl-green">Quiz 9 — مضاعفات 3 و 5 معاً (FizzBuzz نسخة MPI)</h2>
+      <div class="sub">إيجاد أرقام مقسومة على 3 وعلى 5 في نفس الوقت</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>quiz9.cpp</span>
+    </div>
+    <pre><span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">start_num</span>; <span class="var">i</span> &lt;= <span class="var">end_num</span>; <span class="var">i</span>++){
+    <span class="kw">if</span>(<span class="var">i</span> % <span class="num">3</span> == <span class="num">0</span> &amp;&amp; <span class="var">i</span> % <span class="num">5</span> == <span class="num">0</span>){   <span class="cm">// مضاعف 3 ومضاعف 5 في نفس الوقت</span>
+        <span class="var">res</span> += <span class="fn">to_string</span>(<span class="var">i</span>) + <span class="str">" "</span>;
+        <span class="var">found_any</span> = <span class="kw">true</span>;
+    }
+}
+
+<span class="kw">if</span> (<span class="var">found_any</span> == <span class="kw">false</span>) {
+    <span class="var">res</span> += <span class="str">"there is nothing"</span>;
+}</pre>
+  </div>
+
+  <div class="note note-success">
+    <p><strong>🎯 مثال:</strong> من 1 لـ 20، الأرقام المقسومة على 3 و5 معاً هي: <strong>15</strong> فقط (لأن 15 = 3×5)</p>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الـ Rank</th><th>نطاقه (4 processes)</th><th>يلاقي إيه؟</th></tr>
+    <tr><td class="code-cell">0</td><td class="explain-cell">1 → 5</td><td class="explain-cell">nothing</td></tr>
+    <tr><td class="code-cell">1</td><td class="explain-cell">6 → 10</td><td class="explain-cell">nothing</td></tr>
+    <tr><td class="code-cell">2</td><td class="explain-cell">11 → 15</td><td class="explain-cell">15 ✓</td></tr>
+    <tr><td class="code-cell">3</td><td class="explain-cell">16 → 20</td><td class="explain-cell">nothing</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- MPI SEND / RECV -->
+<!-- ============================================================ -->
+<section class="section" id="mpi1">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(247,129,102,0.15)">📨</div>
+    <div>
+      <h2 class="hl-red">MPI_Send و MPI_Recv — إرسال واستقبال</h2>
+      <div class="sub">mpi1.cpp (الشرح) — التواصل المباشر بين Processes</div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>📮 تخيل الموضوع كده</h3>
+    <p><strong class="hl-blue">MPI_Send</strong> = بعت جواب بريدي</p>
+    <p><strong class="hl-red">MPI_Recv</strong> = فتحت الجواب واتسلمت محتواه</p>
+    <p>لازم الاتنين يوجدوا — لو بعت ومفيش حد بيستقبل، البرنامج بيوقف وينتظر للأبد!</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>mpi1.cpp (send/recv example)</span>
+    </div>
+    <pre><span class="cm">// في Process 0 (المُرسل):</span>
+<span class="type">double</span> <span class="var">a</span>[<span class="num">100</span>];
+<span class="kw">for</span>(<span class="type">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="num">100</span>; <span class="var">i</span>++) <span class="var">a</span>[<span class="var">i</span>] = <span class="num">2.5</span>;
+
+<span class="fn">MPI_Send</span>(<span class="var">a</span>,          <span class="cm">// 1. البيانات اللي بنبعتها</span>
+          <span class="num">100</span>,        <span class="cm">// 2. كم عنصر</span>
+          <span class="var">MPI_DOUBLE</span>, <span class="cm">// 3. نوع البيانات</span>
+          <span class="num">1</span>,          <span class="cm">// 4. الـ Rank اللي بنبعتله</span>
+          <span class="num">17</span>,         <span class="cm">// 5. الـ Tag (رقم تعريفي)</span>
+          <span class="var">MPI_COMM_WORLD</span>); <span class="cm">// 6. القناة</span>
+
+<span class="cm">// في Process 1 (المُستقبل):</span>
+<span class="type">double</span> <span class="var">received_data</span>[<span class="num">100</span>];
+
+<span class="fn">MPI_Recv</span>(<span class="var">received_data</span>, <span class="cm">// 1. هنحط البيانات فين</span>
+          <span class="num">100</span>,           <span class="cm">// 2. أقصى عدد عناصر</span>
+          <span class="var">MPI_DOUBLE</span>,    <span class="cm">// 3. نوع البيانات</span>
+          <span class="num">0</span>,             <span class="cm">// 4. بنستقبل من مين</span>
+          <span class="num">17</span>,            <span class="cm">// 5. نفس الـ Tag</span>
+          <span class="var">MPI_COMM_WORLD</span>,
+          <span class="var">&status</span>);      <span class="cm">// 6. معلومات عن الرسالة</span></pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>الباراميتر</th><th>في Send</th><th>في Recv</th></tr>
+    <tr><td class="code-cell">1</td><td class="explain-cell">عنوان البيانات اللي بنبعتها</td><td class="explain-cell">المكان اللي هنحط فيه البيانات</td></tr>
+    <tr><td class="code-cell">2</td><td class="explain-cell">عدد العناصر</td><td class="explain-cell">أقصى عدد عناصر ممكن تستقبل</td></tr>
+    <tr><td class="code-cell">3</td><td class="explain-cell">نوع البيانات</td><td class="explain-cell">نفس النوع لازم يبقى متطابق</td></tr>
+    <tr><td class="code-cell">4</td><td class="explain-cell">الـ Destination (بنبعت لمين)</td><td class="explain-cell">الـ Source (بنستقبل من مين)</td></tr>
+    <tr><td class="code-cell">5</td><td class="explain-cell">الـ Tag</td><td class="explain-cell">نفس الـ Tag لازم يتطابق</td></tr>
+  </table>
+
+  <div class="note note-warn">
+    <p><strong>⚠️ تنبيه مهم:</strong> العدد، النوع، والـ Tag لازم يكونوا متطابقين في Send و Recv. لو اختلفوا، هتحصل مشكلة!</p>
+  </div>
+
+  <div class="note note-info">
+    <p><strong>💡 اختصار مفيد:</strong> بدل ما تكتب رقم معين في Recv، ممكن تستخدم <code style="color:var(--accent3)">MPI_ANY_SOURCE</code> و <code style="color:var(--accent3)">MPI_ANY_TAG</code> عشان تستقبل من أي حد بأي tag.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MPI2 - MANUAL REDUCE -->
+<!-- ============================================================ -->
+<section class="section" id="mpi2">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(88,166,255,0.15)">📊</div>
+    <div>
+      <h2 class="hl-blue">mpi2.cpp — جمع النتائج يدوياً بـ Send/Recv</h2>
+      <div class="sub">قبل ما نتعلم MPI_Reduce، ده الأسلوب اليدوي</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>mpi2.cpp</span>
+    </div>
+    <pre><span class="cm">// 1. كل process تحسب جزئها</span>
+<span class="var">startval</span> = <span class="var">n</span> * <span class="var">mynode</span> / <span class="var">totalnodes</span> + <span class="var">m</span>;
+<span class="var">endval</span>   = <span class="var">n</span> * (<span class="var">mynode</span> + <span class="num">1</span>) / <span class="var">totalnodes</span>;
+
+<span class="kw">for</span>(<span class="type">int</span> <span class="var">i</span> = <span class="var">startval</span>; <span class="var">i</span> &lt;= <span class="var">endval</span>; <span class="var">i</span>++)
+    <span class="var">sum</span> += <span class="var">i</span>;
+
+<span class="cm">// 2. كل موظف يبعت ناتجه للمدير</span>
+<span class="kw">if</span>(<span class="var">mynode</span> != <span class="num">0</span>) {
+    <span class="fn">MPI_Send</span>(<span class="var">&sum</span>, <span class="num">1</span>, <span class="var">MPI_INT</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="var">MPI_COMM_WORLD</span>);
+} <span class="kw">else</span> {
+    <span class="cm">// المدير يستقبل من الكل ويجمع</span>
+    <span class="kw">for</span>(<span class="type">int</span> <span class="var">j</span> = <span class="num">1</span>; <span class="var">j</span> &lt; <span class="var">totalnodes</span>; <span class="var">j</span>++) {
+        <span class="fn">MPI_Recv</span>(<span class="var">&accum</span>, <span class="num">1</span>, <span class="var">MPI_INT</span>, <span class="var">j</span>, <span class="num">1</span>, <span class="var">MPI_COMM_WORLD</span>, <span class="var">&status</span>);
+        <span class="var">sum</span> += <span class="var">accum</span>;
+    }
+}</pre>
+  </div>
+
+  <div class="flow">
+    <div class="flow-box">Worker 1 → sum جزئي</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color:var(--accent4)">Process 0 يجمع الكل</div>
+    <div class="flow-arrow">←</div>
+    <div class="flow-box">Worker 2 → sum جزئي</div>
+  </div>
+
+  <div class="similar-box">
+    <h4>🔗 التشابه مع MPI_Reduce</h4>
+    <p>الكود ده بيعمل نفس اللي بتعمله <code style="color:var(--accent3)">MPI_Reduce</code> بالظبط — بس يدوياً! MPI_Reduce هي نسخة جاهزة ومحسنة من الفكرة دي.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- MPI3 - BROADCAST -->
+<!-- ============================================================ -->
+<section class="section" id="mpi3">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(86,211,100,0.15)">📡</div>
+    <div>
+      <h2 class="hl-green">mpi3.cpp — MPI_Bcast (الإذاعة)</h2>
+      <div class="sub">المدير بيبعت نفس القيمة لكل الـ Processes دفعة واحدة</div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>📻 التشبيه: راديو الإذاعة</h3>
+    <p>زي المذيع في الراديو — Process 0 بيقول الرسالة مرة واحدة، والكل يسمعها في نفس الوقت.</p>
+    <p>مش محتاج تعمل Send لكل واحد لوحده!</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>mpi3.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">shared_value</span> = <span class="num">0</span>; <span class="cm">// الكل بيبدأ بـ 0</span>
+
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>) {
+    <span class="var">shared_value</span> = <span class="num">500</span>; <span class="cm">// المدير بس بيغير القيمة</span>
+}
+
+<span class="cm">// ده لازم ينفذ من الكل (مش في if!)</span>
+<span class="fn">MPI_Bcast</span>(
+    <span class="var">&shared_value</span>,  <span class="cm">// القيمة اللي هنذيعها</span>
+    <span class="num">1</span>,              <span class="cm">// عدد العناصر</span>
+    <span class="var">MPI_INT</span>,        <span class="cm">// النوع</span>
+    <span class="num">0</span>,              <span class="cm">// مين اللي بيذيع (rank 0)</span>
+    <span class="var">MPI_COMM_WORLD</span>
+);
+
+<span class="cm">// بعد السطر ده، الكل عنده shared_value = 500</span></pre>
+  </div>
+
+  <div class="note note-warn">
+    <p><strong>⚠️ مهم جداً:</strong> MPI_Bcast لازم تتكتب <strong>بره الـ if</strong> — الكل (مدير وموظفين) لازم ينفذ السطر ده. لو حطيتها جوه if للـ rank 0 بس، البرنامج هيوقف وينتظر!</p>
+  </div>
+
+  <table class="line-table">
+    <tr><th>قبل MPI_Bcast</th><th>بعد MPI_Bcast</th></tr>
+    <tr><td class="code-cell">Process 0: 500</td><td class="code-cell">Process 0: 500</td></tr>
+    <tr><td class="code-cell">Process 1: 0</td><td class="code-cell">Process 1: 500</td></tr>
+    <tr><td class="code-cell">Process 2: 0</td><td class="code-cell">Process 2: 500</td></tr>
+    <tr><td class="code-cell">Process 3: 0</td><td class="code-cell">Process 3: 500</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- MPI4 - REDUCE -->
+<!-- ============================================================ -->
+<section class="section" id="mpi4">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(247,129,102,0.15)">⚡</div>
+    <div>
+      <h2 class="hl-red">mpi4.cpp — MPI_Reduce (التجميع)</h2>
+      <div class="sub">كل الـ Processes بتبعت قيمة، والمدير بيعمل عليهم عملية</div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <h3>🧮 التشبيه: الاستمارة الجماعية</h3>
+    <p>كل موظف بيملي استمارة بنتيجته، والمدير بياخد كل الاستمارات ويجمعهم (أو يجيب أكبرهم، أو أصغرهم، إلخ).</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span>mpi4.cpp</span>
+    </div>
+    <pre><span class="type">int</span> <span class="var">local_value</span> = <span class="var">rank</span> * <span class="num">10</span>; <span class="cm">// كل process عندها قيمة مختلفة</span>
+<span class="type">int</span> <span class="var">global_sum</span> = <span class="num">0</span>;
+
+<span class="fn">MPI_Reduce</span>(
+    <span class="var">&local_value</span>,  <span class="cm">// 1. قيمتي الخاصة</span>
+    <span class="var">&global_sum</span>,   <span class="cm">// 2. الناتج (عند المدير)</span>
+    <span class="num">1</span>,             <span class="cm">// 3. عدد العناصر</span>
+    <span class="var">MPI_INT</span>,       <span class="cm">// 4. النوع</span>
+    <span class="var">MPI_SUM</span>,       <span class="cm">// 5. العملية (الجمع)</span>
+    <span class="num">0</span>,             <span class="cm">// 6. مين يستقبل الناتج</span>
+    <span class="var">MPI_COMM_WORLD</span>
+);</pre>
+  </div>
+
+  <table class="line-table">
+    <tr><th>عملية MPI_Reduce</th><th>المعنى</th><th>مثال</th></tr>
+    <tr><td class="code-cell">MPI_SUM</td><td class="explain-cell">جمع كل القيم</td><td class="code-cell">0+10+20+30 = 60</td></tr>
+    <tr><td class="code-cell">MPI_MAX</td><td class="explain-cell">أكبر قيمة</td><td class="code-cell">max(0,10,20,30) = 30</td></tr>
+    <tr><td class="code-cell">MPI_MIN</td><td class="explain-cell">أصغر قيمة</td><td class="code-cell">min(0,10,20,30) = 0</td></tr>
+    <tr><td class="code-cell">MPI_PROD</td><td class="explain-cell">ضرب كل القيم</td><td class="code-cell">0×10×20×30 = 0</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- TASKS -->
+<!-- ============================================================ -->
+<section class="section" id="tasks">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(188,140,255,0.15)">🎯</div>
+    <div>
+      <h2 class="hl-purple">Tasks — المشاريع الكبيرة</h2>
+      <div class="sub">برامج مركبة بتجمع كل المفاهيم مع بعض</div>
+    </div>
+  </div>
+
+  <!-- Task 1 -->
+  <div class="concept">
+    <h3>📌 Task 1 — حساب π بطريقة Leibniz</h3>
+    <p>المعادلة: <code style="color:var(--accent3)">π = 4 × (1 - 1/3 + 1/5 - 1/7 + ...)</code></p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>task1.cpp — الخطوات</span>
+      </div>
+      <pre><span class="cm">// 1. المدير يقرأ N ويذيعه للكل</span>
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>) cin >> <span class="var">N</span>;
+<span class="fn">MPI_Bcast</span>(<span class="var">&N</span>, <span class="num">1</span>, <span class="var">MPI_INT</span>, <span class="num">0</span>, <span class="var">MPI_COMM_WORLD</span>);
+
+<span class="cm">// 2. كل process تحسب جزئها</span>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">startval</span>; <span class="var">i</span> &lt; <span class="var">endval</span>; <span class="var">i</span>++) {
+    <span class="type">double</span> <span class="var">term</span> = <span class="num">1.0</span> / (<span class="num">2.0</span> * <span class="var">i</span> + <span class="num">1.0</span>);
+    <span class="kw">if</span> (<span class="var">i</span> % <span class="num">2</span> != <span class="num">0</span>) <span class="var">term</span> = -<span class="var">term</span>; <span class="cm">// الفردي بالسالب</span>
+    <span class="var">partial_sum</span> += <span class="var">term</span>;
+}
+
+<span class="cm">// 3. جمع كل الأجزاء عند المدير</span>
+<span class="fn">MPI_Reduce</span>(<span class="var">&partial_sum</span>, <span class="var">&total_sum</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="var">MPI_SUM</span>, <span class="num">0</span>, <span class="var">MPI_COMM_WORLD</span>);
+
+<span class="cm">// 4. المدير يحسب π</span>
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>) <span class="var">pi</span> = <span class="num">4.0</span> * <span class="var">total_sum</span>;</pre>
+    </div>
+    <div class="flow">
+      <div class="flow-box">Bcast N</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">كل process تحسب partial_sum</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Reduce SUM</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent3)">π = 4 × total</div>
+    </div>
+  </div>
+
+  <!-- Task 2 -->
+  <div class="concept">
+    <h3>📌 Task 2 — الضرب القياسي (Dot Product)</h3>
+    <p>المعادلة: <code style="color:var(--accent3)">A·B = Σ(A[i] × B[i])</code></p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>task2.cpp — الفكرة</span>
+      </div>
+      <pre><span class="cm">// كل process تضرب جزئها وتجمع</span>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="var">startval</span>; <span class="var">i</span> &lt; <span class="var">endval</span>; <span class="var">i</span>++)
+    <span class="var">partial_dot</span> += (<span class="var">a</span>[<span class="var">i</span>] * <span class="var">b</span>[<span class="var">i</span>]);  <span class="cm">// ضرب عنصر من A × عنصر من B</span>
+
+<span class="cm">// جمع كل الأجزاء</span>
+<span class="fn">MPI_Reduce</span>(<span class="var">&partial_dot</span>, <span class="var">&global_dot</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="var">MPI_SUM</span>, <span class="num">0</span>, <span class="var">MPI_COMM_WORLD</span>);</pre>
+    </div>
+    <div class="callout">
+      <div class="callout-icon">🔢</div>
+      <p>لو <strong>a[i] = 1.0</strong> و <strong>b[i] = 2.0</strong> للـ 1000 عنصر: 1×2 = 2، ومجموعهم = <strong>2000</strong></p>
+    </div>
+  </div>
+
+  <!-- Task 3 -->
+  <div class="concept">
+    <h3>📌 Task 3 — تقدير π بطريقة Monte Carlo</h3>
+    <p>بنرمي نقاط عشوائية في مربع، ونشوف قد إيه منهم وقع جوه دائرة → بنقدر π</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>task3.cpp — الفكرة الأساسية</span>
+      </div>
+      <pre><span class="fn">srand</span>(<span class="fn">time</span>(<span class="var">NULL</span>) + <span class="var">rank</span> * <span class="num">1999</span>); <span class="cm">// كل process أرقام عشوائية مختلفة</span>
+
+<span class="kw">for</span> (<span class="type">long long</span> <span class="var">toss</span> = <span class="num">0</span>; <span class="var">toss</span> &lt; <span class="var">local_tosses</span>; <span class="var">toss</span>++) {
+    <span class="type">double</span> <span class="var">x</span> = (<span class="type">double</span>)<span class="fn">rand</span>() / <span class="var">RAND_MAX</span> * <span class="num">2.0</span> - <span class="num">1.0</span>; <span class="cm">// -1 لـ 1</span>
+    <span class="type">double</span> <span class="var">y</span> = (<span class="type">double</span>)<span class="fn">rand</span>() / <span class="var">RAND_MAX</span> * <span class="num">2.0</span> - <span class="num">1.0</span>;
+    
+    <span class="kw">if</span> (<span class="var">x</span>*<span class="var">x</span> + <span class="var">y</span>*<span class="var">y</span> &lt;= <span class="num">1.0</span>)  <span class="cm">// جوه الدائرة؟</span>
+        <span class="var">local_number_in_circle</span>++;
+}
+
+<span class="fn">MPI_Reduce</span>(..., <span class="var">MPI_LONG_LONG</span>, <span class="var">MPI_SUM</span>, ...);
+
+<span class="type">double</span> <span class="var">pi</span> = <span class="num">4.0</span> * <span class="var">global_number_in_circle</span> / <span class="var">total_tosses</span>;</pre>
+    </div>
+  </div>
+
+  <!-- Task 4 -->
+  <div class="concept">
+    <h3>📌 Task 4 — Binary Tree Broadcast</h3>
+    <p>Process 0 بتبعت لـ 1، و1 بتبعت لـ 2 و 3، و2 بتبعت لـ 4 و5، إلخ — زي شجرة</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>task4.cpp</span>
+      </div>
+      <pre><span class="cm">// الاستقبال: كل process بتعرف من مين بتاخد</span>
+<span class="var">i</span> = <span class="fn">floor</span>(<span class="fn">log2</span>(<span class="var">rank</span>));             <span class="cm">// مستواي في الشجرة</span>
+<span class="fn">MPI_Recv</span>(&<span class="var">n</span>, ..., <span class="var">rank</span> - <span class="fn">pow</span>(<span class="num">2</span>,<span class="var">i</span>), ...); <span class="cm">// بستقبل من أبويا</span>
+<span class="var">i</span>++;
+
+<span class="cm">// الإرسال: وبعدين بابعت لأولادي</span>
+<span class="kw">while</span> (<span class="var">i</span> &lt; <span class="fn">log2</span>(<span class="var">size</span>)) {
+    <span class="type">int</span> <span class="var">dest</span> = <span class="var">rank</span> + <span class="fn">pow</span>(<span class="num">2</span>, <span class="var">i</span>);
+    <span class="kw">if</span> (<span class="var">dest</span> &lt; <span class="var">size</span>)
+        <span class="fn">MPI_Send</span>(&<span class="var">n</span>, ..., <span class="var">dest</span>, ...);
+    <span class="var">i</span>++;
+}</pre>
+    </div>
+    <div class="flow">
+      <div class="flow-box" style="border-color:var(--accent4)">P0</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">P1</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">P2 P3</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">P4 P5 P6 P7</div>
+    </div>
+  </div>
+
+  <!-- Task 5 -->
+  <div class="concept">
+    <h3>📌 Task 5 — Normalization + MPI_Gather</h3>
+    <p>بنعمل تطبيع للبيانات (نحطها بين 0 و1)، ثم نجمع كل النتائج عند المدير.</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>task5.cpp — الخطوات</span>
+      </div>
+      <pre><span class="cm">// 1. إيجاد Min و Max عالمي</span>
+<span class="fn">MPI_Reduce</span>(&<span class="var">local_min</span>, &<span class="var">global_min</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="var">MPI_MIN</span>, <span class="num">0</span>, ...);
+<span class="fn">MPI_Reduce</span>(&<span class="var">local_max</span>, &<span class="var">global_max</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="var">MPI_MAX</span>, <span class="num">0</span>, ...);
+
+<span class="cm">// 2. إذاعة Min و Max للكل</span>
+<span class="fn">MPI_Bcast</span>(&<span class="var">global_min</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="num">0</span>, ...);
+<span class="fn">MPI_Bcast</span>(&<span class="var">global_max</span>, <span class="num">1</span>, <span class="var">MPI_DOUBLE</span>, <span class="num">0</span>, ...);
+
+<span class="cm">// 3. كل process تعمل Normalization</span>
+<span class="var">normalized</span>[<span class="var">i</span>] = (<span class="var">data</span>[<span class="var">i</span>] - <span class="var">global_min</span>) / (<span class="var">global_max</span> - <span class="var">global_min</span>);
+
+<span class="cm">// 4. MPI_Gather: كل الـ processes بتبعت نتيجتها للمدير</span>
+<span class="fn">MPI_Gather</span>(<span class="var">local_normalized</span>, <span class="var">local_N</span>, <span class="var">MPI_DOUBLE</span>,
+           <span class="var">global_normalized</span>, <span class="var">local_N</span>, <span class="var">MPI_DOUBLE</span>,
+           <span class="num">0</span>, <span class="var">MPI_COMM_WORLD</span>);</pre>
+    </div>
+    <table class="line-table">
+      <tr><th>الدالة</th><th>هي إيه؟</th></tr>
+      <tr><td class="code-cell">MPI_Gather</td><td class="explain-cell">كل process بتبعت جزئها للمدير، والمدير بيرصهم في مصفوفة كبيرة بالترتيب</td></tr>
+      <tr><td class="code-cell">Normalization</td><td class="explain-cell">بنحول كل الأرقام لنطاق 0→1 بالمعادلة: (x - min) / (max - min)</td></tr>
+    </table>
+  </div>
+
+  <!-- quiz.cpp -->
+  <div class="concept">
+    <h3>📌 quiz.cpp — المتوسط والانحراف المعياري</h3>
+    <p>أعقد برنامج — جولتين: الأولى للمتوسط، الثانية للانحراف المعياري.</p>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+        <span>quiz.cpp — الفكرة</span>
+      </div>
+      <pre><span class="cm">// جولة 1: حساب المتوسط</span>
+<span class="fn">MPI_Reduce</span>(&<span class="var">local_sum</span>, &<span class="var">global_sum</span>, ..., <span class="var">MPI_SUM</span>, ...);
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>) <span class="var">mean</span> = <span class="var">global_sum</span> / <span class="var">N</span>;
+<span class="fn">MPI_Bcast</span>(&<span class="var">mean</span>, ...); <span class="cm">// كل الـ processes محتاجة المتوسط</span>
+
+<span class="cm">// جولة 2: حساب مربع الفرق</span>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="var">local_N</span>; <span class="var">i</span>++)
+    <span class="var">local_sq_diff</span> += <span class="fn">pow</span>(<span class="var">local_data</span>[<span class="var">i</span>] - <span class="var">mean</span>, <span class="num">2</span>);
+
+<span class="fn">MPI_Reduce</span>(&<span class="var">local_sq_diff</span>, &<span class="var">global_sq_diff</span>, ..., <span class="var">MPI_SUM</span>, ...);
+
+<span class="kw">if</span> (<span class="var">rank</span> == <span class="num">0</span>) {
+    <span class="type">double</span> <span class="var">std_dev</span> = <span class="fn">sqrt</span>(<span class="var">global_sq_diff</span> / <span class="var">N</span>);
+}</pre>
+    </div>
+    <div class="flow">
+      <div class="flow-box">Reduce (sum)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">حساب mean</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Bcast mean</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Reduce (sq_diff)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent3)">sqrt → std_dev</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CHEATSHEET -->
+<!-- ============================================================ -->
+<section class="section" id="cheatsheet">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(227,179,65,0.15)">📋</div>
+    <div>
+      <h2 class="hl-yellow">Cheatsheet — ملخص كل الدوال</h2>
+      <div class="sub">مرجع سريع لكل دالة MPI اتعملت في الملفات</div>
+    </div>
+  </div>
+
+  <table class="summary-table">
+    <tr>
+      <th>الدالة</th>
+      <th>بتعمل إيه؟</th>
+      <th>اتاستخدمت في</th>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Init()</td>
+      <td>بدء بيئة MPI — الأول دايماً</td>
+      <td><span class="badge badge-blue">كل الملفات</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Finalize()</td>
+      <td>إنهاء بيئة MPI — الآخر دايماً</td>
+      <td><span class="badge badge-blue">كل الملفات</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Comm_rank()</td>
+      <td>كل process تعرف رقمها (rank)</td>
+      <td><span class="badge badge-green">كل الملفات</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Comm_size()</td>
+      <td>كل process تعرف الإجمالي (size)</td>
+      <td><span class="badge badge-green">quiz3, mpi2, tasks</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Send()</td>
+      <td>بعت بيانات لـ Process معينة</td>
+      <td><span class="badge badge-red">mpi1, mpi2, task4</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Recv()</td>
+      <td>استقبلت بيانات من Process معينة</td>
+      <td><span class="badge badge-red">mpi1, mpi2, task4</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Bcast()</td>
+      <td>الـ Root يبعت نفس القيمة للكل</td>
+      <td><span class="badge badge-purple">mpi3, task1, task3, task5, quiz.cpp</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Reduce()</td>
+      <td>كل الـ Processes بتبعت، والـ Root بيعمل عملية (SUM, MAX, MIN)</td>
+      <td><span class="badge badge-yellow">mpi4, tasks, quiz.cpp</span></td>
+    </tr>
+    <tr>
+      <td class="fn-name">MPI_Gather()</td>
+      <td>كل Process بتبعت جزئها، الـ Root بيرصهم بالترتيب</td>
+      <td><span class="badge badge-purple">task5</span></td>
+    </tr>
+  </table>
+
+  <hr>
+
+  <h3 style="margin:24px 0 14px; color: var(--accent)">🔑 المتغيرات الثابتة المستخدمة</h3>
+  <table class="summary-table">
+    <tr><th>المتغير/الثابت</th><th>المعنى</th></tr>
+    <tr><td class="fn-name">MPI_COMM_WORLD</td><td>القناة الافتراضية اللي فيها كل الـ Processes</td></tr>
+    <tr><td class="fn-name">MPI_INT / MPI_DOUBLE / MPI_LONG_LONG</td><td>نوع البيانات اللي بنبعتها</td></tr>
+    <tr><td class="fn-name">MPI_STATUS_IGNORE</td><td>بدل &status لو مش محتاج معلومات الرسالة</td></tr>
+    <tr><td class="fn-name">MPI_ANY_SOURCE / MPI_ANY_TAG</td><td>استقبل من أي حد بأي tag</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SIMILAR CONCEPTS -->
+<!-- ============================================================ -->
+<section class="section" id="similar">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(188,140,255,0.15)">🔗</div>
+    <div>
+      <h2 class="hl-purple">التشابهات — المفاهيم المتشابهة مع بعض</h2>
+      <div class="sub">كل حاجة متشابهة اتشرحت هنا مع بعض مرة واحدة</div>
+    </div>
+  </div>
+
+  <div class="compare-grid">
+    <div class="compare-card" style="border-color:rgba(88,166,255,0.4)">
+      <h4 class="hl-blue">🔵 هيكل التقسيم (Quiz 3, 5, 6, 7, 9)</h4>
+      <ul>
+        <li>كلهم بيحسبوا start_num وend_num بنفس الطريقة</li>
+        <li>chunk_size = N / size</li>
+        <li>start = rank * chunk_size + 1</li>
+        <li>end = (rank+1) * chunk_size</li>
+        <li>آخر process بياخد لحد N</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="border-color:rgba(86,211,100,0.4)">
+      <h4 class="hl-green">🟢 MPI_Bcast مقابل MPI_Send متكرر</h4>
+      <ul>
+        <li>الاتنين بيوصلوا نفس البيانات لكل الـ Processes</li>
+        <li>Bcast أسرع وأبسط</li>
+        <li>Send/Recv يدوي في mpi2</li>
+        <li>Bcast جاهزة في mpi3 وكل الـ tasks</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="border-color:rgba(247,129,102,0.4)">
+      <h4 class="hl-red">🔴 Manual Reduce مقابل MPI_Reduce</h4>
+      <ul>
+        <li>mpi2 بيعمل الجمع يدوياً بـ loop + Send/Recv</li>
+        <li>MPI_Reduce بتعمل نفس الحاجة أوتوماتيك</li>
+        <li>النتيجة واحدة — بس Reduce أسرع وأنظف</li>
+        <li>استخدمت في task1, task2, task3, task5, quiz.cpp</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="border-color:rgba(227,179,65,0.4)">
+      <h4 class="hl-yellow">🟡 Task 1 مقابل Task 3 (حساب π)</h4>
+      <ul>
+        <li>الاتنين بيحسبوا π بطريقتين مختلفتين</li>
+        <li>Task 1: متسلسلة رياضية (Leibniz)</li>
+        <li>Task 3: عشوائية إحصائية (Monte Carlo)</li>
+        <li>الاتنين بيستخدموا Bcast + Reduce</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="border-color:rgba(188,140,255,0.4)">
+      <h4 class="hl-purple">🟣 Quiz 1 مقابل Quiz 7 (فرق/زوجي)</h4>
+      <ul>
+        <li>الاتنين بيميزوا بين rank فردي وزوجي</li>
+        <li>Quiz 1: بس بيطبع نوعه</li>
+        <li>Quiz 7: بيطبع النوع ويجمع حسبه</li>
+        <li>الشرط واحد: rank % 2 == 0</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="border-color:rgba(86,211,100,0.4)">
+      <h4 class="hl-green">🟢 Quiz 2 مقابل Quiz 7 (نطاق 5 أرقام)</h4>
+      <ul>
+        <li>الاتنين بيحسبوا start = rank*5 + 1</li>
+        <li>Quiz 2: بس بيطبع الأرقام</li>
+        <li>Quiz 7: بيجمع حسب نوع الـ rank</li>
+        <li>الفكرة الأساسية متطابقة</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="similar-box" style="margin-top:24px">
+    <h4>🔗 الـ Pattern المتكرر في كل برنامج MPI كبير</h4>
+    <p>كل برنامج MPI معقد بيتبع نفس الـ Pattern:</p>
+    <div class="flow" style="margin-top:12px; flex-wrap:wrap">
+      <div class="flow-box" style="border-color:var(--accent)">1. Bcast المدخلات</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">2. كل process تشتغل على جزئها</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent3)">3. Reduce النتائج</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box" style="border-color:var(--accent4)">4. Root يطبع</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+</body>
+</html>
