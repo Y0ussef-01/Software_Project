@@ -39,4 +39,5 @@ router.get('/dashboard-stats', adminAuth, adminController.getDashboardStats);
 
 router.post('/upload-final-grades', adminAuth, upload.any(), adminController.uploadFinalGrades);
 
+router.get('/group-students', adminAuth, adminController.getStudentsInGroup);
 module.exports = router;
