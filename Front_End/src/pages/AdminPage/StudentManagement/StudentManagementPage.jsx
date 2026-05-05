@@ -4,11 +4,22 @@ import { useNavigate } from "react-router-dom";
 
 import StudentSearchSection from "../../../components/AdminComp/StudentManagement/StudentSearchSection";
 import StudentDetailsCard from "../../../components/AdminComp/StudentManagement/StudentDetailsCard";
+import CourseStudentsFilter from "../../../components/AdminComp/StudentManagement/CourseStudentsFilter";
 
 import useStudentManagement from "../../../hooks/Admin/StudentManagement/useStudentManagement";
 
+// ─── Helper: get token from localStorage (adjust key if needed) ────────────
+function getToken() {
+  try {
+    return localStorage.getItem("token") || "";
+  } catch {
+    return "";
+  }
+}
+
 export default function StudentManagementPage() {
   const navigate = useNavigate();
+  const token = getToken();
 
   const {
     searchId,
@@ -28,8 +39,14 @@ export default function StudentManagementPage() {
         flexDirection: "column",
         alignItems: "center",
         p: { xs: 2, md: 3, lg: 4 },
+        animation: "fadeInUp 0.45s ease-out",
+        "@keyframes fadeInUp": {
+          from: { opacity: 0, transform: "translateY(18px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
       }}
     >
+      {/* ── Page title ── */}
       <Box
         sx={{
           width: "100%",
@@ -54,12 +71,25 @@ export default function StudentManagementPage() {
         </Typography>
       </Box>
 
+      {/* ── Search bar ── */}
       <StudentSearchSection
         searchId={searchId}
         setSearchId={setSearchId}
         onSearch={handleSearch}
       />
 
+      {/* ── Filter icon + expandable course-students panel ── */}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: { xs: "850px", lg: "1050px", xl: "1250px" },
+          mb: 1,
+        }}
+      >
+        <CourseStudentsFilter token={token} />
+      </Box>
+
+      {/* ── Student details card (search result) ── */}
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <Collapse
           in={showCard}
