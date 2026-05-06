@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
-// استيراد الدالة المحسنة بالكاش
-import { getStudentProfile } from '../api/studentApi'; 
+import { getStudentProfile } from '../api/studentApi';
 
 interface Course {
     courseId: string;
@@ -16,7 +15,6 @@ interface Course {
 
 const AttendanceCourses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
-    // لو في بيانات متكاشة، مفيش داعي للـ Loading من أول ثانية
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -26,16 +24,14 @@ const AttendanceCourses = () => {
 
     const loadData = async (isRefresh = false) => {
         if (isRefresh) setRefreshing(true);
-        
+
         try {
-            // نستخدم الدالة اللي فيها الـ Cache اللي عملناها سوا
             const profileData = await getStudentProfile();
             const registeredCourses = profileData?.registeredCourses || [];
 
             const lectureGroups: Course[] = [];
             const seen = new Set<string>();
 
-            // منطق الفلترة بتاعك (محاضرات فقط)
             registeredCourses.forEach((rc: any) => {
                 const courseId = rc.course?._id || rc.course || '';
                 const courseName = rc.course?.name || courseId;
@@ -47,12 +43,18 @@ const AttendanceCourses = () => {
                 }
             });
 
-            const finalData = lectureGroups.length > 0 ? lectureGroups : 
-                registeredCourses.map((rc: any) => ({
-                    courseId: rc.course?._id || rc.course || '',
-                    courseName: rc.course?.name || '',
-                    groupName: rc.group?.groupName || ''
-                }));
+            const finalData = lectureGroups.length > 0 ? lectureGroups :
+                registeredCourses.reduce((acc: Course[], rc: any) => {
+                    const courseId = rc.course?._id || rc.course || '';
+                    if (!acc.find(c => c.courseId === courseId)) {
+                        acc.push({
+                            courseId,
+                            courseName: rc.course?.name || '',
+                            groupName: rc.group?.groupName || ''
+                        });
+                    }
+                    return acc;
+                }, []);
 
             setCourses(finalData);
         } catch (err) {
@@ -93,7 +95,6 @@ const AttendanceCourses = () => {
                         data={courses}
                         keyExtractor={(item, index) => item.courseId + index}
                         contentContainerStyle={{ paddingBottom: 30 }}
-                        // إضافة ميزة شد الشاشة للتحديث
                         refreshControl={
                             <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} />
                         }
