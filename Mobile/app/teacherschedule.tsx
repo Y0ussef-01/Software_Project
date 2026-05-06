@@ -1,20 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    FlatList,
-    ActivityIndicator,
-    StatusBar,
-    Platform,
-    ScrollView
+    View, Text, StyleSheet, TouchableOpacity, FlatList,
+    ActivityIndicator, StatusBar, Platform, ScrollView
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { getTeacherProfile } from '../api/teacherApi';
 
-// تعريف واجهة البيانات للجلسة (المحاضرة/السكشن)
 interface Session {
     id: string;
     courseName: string;
@@ -27,12 +19,27 @@ interface Session {
 }
 
 const DAYS_OF_WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const toMinutes = (t?: string): number => {
+    if (!t) return 0;
+
+    if (t.includes('AM') || t.includes('PM')) {
+        const isPM = t.includes('PM');
+        const timePart = t.replace('AM', '').replace('PM', '').trim();
+        const [hStr, mStr] = timePart.split(':');
+        let h = parseInt(hStr, 10);
+        const m = parseInt(mStr || '0', 10);
+        if (isPM && h !== 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
+    const [h, m] = t.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+};
 
 const TeacherSchedule = () => {
     const [loading, setLoading] = useState(true);
     const [scheduleMap, setScheduleMap] = useState<{ [key: string]: Session[] }>({});
-    
-    // تحديد اليوم الحالي كافتراضي (أو الأحد لو كان اليوم أجازة مثلاً)
     const todayIndex = new Date().getDay();
     const [selectedDay, setSelectedDay] = useState(DAYS_OF_WEEK[todayIndex]);
 
@@ -46,21 +53,19 @@ const TeacherSchedule = () => {
         try {
             setLoading(true);
             const data = await getTeacherProfile();
-            
-            // استخراج الكورسات والمجموعات المرتبطة بالمدرس
             const rawCourses = data?.user?.courses || data?.courses || [];
-            
+
             const tempSchedule: { [key: string]: Session[] } = {};
             DAYS_OF_WEEK.forEach(day => tempSchedule[day] = []);
 
             rawCourses.forEach((c: any) => {
-                const courseId = c.course?._id || 'N/A';
+                const courseId   = c.course?._id || 'N/A';
                 const courseName = c.course?.name || 'Unknown Course';
-                const groupId = c.group?._id || Math.random().toString();
-                const groupName = c.group?.groupName || '';
-                const type = c.group?.type || 'Lecture';
-                const room = c.group?.Room || 'TBA';
-                
+                const groupId    = c.group?._id || Math.random().toString();
+                const groupName  = c.group?.groupName || '';
+                const type       = c.group?.type || 'Lecture';
+                const room       = c.group?.Room || 'TBA';
+
                 const appointment = c.group?.appointment;
                 if (appointment && appointment.day) {
                     const day = appointment.day.toLowerCase().trim();
@@ -73,20 +78,22 @@ const TeacherSchedule = () => {
                             type,
                             room,
                             startTime: appointment.startTime || '--:--',
-                            endTime: appointment.endTime || '--:--'
+                            endTime:   appointment.endTime   || '--:--',
                         });
                     }
                 }
             });
 
-            // تحديث الجدول
+            DAYS_OF_WEEK.forEach(day => {
+                tempSchedule[day].sort((a, b) =>
+                    toMinutes(a.startTime) - toMinutes(b.startTime)
+                );
+            });
+
             setScheduleMap(tempSchedule);
 
-            // تحديد الأيام اللي فيها محاضرات فقط عشان نظهرها في الـ Tabs
-            const activeDays = DAYS_OF_WEEK.filter(day => tempSchedule[day].length > 0);
-            
-            // لو اليوم الحالي مفيهوش محاضرات، اختار أول يوم متاح تلقائياً
-            const currentDay = DAYS_OF_WEEK[new Date().getDay()];
+            const activeDays  = DAYS_OF_WEEK.filter(day => tempSchedule[day].length > 0);
+            const currentDay  = DAYS_OF_WEEK[new Date().getDay()];
             if (activeDays.length > 0 && !activeDays.includes(currentDay)) {
                 setSelectedDay(activeDays[0]);
             } else if (activeDays.includes(currentDay)) {
@@ -139,7 +146,6 @@ const TeacherSchedule = () => {
         </View>
     );
 
-    // الأيام اللي هتتعرض في الشريط اللي فوق (فقط اللي فيها مواد)
     const activeDaysList = DAYS_OF_WEEK.filter(day => scheduleMap[day] && scheduleMap[day].length > 0);
 
     return (
@@ -147,7 +153,6 @@ const TeacherSchedule = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <MaterialCommunityIcons name="arrow-left" size={28} color="white" />
@@ -162,7 +167,6 @@ const TeacherSchedule = () => {
                     <Text style={styles.loadingText}>Loading Schedule...</Text>
                 </View>
             ) : activeDaysList.length === 0 ? (
-                // لو المدرس مفندوش محاضرات طول الأسبوع
                 <View style={styles.emptyContainer}>
                     <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#cbd5e1" />
                     <Text style={styles.emptyTitle}>No Sessions</Text>
@@ -170,26 +174,19 @@ const TeacherSchedule = () => {
                 </View>
             ) : (
                 <>
-                    {/* Days Tabs (Horizontal Scroll) - يعرض أيام الشغل فقط */}
                     <View style={styles.tabsContainer}>
-                        <ScrollView 
-                            horizontal 
+                        <ScrollView
+                            horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={styles.tabsScrollContent}
                         >
                             {activeDaysList.map((day) => (
                                 <TouchableOpacity
                                     key={day}
-                                    style={[
-                                        styles.tabBtn,
-                                        selectedDay === day && styles.tabBtnActive
-                                    ]}
+                                    style={[styles.tabBtn, selectedDay === day && styles.tabBtnActive]}
                                     onPress={() => setSelectedDay(day)}
                                 >
-                                    <Text style={[
-                                        styles.tabText,
-                                        selectedDay === day && styles.tabTextActive
-                                    ]}>
+                                    <Text style={[styles.tabText, selectedDay === day && styles.tabTextActive]}>
                                         {day.charAt(0).toUpperCase() + day.slice(1, 3)}
                                     </Text>
                                     {selectedDay === day && <View style={styles.activeDot} />}
@@ -198,7 +195,6 @@ const TeacherSchedule = () => {
                         </ScrollView>
                     </View>
 
-                    {/* Schedule List */}
                     <View style={{ flex: 1 }}>
                         <FlatList
                             data={scheduleMap[selectedDay] || []}
@@ -210,7 +206,9 @@ const TeacherSchedule = () => {
                                 <View style={styles.emptyContainer}>
                                     <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#cbd5e1" />
                                     <Text style={styles.emptyTitle}>No Sessions</Text>
-                                    <Text style={styles.emptySub}>You have no lectures or classes scheduled for {selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1)}.</Text>
+                                    <Text style={styles.emptySub}>
+                                        {'You have no lectures or classes scheduled for ' + selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1) + '.'}
+                                    </Text>
                                 </View>
                             )}
                         />
@@ -225,8 +223,6 @@ export default TeacherSchedule;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f4f7ff' },
-    
-    // Header Styles
     header: {
         backgroundColor: 'rgb(23, 42, 70)',
         paddingTop: Platform.OS === 'ios' ? 50 : (StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40),
@@ -243,8 +239,6 @@ const styles = StyleSheet.create({
     },
     backBtn: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
     headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
-    
-    // Tabs Styles
     tabsContainer: {
         backgroundColor: '#fff',
         paddingVertical: 12,
@@ -252,10 +246,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#e2e8f0',
         elevation: 2,
     },
-    tabsScrollContent: {
-        paddingHorizontal: 15,
-        gap: 10,
-    },
+    tabsScrollContent: { paddingHorizontal: 15, gap: 10 },
     tabBtn: {
         paddingVertical: 10,
         paddingHorizontal: 20,
@@ -264,30 +255,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    tabBtnActive: {
-        backgroundColor: 'rgb(23, 42, 70)',
-    },
-    tabText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#64748b',
-    },
-    tabTextActive: {
-        color: 'white',
-    },
+    tabBtnActive:  { backgroundColor: 'rgb(23, 42, 70)' },
+    tabText:       { fontSize: 14, fontWeight: 'bold', color: '#64748b' },
+    tabTextActive: { color: 'white' },
     activeDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: '#38bdf8',
-        marginTop: 4,
+        width: 4, height: 4, borderRadius: 2,
+        backgroundColor: '#38bdf8', marginTop: 4,
     },
-
-    // List & Cards
-    listContent: {
-        padding: 20,
-        paddingBottom: 40,
-    },
+    listContent: { padding: 20, paddingBottom: 40 },
     card: {
         backgroundColor: '#fff',
         borderRadius: 18,
@@ -299,96 +274,45 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 6,
         borderLeftWidth: 5,
-        borderLeftColor: 'rgb(23, 42, 70)', // الكارت الأبيض بالخط الجانبي
+        borderLeftColor: 'rgb(23, 42, 70)',
     },
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
     },
-    courseInfoBox: {
-        flex: 1,
-        paddingRight: 10,
-    },
+    courseInfoBox: { flex: 1, paddingRight: 10 },
     courseCode: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#0284c7',
-        letterSpacing: 1,
-        marginBottom: 4,
+        fontSize: 12, fontWeight: 'bold',
+        color: '#0284c7', letterSpacing: 1, marginBottom: 4,
     },
-    courseName: {
-        fontSize: 17,
-        fontWeight: 'bold',
-        color: '#1e293b',
-    },
+    courseName: { fontSize: 17, fontWeight: 'bold', color: '#1e293b' },
     typeBadge: {
         backgroundColor: '#f1f5f9',
         paddingHorizontal: 10,
         paddingVertical: 5,
         borderRadius: 8,
     },
-    typeText: {
-        fontSize: 11,
-        fontWeight: 'bold',
-        color: 'rgb(23, 42, 70)',
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#f1f5f9',
-        marginVertical: 15,
-    },
-    cardBody: {
-        gap: 12,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+    typeText: { fontSize: 11, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
+    divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 15 },
+    cardBody: { gap: 12 },
+    infoRow:  { flexDirection: 'row', alignItems: 'center' },
     iconContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
+        width: 32, height: 32, borderRadius: 8,
         backgroundColor: '#f8fafc',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'center', justifyContent: 'center',
         marginRight: 12,
     },
-    infoText: {
-        fontSize: 14,
-        color: '#475569',
-        fontWeight: '600',
-    },
-
-    // Empty & Loading States
-    centerContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    loadingText: {
-        marginTop: 12,
-        fontSize: 15,
-        color: '#64748b',
-        fontWeight: '500',
-    },
+    infoText: { fontSize: 14, color: '#475569', fontWeight: '600' },
+    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    loadingText: { marginTop: 12, fontSize: 15, color: '#64748b', fontWeight: '500' },
     emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 80,
-        paddingHorizontal: 30,
+        alignItems: 'center', justifyContent: 'center',
+        marginTop: 80, paddingHorizontal: 30,
     },
-    emptyTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#64748b',
-        marginTop: 15,
-    },
+    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#64748b', marginTop: 15 },
     emptySub: {
-        fontSize: 14,
-        color: '#94a3b8',
-        textAlign: 'center',
-        marginTop: 8,
-        lineHeight: 20,
+        fontSize: 14, color: '#94a3b8',
+        textAlign: 'center', marginTop: 8, lineHeight: 20,
     },
 });

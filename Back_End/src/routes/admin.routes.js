@@ -40,6 +40,7 @@ router.get('/dashboard-stats', adminAuth, adminController.getDashboardStats);
 router.post('/upload-final-grades', adminAuth, upload.any(), adminController.uploadFinalGrades);
 
 router.get('/group-students', adminAuth, adminController.getStudentsInGroup);
+router.get('/course-teachers', adminAuth, adminController.getTeachersInCourse);
 
 router.get('/complaints', adminAuth, adminController.getAllComplaints);
 router.put('/complaint/:id/status', adminAuth, adminController.updateComplaintStatus);

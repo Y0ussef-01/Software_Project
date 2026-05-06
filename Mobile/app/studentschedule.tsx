@@ -1,4 +1,3 @@
-// ===== app/studentschedule.tsx =====
 import React, { useCallback, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
@@ -8,7 +7,6 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { getStudentProfile } from '../api/studentApi';
-
 
 interface Appointment {
     day: string;
@@ -47,13 +45,21 @@ interface SessionCard {
     endTime: string;
 }
 
-// ----------------------------------------------------------------
-// Day order for sorting (Saturday → Friday)
-// ----------------------------------------------------------------
 const DAYS_OF_WEEK = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-
 const toMinutes = (t?: string): number => {
     if (!t) return 0;
+
+    if (t.includes('AM') || t.includes('PM')) {
+        const isPM = t.includes('PM');
+        const timePart = t.replace('AM', '').replace('PM', '').trim();
+        const [hStr, mStr] = timePart.split(':');
+        let h = parseInt(hStr, 10);
+        const m = parseInt(mStr || '0', 10);
+        if (isPM && h !== 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
     const [h, m] = t.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
 };
@@ -79,16 +85,12 @@ const getTypeStyle = (type: string) => {
     return                            { color: '#64748b', icon: 'account-group-outline' };
 };
 
-// ----------------------------------------------------------------
-// Component
-// ----------------------------------------------------------------
 const StudentSchedule = () => {
     const [scheduleMap, setScheduleMap] = useState<{ [key: string]: SessionCard[] }>({});
     const [loading, setLoading]         = useState(true);
     const [refreshing, setRefreshing]   = useState(false);
     const [studentName, setStudentName] = useState('');
 
-    // new Date().getDay(): 0=Sun,1=Mon,...,6=Sat → map to our Saturday-first array
     const JS_TO_IDX: Record<number, number> = { 6:0, 0:1, 1:2, 2:3, 3:4, 4:5, 5:6 };
     const todayIndex = JS_TO_IDX[new Date().getDay()];
     const [selectedDay, setSelectedDay] = useState(DAYS_OF_WEEK[todayIndex]);
@@ -142,7 +144,6 @@ const StudentSchedule = () => {
                 }
             });
 
-            // Sort sessions within each day by start time
             DAYS_OF_WEEK.forEach(day => {
                 tempSchedule[day].sort((a, b) =>
                     toMinutes(a.startTime) - toMinutes(b.startTime)
@@ -152,9 +153,8 @@ const StudentSchedule = () => {
             if (isMounted) {
                 setScheduleMap(tempSchedule);
 
-                // Auto-select: prefer today if it has sessions, else first active day
                 const activeDays = DAYS_OF_WEEK.filter(d => tempSchedule[d].length > 0);
-                const currentDay = DAYS_OF_WEEK[new Date().getDay()];
+                const currentDay = DAYS_OF_WEEK[JS_TO_IDX[new Date().getDay()]];
                 if (activeDays.length > 0 && !activeDays.includes(currentDay)) {
                     setSelectedDay(activeDays[0]);
                 } else if (activeDays.includes(currentDay)) {
@@ -169,9 +169,6 @@ const StudentSchedule = () => {
         }
     };
 
-    // ----------------------------------------------------------------
-    // Render one session card  (same style as teacher)
-    // ----------------------------------------------------------------
     const renderSessionCard = ({ item }: { item: SessionCard }) => {
         const ts = getTypeStyle(item.type);
         return (
@@ -227,17 +224,12 @@ const StudentSchedule = () => {
     };
 
     const activeDaysList = DAYS_OF_WEEK.filter(d => scheduleMap[d] && scheduleMap[d].length > 0);
-    const totalSessions  = Object.values(scheduleMap).reduce((sum, s) => sum + s.length, 0);
 
-    // ----------------------------------------------------------------
-    // Main render
-    // ----------------------------------------------------------------
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => router.replace('/home' as any)}
@@ -258,13 +250,10 @@ const StudentSchedule = () => {
                 <View style={styles.emptyContainer}>
                     <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#cbd5e1" />
                     <Text style={styles.emptyTitle}>No courses registered</Text>
-                    <Text style={styles.emptySub}>
-                        Register in courses to see your schedule here.
-                    </Text>
+                    <Text style={styles.emptySub}>Register in courses to see your schedule here.</Text>
                 </View>
             ) : (
                 <>
-                    {/* Days Tabs */}
                     <View style={styles.tabsContainer}>
                         <ScrollView
                             horizontal
@@ -286,7 +275,6 @@ const StudentSchedule = () => {
                         </ScrollView>
                     </View>
 
-                    {/* Session List */}
                     <FlatList
                         data={scheduleMap[selectedDay] || []}
                         keyExtractor={(item, index) => item.id + index}
@@ -318,12 +306,8 @@ const StudentSchedule = () => {
 
 export default StudentSchedule;
 
-// ----------------------------------------------------------------
-// Styles  (mirrors teacher schedule, same color scheme)
-// ----------------------------------------------------------------
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f4f7ff' },
-
     header: {
         backgroundColor: 'rgb(23, 42, 70)',
         paddingTop: Platform.OS === 'ios' ? 55 : (StatusBar.currentHeight || 0) + 10,
@@ -340,8 +324,6 @@ const styles = StyleSheet.create({
     },
     backBtn:     { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
     headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
-
-    // Tabs
     tabsContainer: {
         backgroundColor: '#fff',
         paddingVertical: 12,
@@ -365,11 +347,7 @@ const styles = StyleSheet.create({
         width: 4, height: 4, borderRadius: 2,
         backgroundColor: '#38bdf8', marginTop: 4,
     },
-
-    // List
     listContent: { padding: 20, paddingBottom: 40 },
-
-    // Card
     card: {
         backgroundColor: '#fff',
         borderRadius: 18,
@@ -394,15 +372,12 @@ const styles = StyleSheet.create({
         color: '#0284c7', letterSpacing: 1, marginBottom: 4,
     },
     courseName: { fontSize: 17, fontWeight: 'bold', color: '#1e293b' },
-
     typeBadge: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
         paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
     },
     typeText: { fontSize: 11, fontWeight: 'bold' },
-
     divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 15 },
-
     cardBody: { gap: 12 },
     infoRow:  { flexDirection: 'row', alignItems: 'center' },
     iconContainer: {
@@ -412,8 +387,6 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     infoText: { fontSize: 14, color: '#475569', fontWeight: '600' },
-
-    // Empty & Loading
     centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     loadingText: { marginTop: 12, fontSize: 15, color: '#64748b', fontWeight: '500' },
     emptyContainer: {

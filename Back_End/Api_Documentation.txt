@@ -673,7 +673,23 @@ Base URL: http://localhost:5000
     }
   ]
 }
-
+[4] Get Teachers in Course
+- Endpoint: /admin/course-teachers
+- Method: GET
+- Description: Retrieves a list of teachers registered in a specific course. The response includes only the teacher's ID, name, and profile image.
+- Query Params (Required): ?courseId=CS101
+- Response (200 OK):
+{
+  "message": "Teachers retrieved successfully",
+  "count": 45,
+  "teachers": [
+    {
+      "_id": "T-1",
+      "name": "Hassan Ayad",
+      "profileImg": "default.jpg"
+    }
+  ]
+}
 --- 4.F Schedule Management (Admin Overrides) ---
 
 [1] Assign Course to Student

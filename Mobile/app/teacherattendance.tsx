@@ -6,7 +6,6 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Stack, useFocusEffect } from 'expo-router';
 import API from '../api/axiosConfig';
-// استيراد دالة الكاش الموحدة للمدرس
 import { getTeacherProfile } from '../api/teacherApi';
 
 interface AttendanceRecord {
@@ -35,7 +34,6 @@ const TeacherAttendance = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    // --- التحديث عند دخول الشاشة باستخدام الكاش ---
     useFocusEffect(
         useCallback(() => {
             fetchOptions();
@@ -44,10 +42,7 @@ const TeacherAttendance = () => {
 
     const fetchOptions = async () => {
         try {
-            // جلب بيانات المدرس (سواء من الـ RAM أو التخزين المحلي أو السيرفر)
             const data = await getTeacherProfile();
-            
-            // معالجة البيانات للتأكد من الوصول للمواد والمجموعات بشكل صحيح
             const rawCourses = data?.user?.courses || data?.courses || [];
 
             const list: GroupOption[] = [];
@@ -60,9 +55,10 @@ const TeacherAttendance = () => {
                 const courseName = c.course?.name || c.course?._id || 'Unknown Course';
 
                 if (!groupId || seen.has(groupId)) return;
+                if (groupType.toLowerCase() === 'lab') return;
+
                 seen.add(groupId);
 
-                // --- التعديل هنا: إزالة كلمة lecture من الاختيارات ---
                 let label = `${courseName} - ${groupNum}`;
                 if (groupType && groupType.toLowerCase() !== 'lecture') {
                     label += ` (${groupType})`;
@@ -86,7 +82,6 @@ const TeacherAttendance = () => {
         setSearched(true);
         setCurrentPage(1);
         try {
-            // البحث عن سجلات الحضور (دائماً من السيرفر لضمان الدقة اللحظية)
             const res = await API.get(`/teacher/attendance/${selected.groupId}`, {
                 params: { sessionNumber: sessionFilter.trim() }
             });
@@ -107,7 +102,6 @@ const TeacherAttendance = () => {
         });
     };
 
-    // --- Pagination Logic ---
     const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
     const paginatedRecords = records.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
@@ -119,7 +113,6 @@ const TeacherAttendance = () => {
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                     <MaterialCommunityIcons name="arrow-left" size={28} color="white" />
@@ -135,9 +128,7 @@ const TeacherAttendance = () => {
                 </View>
             ) : (
                 <View style={{ flex: 1 }}>
-                    {/* Filter Card */}
                     <View style={styles.filtersCard}>
-                        {/* --- التعديل هنا: إزالة كلمة Lecture من العنوان --- */}
                         <Text style={styles.label}>Select Group</Text>
                         <TouchableOpacity
                             style={styles.dropdown}
@@ -181,7 +172,6 @@ const TeacherAttendance = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Stats Row */}
                     {searched && !searching && (
                         <View style={styles.countRow}>
                             <MaterialCommunityIcons name="account-check-outline" size={22} color="rgb(23, 42, 70)" />
@@ -191,7 +181,6 @@ const TeacherAttendance = () => {
                         </View>
                     )}
 
-                    {/* Table Header */}
                     {searched && !searching && records.length > 0 && (
                         <View style={styles.tableHeader}>
                             <Text style={[styles.thText, { flex: 2 }]}>Student Name</Text>
@@ -200,7 +189,6 @@ const TeacherAttendance = () => {
                         </View>
                     )}
 
-                    {/* Results List */}
                     {searching ? (
                         <View style={styles.centerContainer}>
                             <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
@@ -234,7 +222,6 @@ const TeacherAttendance = () => {
                                 )}
                             />
 
-                            {/* Pagination Controls */}
                             {totalPages > 1 && (
                                 <View style={styles.pagination}>
                                     <TouchableOpacity
@@ -259,7 +246,6 @@ const TeacherAttendance = () => {
                 </View>
             )}
 
-            {/* Selection Modal */}
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -284,10 +270,10 @@ const TeacherAttendance = () => {
                                         setModalVisible(false);
                                     }}
                                 >
-                                    <MaterialCommunityIcons 
-                                        name="account-group" 
-                                        size={22} 
-                                        color={selected?.groupId === opt.groupId ? 'white' : 'rgb(23, 42, 70)'} 
+                                    <MaterialCommunityIcons
+                                        name="account-group"
+                                        size={22}
+                                        color={selected?.groupId === opt.groupId ? 'white' : 'rgb(23, 42, 70)'}
                                         style={{ marginRight: 12 }}
                                     />
                                     <Text
@@ -329,7 +315,6 @@ const styles = StyleSheet.create({
     headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
     centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
     emptyText: { fontSize: 16, color: '#94a3b8', marginTop: 15, textAlign: 'center', fontWeight: '500' },
-    
     filtersCard: {
         backgroundColor: '#fff',
         margin: 15,
@@ -378,7 +363,6 @@ const styles = StyleSheet.create({
     },
     searchBtnDisabled: { backgroundColor: '#94a3b8' },
     searchBtnText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-
     countRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -394,7 +378,6 @@ const styles = StyleSheet.create({
     },
     countText: { fontSize: 15, color: '#1e3a8a', fontWeight: '500' },
     countNum: { fontWeight: '800', fontSize: 17 },
-
     tableHeader: {
         flexDirection: 'row',
         paddingHorizontal: 20,
@@ -405,7 +388,6 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 12,
     },
     thText: { color: '#cbd5e1', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
-
     row: {
         flexDirection: 'row',
         paddingHorizontal: 20,
@@ -429,7 +411,6 @@ const styles = StyleSheet.create({
     },
     badgeText: { fontSize: 11, fontWeight: 'bold', color: 'rgb(23, 42, 70)' },
     timeText: { fontSize: 13, color: '#475569', fontWeight: '600' },
-
     pagination: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -451,7 +432,6 @@ const styles = StyleSheet.create({
     },
     pageBtnDisabled: { opacity: 0.5 },
     pageText: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
-
     modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
     modalContent: {
         backgroundColor: '#fff',

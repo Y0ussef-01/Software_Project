@@ -1,5 +1,5 @@
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import BulkUploadStudentsComp from "../../../components/AdminComp/StudentManagement/Bulkuploadstudentscomp";
 
 export default function BulkUploadStudentsPage() {
@@ -7,24 +7,28 @@ export default function BulkUploadStudentsPage() {
     <Box
       sx={{
         width: "100%",
-        flexGrow: 1,
         display: "flex",
-        justifyContent: "center",
+        flexDirection: "column",
         alignItems: "center",
         p: { xs: 2, md: 3, lg: 4 },
-        animation: "fadeInUp 0.5s ease-out",
+        animation: "fadeInUp 0.4s ease-out",
+        "@keyframes fadeInUp": {
+          from: { opacity: 0, transform: "translateY(14px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
       }}
     >
-      <BulkUploadStudentsComp />
+      {/* Page Title */}
+      <Box sx={{ width: "100%", maxWidth: 780, mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 900, color: "text.primary" }}>
+          Upload Students
+        </Typography>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary", fontWeight: 500 }}>
+          Add multiple students at once via Excel sheet
+        </Typography>
+      </Box>
 
-      <style>
-        {`
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
+      <BulkUploadStudentsComp />
     </Box>
   );
 }
