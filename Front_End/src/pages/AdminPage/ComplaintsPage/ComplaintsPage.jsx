@@ -38,14 +38,12 @@ export default function ComplaintsPage() {
       field: "code",
       headerName: "Student Code",
       flex: 0.8,
-      // التعديل هنا: استخدام (value, row) بدل params
       valueGetter: (value, row) => row?.student?._id || "N/A"
     },
     {
       field: "studentName",
       headerName: "Student Name",
       flex: 1,
-      // التعديل هنا أيضاً
       valueGetter: (value, row) => row?.student?.name || "Unknown"
     },
     {
