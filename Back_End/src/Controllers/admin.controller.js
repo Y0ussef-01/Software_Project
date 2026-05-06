@@ -765,6 +765,32 @@ const getStudentsInGroup = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const getTeachersInCourse = async (req, res) => {
+  try {
+    const { courseId } = req.query;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID are required" });
+    }
+
+    let teachers = [];
+
+
+      teachers = await Teacher.find({ "courses.course": courseId })
+          .select('_id name profileImg');
+
+
+    res.status(200).json({
+      message: "Teachers retrieved successfully",
+      count: teachers.length,
+      teachers: teachers
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 const getAllComplaints = async (req, res) => {
   try {
@@ -820,6 +846,7 @@ module.exports = {
   uploadFinalGrades,
   uploadStudentsExcel,
   getStudentsInGroup,
+  getTeachersInCourse,
   getAllComplaints,
   updateComplaintStatus
 };
