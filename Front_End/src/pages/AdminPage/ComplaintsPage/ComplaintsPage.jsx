@@ -19,8 +19,7 @@ import { useAdminComplaints } from "../../../hooks/Admin/useAdminComplaints";
 export default function ComplaintsPage() {
   const theme = useTheme();
   const { complaints, loading, updateComplaintStatus } = useAdminComplaints();
-  
-  // State for the "View More" Modal
+
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -28,77 +27,97 @@ export default function ComplaintsPage() {
     setSelectedMessage(message);
     setModalOpen(true);
   };
-  
+
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedMessage(null);
   };
 
   const columns = [
-    { field: "code", headerName: "Student Code", flex: 0.8 },
-    { field: "studentName", headerName: "Student Name", flex: 1 },
+    {
+      field: "code",
+      headerName: "Student Code",
+      flex: 0.8,
+      // التعديل هنا: استخدام (value, row) بدل params
+      valueGetter: (value, row) => row?.student?._id || "N/A"
+    },
+    {
+      field: "studentName",
+      headerName: "Student Name",
+      flex: 1,
+      // التعديل هنا أيضاً
+      valueGetter: (value, row) => row?.student?.name || "Unknown"
+    },
     {
       field: "type",
       headerName: "Type",
       flex: 0.8,
       renderCell: (params) => (
-        <Chip 
-          label={params.value} 
-          color={params.value?.toLowerCase() === "complaint" ? "error" : "primary"} 
-          size="small" 
-          variant="outlined" 
+        <Chip
+          label={params.value}
+          color={params.value?.toLowerCase() === "complaint" ? "error" : "primary"}
         />
-      ),
-    },
-    { 
-      field: "message", 
-      headerName: "Message", 
-      flex: 2,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-          <Typography noWrap sx={{ maxWidth: '70%', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-            {params.value}
-          </Typography>
-          <Button size="small" variant="text" onClick={() => handleOpenModal(params.value)}>
-            View
-          </Button>
-        </Box>
       )
     },
     {
-      field: "date",
-      headerName: "Date",
-      flex: 1,
-      valueFormatter: (params) => {
-        if (!params.value) return "";
-        return new Date(params.value).toLocaleDateString();
-      },
+      field: "message",
+      headerName: "Message",
+      flex: 2
     },
     {
       field: "status",
       headerName: "Status",
       flex: 0.8,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value?.toLowerCase() === "reviewed" ? "success" : "warning"}
-          size="small"
-        />
-      ),
+      renderCell: (params) => {
+        const statusColors = {
+          Pending: "warning",
+          Reviewed: "info",
+          Resolved: "success",
+        };
+        return (
+          <Chip
+            label={params.value}
+            color={statusColors[params.value] || "default"}
+            variant="outlined"
+          />
+        );
+      },
     },
     {
       field: "actions",
       headerName: "Actions",
-      flex: 1,
+      flex: 1.5,
+      sortable: false,
       renderCell: (params) => (
-        <Button
-          variant="contained"
-          size="small"
-          disabled={params.row.status?.toLowerCase() === "reviewed"}
-          onClick={() => updateComplaintStatus(params.row.id)}
-        >
-          {params.row.status?.toLowerCase() === "reviewed" ? "Reviewed" : "Mark Reviewed"}
-        </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => handleOpenModal(params.row.message)}
+          >
+            View
+          </Button>
+          {params.row.status === "Pending" && (
+            <Button
+              size="small"
+              variant="contained"
+              color="info"
+              onClick={() => updateComplaintStatus(params.row.id, "Reviewed")}
+            >
+              Mark Reviewed
+            </Button>
+          )}
+          {params.row.status !== "Resolved" && (
+            <Button
+              size="small"
+              variant="contained"
+              color="success"
+              onClick={() => updateComplaintStatus(params.row.id, "Resolved")}
+            >
+              Resolve
+            </Button>
+          )}
+        </Box>
       ),
     },
   ];
@@ -134,7 +153,6 @@ export default function ComplaintsPage() {
         />
       </Paper>
 
-      {/* View More Modal */}
       <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold">Full Message</Typography>

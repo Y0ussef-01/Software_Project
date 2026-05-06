@@ -24,7 +24,7 @@ export default function ComplaintDialog({ open, onClose }) {
 
   const handleSubmit = async () => {
     if (!message.trim()) return;
-    
+
     const success = await submitComplaint({ type, message });
     if (success) {
       setMessage('');
@@ -41,7 +41,7 @@ export default function ComplaintDialog({ open, onClose }) {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       <DialogContent dividers>
         <FormControl fullWidth margin="dense">
           <InputLabel>Type</InputLabel>
