@@ -19,9 +19,9 @@ interface Session {
 }
 
 const DAYS_OF_WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
 const toMinutes = (t?: string): number => {
     if (!t) return 0;
-
     if (t.includes('AM') || t.includes('PM')) {
         const isPM = t.includes('PM');
         const timePart = t.replace('AM', '').replace('PM', '').trim();
@@ -32,7 +32,6 @@ const toMinutes = (t?: string): number => {
         if (!isPM && h === 12) h = 0;
         return h * 60 + m;
     }
-
     const [h, m] = t.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
 };
@@ -59,11 +58,13 @@ const TeacherSchedule = () => {
             DAYS_OF_WEEK.forEach(day => tempSchedule[day] = []);
 
             rawCourses.forEach((c: any) => {
+                const type = c.group?.type || 'Lecture';
+                if (type.toLowerCase() === 'lab') return;
+
                 const courseId   = c.course?._id || 'N/A';
                 const courseName = c.course?.name || 'Unknown Course';
                 const groupId    = c.group?._id || Math.random().toString();
                 const groupName  = c.group?.groupName || '';
-                const type       = c.group?.type || 'Lecture';
                 const room       = c.group?.Room || 'TBA';
 
                 const appointment = c.group?.appointment;
