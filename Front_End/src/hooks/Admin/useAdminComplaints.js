@@ -9,9 +9,8 @@ export const useAdminComplaints = () => {
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get("/api/admin/complaints");
+      const response = await axiosInstance.get("/admin/complaints");
       let data = response.data?.complaints || response.data || [];
-      // Ensure unique ID for DataGrid
       data = data.map((item) => ({ ...item, id: item._id || item.id }));
       setComplaints(data);
     } catch (error) {
@@ -27,7 +26,7 @@ export const useAdminComplaints = () => {
 
   const updateComplaintStatus = async (id, status = "Reviewed") => {
     try {
-      await axiosInstance.patch(`/api/admin/complaint/${id}`, { status });
+      await axiosInstance.put(`/admin/complaint/${id}/status`, { status });
       toast.success(`Complaint marked as ${status}`);
       setComplaints((prev) =>
         prev.map((c) => (c.id === id ? { ...c, status } : c))
@@ -39,5 +38,5 @@ export const useAdminComplaints = () => {
     }
   };
 
-  return { complaints, loading, updateComplaintStatus, refetch: fetchComplaints };
+  return { complaints, loading, updateComplaintStatus };
 };

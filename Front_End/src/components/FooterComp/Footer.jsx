@@ -14,10 +14,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import RestStud from "../../assets/images/restStud.jpg";
 import ComplaintDialog from "./ComplaintDialog";
+import MyComplaintsDialog from "./MyComplaintsDialog";
+import HistoryIcon from "@mui/icons-material/History";
 
 export default function Footer() {
   const [open, setOpen] = useState(false);
   const [openComplaint, setOpenComplaint] = useState(false);
+  const [openMyComplaints, setOpenMyComplaints] = useState(false);
 
   // دوال الفتح والقفل لنتيجة التقويم
   const handleOpen = (e) => {
@@ -35,6 +38,15 @@ export default function Footer() {
   };
   const handleComplaintClose = () => {
     setOpenComplaint(false);
+  };
+
+  // دوال الفتح والقفل لسجل الشكاوى
+  const handleMyComplaintsOpen = (e) => {
+    e.preventDefault();
+    setOpenMyComplaints(true);
+  };
+  const handleMyComplaintsClose = () => {
+    setOpenMyComplaints(false);
   };
 
   return (
@@ -88,6 +100,23 @@ export default function Footer() {
               >
                 <RateReviewIcon fontSize="small" />
                 Complaints & Suggestions
+              </Link>
+
+              <Link
+                href="#"
+                onClick={handleMyComplaintsOpen}
+                underline="hover"
+                sx={{
+                  color: "#fff",
+                  fontSize: "0.875rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <HistoryIcon fontSize="small" />
+                My Complaints
               </Link>
             </Stack>
           </Stack>
@@ -145,6 +174,7 @@ export default function Footer() {
       </Dialog>
 
       <ComplaintDialog open={openComplaint} onClose={handleComplaintClose} />
+      <MyComplaintsDialog open={openMyComplaints} onClose={handleMyComplaintsClose} />
     </>
   );
 }

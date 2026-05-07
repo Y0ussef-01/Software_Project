@@ -1,6 +1,3 @@
-// =========================================
-// File: ./src/Controllers/student.controller.js
-// =========================================
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
 const Course = require('../models/Course');
@@ -10,10 +7,10 @@ const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const SwapRequest = require('../models/SwapRequest');
 const AcademicRecord = require('../models/AcademicRecord');
-const FinalResult    = require('../models/FinalResult');
+const FinalResult = require('../models/FinalResult');
 const Complaint = require('../models/Complaint');
 const sendPushNotification = require('../utils/sendPushNotification');
-const {isTimeConflict} = require('../utils/Test_Conflict');
+const { isTimeConflict } = require('../utils/Test_Conflict');
 
 const registerAttendance = async (req, res) => {
     try {
@@ -89,10 +86,10 @@ const registerAttendance = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
         const student = await Student.findById(req.user.id).populate({
-                path: "registeredCourses.course",select: 'name hours '
-            }
+            path: "registeredCourses.course", select: 'name hours '
+        }
         ).populate({
-            path: "registeredCourses.group",select: 'groupName Room type appointment',
+            path: "registeredCourses.group", select: 'groupName Room type appointment',
         });
         if (!student) return res.status(404).json({ message: 'Student not found' });
         res.json(student);
@@ -670,12 +667,12 @@ const getAcademicRecord = async (req, res) => {
             message: 'Academic record retrieved successfully',
             totalCourses: safeRecords.length,
             records: safeRecords.map(r => ({
-                courseId:   r.course._id,
+                courseId: r.course._id,
                 courseName: r.course.name,
-                hours:      r.course.hours,
-                score:      r.score,
-                grade:      r.grade,
-                status:     r.status,
+                hours: r.course.hours,
+                score: r.score,
+                grade: r.grade,
+                status: r.status,
                 uploadedAt: r.uploadedAt
             }))
         });
@@ -696,13 +693,13 @@ const getFinalResults = async (req, res) => {
         res.status(200).json({
             message: 'Final results retrieved successfully',
             results: results.map(r => ({
-                courseId:   r.course._id,
+                courseId: r.course._id,
                 courseName: r.course.name,
-                hours:      r.course.hours,
-                score:      r.score,
-                grade:      r.grade,
-                status:     r.status,
-                expiresAt:  r.expiresAt
+                hours: r.course.hours,
+                score: r.score,
+                grade: r.grade,
+                status: r.status,
+                expiresAt: r.expiresAt
             }))
         });
     } catch (err) {
@@ -954,7 +951,6 @@ const submitComplaint = async (req, res) => {
     try {
         const studentId = req.user.id;
         const { type, message } = req.body;
-
         if (!type || !message) {
             return res.status(400).json({ message: "Type and message are required" });
         }
@@ -971,7 +967,22 @@ const submitComplaint = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+const getMyComplaints = async (req, res) => {
+    try {
+        const student = req.user.id;
+        const complaints = await Complaint.find({student})
+            .select('message status type')
+            .sort({ createdAt: -1 });
 
+        res.status(200).json({
+            success: true,
+            count: complaints.length,
+            complaints: complaints
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
@@ -994,5 +1005,6 @@ module.exports = {
     getFinalResults,
     generateSchedules,
     getStudentCourseAnalytics,
-    submitComplaint
+    submitComplaint,
+    getMyComplaints
 };
