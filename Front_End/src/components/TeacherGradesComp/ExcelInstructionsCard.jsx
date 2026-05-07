@@ -16,6 +16,9 @@ export default function ExcelInstructionsCard() {
           <p className="text-sm text-gray-500 mt-1">
             Please ensure your primary key column is named correctly before uploading.
           </p>
+          <p className="text-sm text-gray-500 mt-1">
+            You must write the max score next to the name using a slash Example : Quiz/10 or Midterm/20
+          </p>
         </div>
       </div>
 
