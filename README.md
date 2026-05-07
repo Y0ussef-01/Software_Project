@@ -1,103 +1,41 @@
-# 🎓 College Management System
+# 🎓 Smart University Management System (CU Portal)
 
-A complete full-stack solution for managing college operations. This system provides dedicated portals and features for **Admins**, **Teachers**, and **Students** across three main platforms: a robust Backend API, a responsive Web App, and a Mobile Application.
+## 📌 Problem Statement
+During the course registration period, students waste a massive amount of time manually drafting, comparing, and adjusting their schedules. If a single group reaches maximum capacity, their entire planned schedule collapses, forcing them to start from scratch and causing severe registration delays. Furthermore, once groups are full, manually finding and executing a group swap with another student is an incredibly tedious and nearly impossible process.
 
----
+## 🎯 Target Users
+* **Students:** To easily register courses, auto-generate schedules, swap groups, track attendance, and view AI-driven academic performance analysis.
+* **Teachers:** To manage course grades, generate dynamic QR codes for secure attendance, and send instant announcements to specific groups.
+* **Admins:** To manage users, oversee course enrollments, upload bulk data via Excel, and monitor overall university statistics.
 
-## 🚀 System Features
+## 🚀 Goals
+* **Primary Goal:** To drastically simplify the registration process and lift the heavy stress and pressure off students' shoulders during the enrollment period.
+* Automate the attendance process using dynamic, time-sensitive QR codes to save lecture time.
+* Streamline course management and minimize administrative bottlenecks.
+* Provide students with AI-powered, personalized academic analytics to help them improve their GPA.
 
-### 👨‍💼 Admin Panel
-- **User Management:** Full CRUD operations for Students and Teachers.
-- **Course & Schedule Management:** Add/remove courses and manage groups (Lectures, Labs, Tutorials) with specific capacities and time slots.
-- **Conflict Handling:** Automated checks to prevent schedule overlaps.
+## 💡 How to Solve the Problem (The Solution)
+To tackle these specific bottlenecks, we built a comprehensive platform (Web & Mobile) integrating smart features:
+1. **Auto-Schedule Generator:** A smart feature where the system instantly computes and generates ready-made, conflict-free schedule combinations based on the student's selected subjects, saving them hours of manual planning.
+2. **Peer-to-Peer 'Switch' System:** A seamless swapping feature allowing students to broadcast swap requests and easily exchange full groups with one another without administrative hurdles.
+3. **Full-Stack Ecosystem:** A powerful Web Dashboard for Admins and a React Native Mobile App for Students/Teachers, ensuring real-time syncing and smooth university operations.
 
-### 👨‍🏫 Teacher Portal
-- **Profile Management:** View assigned courses and update profile credentials/images.
-- **Grades Management:** Upload student grades efficiently using Excel sheets (`.xlsx`).
+## 🔄 Usage Patterns (Key Use Cases)
+* **Smart Registration:** Student selects desired courses ➔ System generates valid schedule combinations ➔ Student picks the best one with one click.
+* **Course Swap Flow:** Student A broadcasts a swap request for a specific group ➔ Student B accepts ➔ The system automatically checks for time conflicts and seamlessly swaps their enrollments.
+* **Smart Attendance:** Teacher generates a 5-second valid QR token via the app ➔ Students scan the QR code ➔ Backend verifies the device ID and logs attendance.
 
-### 👨‍🎓 Student Portal (Web & Mobile)
-- **Course Registration:** Browse available courses, register for specific groups, or drop courses.
-- **Academic Tracking:** View detailed grades and track registered hours vs. maximum allowed hours.
-- **Profile & Security:** Manage profile images and secure passwords.
+## 🛠️ Tech Stack
+* **Frontend (Web):** React.js, Material-UI (MUI)
+* **Frontend (Mobile):** React Native (Expo)
+* **Backend:** Node.js, Express.js
+* **Database:** MongoDB & Mongoose
+* **Integrations:** OpenRouter API (AI Analysis), Expo Push Notifications, XLSX (File parsing), Nodemailer (Emails).
 
----
-
-## 🛠️ Technology Stack
-
-### Backend (RESTful API)
-- **Runtime & Framework:** Node.js, Express.js
-- **Database:** MongoDB, Mongoose
-- **Security:** JWT (JSON Web Tokens), bcrypt
-- **File Handling:** Multer, xlsx
-
-### Frontend (Web Application)
-- **Framework:** React.js (Vite)
-- **Routing:** React Router v6
-- **State Management:** React Context API (`AuthContext`)
-- **HTTP Client:** Axios (with interceptors)
-- **UI Notifications:** React Toastify
-
-### Mobile Application
-- **Framework:** React Native (Expo)
-- **Styling:** Custom responsive theme based on `PixelRatio`
-- **Fonts:** Inter Font Family
-
----
-
-## ⚙️ Installation & Setup
-
-To run this project locally, you need to set up all three environments. Make sure you have **Node.js** and **MongoDB** installed.
-
-### 1. Clone the repository
-\`\`\`bash
-git clone https://github.com/Y0ussef-01/Software_Project.git
-cd Software_Project
-\`\`\`
-
-### 2. Backend Setup
-\`\`\`bash
-cd backend
-npm install
-\`\`\`
-Create a `.env` file in the `backend` folder:
-\`\`\`env
-PORT=5000
-MONGO_URL=mongodb://localhost:27017/college-system
-JWT_SECRET=your_super_secret_key
-\`\`\`
-Seed the database with initial data (Optional but recommended) and start the server:
-\`\`\`bash
-node seed2.js
-npm start
-\`\`\`
-
-### 3. Frontend (Web) Setup
-Open a new terminal window:
-\`\`\`bash
-cd frontend
-npm install
-\`\`\`
-Create a `.env` file in the `frontend` folder:
-\`\`\`env
-VITE_API_BASE_URL=http://localhost:5000
-\`\`\`
-Start the React development server:
-\`\`\`bash
-npm run dev
-\`\`\`
-
-### 4. Mobile App Setup
-Open a third terminal window:
-\`\`\`bash
-cd mobile
-npm install
-npx expo start
-\`\`\`
-- Press `a` to run on Android emulator.
-- Press `i` to run on iOS simulator.
-- Or scan the QR code with the Expo Go app on your physical device.
-
----
-
-## 📚 API Documentation
-All backend routes are protected via role-based JWT middleware. For a complete list of endpoints, request bodies, and responses, please refer to the `API_Documentation.txt` file included in the backend directory.
+## 👥 Contributors
+* Youssef Ashraf Mahmoud
+* Abdulrahman Eliwa
+* Abdulrahman Mohammed
+* Youssef Ahmed
+* Mahmoud Massad
+* Ahmed Hesham

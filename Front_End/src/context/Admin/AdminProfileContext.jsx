@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import axios from "axios";
+import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 const AdminProfileContext = createContext(null);
@@ -11,10 +11,7 @@ export const AdminProfileProvider = ({ children }) => {
 
   const fetchAdminData = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/admin/getAdmin", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get("/admin/getAdmin");
       setAdminData(response.data);
     } catch (error) {
       console.error("Error fetching admin profile:", error);
@@ -44,13 +41,10 @@ export const AdminProfileProvider = ({ children }) => {
     setIsImageUpdating(true);
     try {
       const base64Image = await convertToBase64(file);
-      const token = localStorage.getItem("token");
 
-      const response = await axios.put(
-        "http://localhost:5000/admin/updateProfileImg",
-        { profileImg: base64Image },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await axiosInstance.put("/admin/updateProfileImg", {
+        profileImg: base64Image
+      });
 
       toast.success(response.data.message || "Image updated successfully!");
 
@@ -70,13 +64,9 @@ export const AdminProfileProvider = ({ children }) => {
   const removeProfileImage = async () => {
     setIsImageUpdating(true);
     try {
-      const token = localStorage.getItem("token");
-
-      await axios.put(
-        "http://localhost:5000/admin/updateProfileImg",
-        { profileImg: "default.jpg" },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      await axiosInstance.put("/admin/updateProfileImg", {
+        profileImg: "default.jpg"
+      });
 
       toast.success("Image removed successfully!");
 
@@ -90,17 +80,17 @@ export const AdminProfileProvider = ({ children }) => {
   };
 
   return (
-    <AdminProfileContext.Provider
-      value={{
-        adminData,
-        isLoading,
-        isImageUpdating,
-        updateProfileImage,
-        removeProfileImage,
-      }}
-    >
-      {children}
-    </AdminProfileContext.Provider>
+      <AdminProfileContext.Provider
+          value={{
+            adminData,
+            isLoading,
+            isImageUpdating,
+            updateProfileImage,
+            removeProfileImage,
+          }}
+      >
+        {children}
+      </AdminProfileContext.Provider>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 export default function useBulkUploadStudents() {
@@ -39,16 +39,14 @@ export default function useBulkUploadStudents() {
     formData.append("file", file);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        "http://localhost:5000/admin/upload-students",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      const response = await axiosInstance.post(
+          "/admin/upload-students",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
       );
 
       setResult(response.data);
@@ -58,7 +56,7 @@ export default function useBulkUploadStudents() {
       if (fileInput) fileInput.value = "";
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Upload failed. Please try again."
+          error.response?.data?.message || "Upload failed. Please try again."
       );
     } finally {
       setLoading(false);

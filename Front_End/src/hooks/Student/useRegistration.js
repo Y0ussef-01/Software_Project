@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useMemo } from "react";
+import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 export default function useRegistration() {
@@ -11,11 +11,6 @@ export default function useRegistration() {
     } catch (e) {
       return null;
     }
-  };
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return { headers: { Authorization: `Bearer ${token}` } };
   };
 
   const [studentProfile, setStudentProfile] = useState(() =>
@@ -41,11 +36,7 @@ export default function useRegistration() {
 
   const fetchPendingSwaps = async () => {
     try {
-      const response = await axios.get(
-          "http://localhost:5000/student/get_pending_requests",
-          getAuthHeaders(),
-      );
-      // التأكد من إن الداتا الراجعة عبارة عن مصفوفة (Array) عشان الـ map ماتضربش الشاشة
+      const response = await axiosInstance.get("/student/get_pending_requests");
       const rawData = response.data?.requests || response.data?.data || response.data || [];
       setPendingSwapRequests(Array.isArray(rawData) ? rawData : []);
     } catch (error) {
@@ -55,14 +46,8 @@ export default function useRegistration() {
 
   const fetchSentSwaps = async () => {
     try {
-      const response = await axios.get(
-          "http://localhost:5000/student/sent-swap-requests",
-          getAuthHeaders(),
-      );
-      console.log("Sent Swaps Data:", response.data);
+      const response = await axiosInstance.get("/student/sent-swap-requests");
       const rawData = response.data?.requests || response.data?.data || response.data || [];
-
-      // التأكد من النوع هنا كمان لتجنب خطأ الـ reduce
       const validData = Array.isArray(rawData) ? rawData : [];
 
       const grouped = validData.reduce((acc, curr) => {
@@ -88,11 +73,8 @@ export default function useRegistration() {
     if (showPageLoader && !studentProfile) setIsLoading(true);
     try {
       const [profileRes, coursesRes] = await Promise.all([
-        axios.get("http://localhost:5000/student/Profile", getAuthHeaders()),
-        axios.get(
-            "http://localhost:5000/student/getAllCourses",
-            getAuthHeaders(),
-        ),
+        axiosInstance.get("/student/Profile"),
+        axiosInstance.get("/student/getAllCourses"),
       ]);
 
       const profileData = profileRes.data?.student || profileRes.data || {};
@@ -152,11 +134,7 @@ export default function useRegistration() {
     setIsActionLoading(true);
     try {
       const payload = { courseId: selectedCourseId, groupName: selectedGroup };
-      const response = await axios.post(
-          "http://localhost:5000/student/register-course",
-          payload,
-          getAuthHeaders(),
-      );
+      const response = await axiosInstance.post("/student/register-course", payload);
 
       const newEntry = {
         course: selectedCourseDetails,
@@ -187,8 +165,7 @@ export default function useRegistration() {
     if (!courseId) return;
     setIsActionLoading(true);
     try {
-      await axios.delete("http://localhost:5000/student/drop-course", {
-        headers: getAuthHeaders().headers,
+      await axiosInstance.delete("/student/drop-course", {
         data: { courseId },
       });
 
@@ -222,11 +199,7 @@ export default function useRegistration() {
     setIsActionLoading(true);
     try {
       const payload = { courseId, newGroupName };
-      const response = await axios.put(
-          "http://localhost:5000/student/switch-group",
-          payload,
-          getAuthHeaders(),
-      );
+      const response = await axiosInstance.put("/student/switch-group", payload);
 
       const updatedCourses =
           response.data.registeredCourses ||
@@ -266,11 +239,7 @@ export default function useRegistration() {
     setIsActionLoading(true);
     try {
       const payload = { courseId, targetGroupName };
-      const response = await axios.post(
-          "http://localhost:5000/student/swap-request",
-          payload,
-          getAuthHeaders(),
-      );
+      const response = await axiosInstance.post("/student/swap-request", payload);
       toast.success(response.data.message || "Swap request sent successfully!", { autoClose: 2000 });
       fetchSentSwaps();
       fetchData(false);
@@ -286,11 +255,7 @@ export default function useRegistration() {
     setIsActionLoading(true);
     try {
       const payload = { requestId, action };
-      const response = await axios.post(
-          "http://localhost:5000/student/swap-respond",
-          payload,
-          getAuthHeaders(),
-      );
+      const response = await axiosInstance.post("/student/swap-respond", payload);
 
       toast.success(response.data.message || `Swap request ${action.toLowerCase()}!`, { autoClose: 2000 });
       fetchData(false);
@@ -316,9 +281,7 @@ export default function useRegistration() {
     try {
       await Promise.all(
           relatedIds.map((id) =>
-              axios.delete(`http://localhost:5000/student/cancel-swap-request/${id}`, {
-                headers: getAuthHeaders().headers,
-              })
+              axiosInstance.delete(`/student/cancel-swap-request/${id}`)
           )
       );
 
@@ -336,11 +299,7 @@ export default function useRegistration() {
     setIsGenerating(true);
     try {
       const payload = { courseIds: selectedCoursesForGen };
-      const response = await axios.post(
-          "http://localhost:5000/student/generate-schedules",
-          payload,
-          getAuthHeaders()
-      );
+      const response = await axiosInstance.post("/student/generate-schedules", payload);
       const rawData = response.data?.schedules || response.data || [];
       const validData = Array.isArray(rawData) ? rawData : [];
       setGeneratedSchedules(validData);
@@ -375,11 +334,7 @@ export default function useRegistration() {
     try {
       for (const item of schedule) {
         const payload = { courseId: item.courseId, groupName: item.groupName };
-        await axios.post(
-            "http://localhost:5000/student/register-course",
-            payload,
-            getAuthHeaders(),
-        );
+        await axiosInstance.post("/student/register-course", payload);
       }
       toast.success("Schedule confirmed and registered successfully!", { autoClose: 2000 });
       setGeneratedSchedules([]);
@@ -392,6 +347,7 @@ export default function useRegistration() {
       setIsActionLoading(false);
     }
   };
+
   return {
     isLoading,
     isActionLoading,

@@ -1,14 +1,12 @@
-// ===== app/studentschedule.tsx =====
 import React, { useCallback, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList,
     ActivityIndicator, StatusBar, TouchableOpacity,
-    RefreshControl, Platform
+    RefreshControl, Platform, ScrollView
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { getStudentProfile } from '../api/studentApi';
-
 
 interface Appointment {
     day: string;
@@ -35,57 +33,39 @@ interface RegisteredCourse {
     group: GroupInfo;
 }
 
-interface CourseCard {
+interface SessionCard {
+    id: string;
     courseId: string;
     courseName: string;
     hours: number;
-    groups: GroupInfo[];
+    groupName: string;
+    type: string;
+    room: string;
+    startTime: string;
+    endTime: string;
 }
 
-// ----------------------------------------------------------------
-// Day order for sorting (Sunday → Saturday)
-// ----------------------------------------------------------------
-const DAY_ORDER: Record<string, number> = {
-    Sunday: 0, Monday: 1, Tuesday: 2,
-    Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
-};
-
-// Convert "HH:MM" to total minutes for numeric comparison
+const DAYS_OF_WEEK = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 const toMinutes = (t?: string): number => {
     if (!t) return 0;
+
+    if (t.includes('AM') || t.includes('PM')) {
+        const isPM = t.includes('PM');
+        const timePart = t.replace('AM', '').replace('PM', '').trim();
+        const [hStr, mStr] = timePart.split(':');
+        let h = parseInt(hStr, 10);
+        const m = parseInt(mStr || '0', 10);
+        if (isPM && h !== 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
     const [h, m] = t.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
 };
 
-const sortGroups = (groups: GroupInfo[]): GroupInfo[] =>
-    [...groups].sort((a, b) => {
-        const dayDiff =
-            (DAY_ORDER[a.appointment?.day] ?? 99) -
-            (DAY_ORDER[b.appointment?.day] ?? 99);
-        if (dayDiff !== 0) return dayDiff;
-        return toMinutes(a.appointment?.startTime) - toMinutes(b.appointment?.startTime);
-    });
-
-// ----------------------------------------------------------------
-// Helpers
-// ----------------------------------------------------------------
-const CARD_COLORS = [
-    '#4f46e5', '#0891b2', '#059669', '#d97706',
-    '#dc2626', '#7c3aed', '#0284c7', '#16a34a',
-];
-
-const getTypeStyle = (type: string) => {
-    const t = (type || '').toLowerCase();
-    if (t.includes('lab'))     return { color: '#059669', icon: 'flask-outline' };
-    if (t.includes('lecture')) return { color: '#4f46e5', icon: 'presentation' };
-    if (t.includes('section') || t.includes('tutorial'))
-                               return { color: '#0891b2', icon: 'account-group-outline' };
-    return                            { color: '#64748b', icon: 'account-group-outline' };
-};
-
 const fmt = (t?: string) => {
     if (!t) return '';
-    // لو الوقت جاي بـ AM/PM بالفعل، رجعه زي ما هو
     if (t.includes('AM') || t.includes('PM')) return t;
     const [hStr, mStr] = t.split(':');
     let h = parseInt(hStr, 10);
@@ -96,14 +76,24 @@ const fmt = (t?: string) => {
     return h + ':' + m + ' ' + ampm;
 };
 
-// ----------------------------------------------------------------
-// Component
-// ----------------------------------------------------------------
+const getTypeStyle = (type: string) => {
+    const t = (type || '').toLowerCase();
+    if (t.includes('lab'))     return { color: '#059669', icon: 'flask-outline' };
+    if (t.includes('lecture')) return { color: '#4f46e5', icon: 'presentation' };
+    if (t.includes('section') || t.includes('tutorial'))
+                               return { color: '#0891b2', icon: 'account-group-outline' };
+    return                            { color: '#64748b', icon: 'account-group-outline' };
+};
+
 const StudentSchedule = () => {
-    const [cards, setCards]             = useState<CourseCard[]>([]);
+    const [scheduleMap, setScheduleMap] = useState<{ [key: string]: SessionCard[] }>({});
     const [loading, setLoading]         = useState(true);
     const [refreshing, setRefreshing]   = useState(false);
     const [studentName, setStudentName] = useState('');
+
+    const JS_TO_IDX: Record<number, number> = { 6:0, 0:1, 1:2, 2:3, 3:4, 4:5, 5:6 };
+    const todayIndex = JS_TO_IDX[new Date().getDay()];
+    const [selectedDay, setSelectedDay] = useState(DAYS_OF_WEEK[todayIndex]);
 
     useFocusEffect(
         useCallback(() => {
@@ -124,7 +114,9 @@ const StudentSchedule = () => {
             setStudentName(profile?.name?.split(' ')[0] || '');
 
             const registered: RegisteredCourse[] = profile?.registeredCourses || [];
-            const map: Record<string, CourseCard> = {};
+
+            const tempSchedule: { [key: string]: SessionCard[] } = {};
+            DAYS_OF_WEEK.forEach(day => tempSchedule[day] = []);
 
             registered.forEach((rc) => {
                 const course = rc.course;
@@ -133,36 +125,42 @@ const StudentSchedule = () => {
                 if (!course || typeof course === 'string') return;
                 if (!group  || typeof group  === 'string') return;
 
-                const cId = course._id;
-                if (!map[cId]) {
-                    map[cId] = {
-                        courseId:   cId,
-                        courseName: course.name  || cId,
-                        hours:      course.hours || 0,
-                        groups:     [],
-                    };
+                const appointment = group.appointment;
+                if (appointment && appointment.day) {
+                    const day = appointment.day.toLowerCase().trim();
+                    if (tempSchedule[day] !== undefined) {
+                        tempSchedule[day].push({
+                            id:         group._id,
+                            courseId:   course._id,
+                            courseName: course.name  || course._id,
+                            hours:      course.hours || 0,
+                            groupName:  group.groupName || '',
+                            type:       group.type  || 'Lecture',
+                            room:       group.Room  || 'TBA',
+                            startTime:  appointment.startTime || '--:--',
+                            endTime:    appointment.endTime   || '--:--',
+                        });
+                    }
                 }
-                map[cId].groups.push(group);
             });
 
-            // Sort groups inside each course by day → startTime
-            const sorted = Object.values(map).map((card) => ({
-                ...card,
-                groups: sortGroups(card.groups),
-            }));
-
-            // Sort cards themselves by the day of their first group
-            sorted.sort((a, b) => {
-                const dayA = DAY_ORDER[a.groups[0]?.appointment?.day] ?? 99;
-                const dayB = DAY_ORDER[b.groups[0]?.appointment?.day] ?? 99;
-                if (dayA !== dayB) return dayA - dayB;
-                return (
-                    toMinutes(a.groups[0]?.appointment?.startTime) -
-                    toMinutes(b.groups[0]?.appointment?.startTime)
+            DAYS_OF_WEEK.forEach(day => {
+                tempSchedule[day].sort((a, b) =>
+                    toMinutes(a.startTime) - toMinutes(b.startTime)
                 );
             });
 
-            if (isMounted) setCards(sorted);
+            if (isMounted) {
+                setScheduleMap(tempSchedule);
+
+                const activeDays = DAYS_OF_WEEK.filter(d => tempSchedule[d].length > 0);
+                const currentDay = DAYS_OF_WEEK[JS_TO_IDX[new Date().getDay()]];
+                if (activeDays.length > 0 && !activeDays.includes(currentDay)) {
+                    setSelectedDay(activeDays[0]);
+                } else if (activeDays.includes(currentDay)) {
+                    setSelectedDay(currentDay);
+                }
+            }
 
         } catch (err) {
             console.log('Schedule error:', err);
@@ -171,101 +169,67 @@ const StudentSchedule = () => {
         }
     };
 
-    // ----------------------------------------------------------------
-    // Render one group slot row
-    // ----------------------------------------------------------------
-    const renderGroupRow = (group: GroupInfo, idx: number, accentColor: string) => {
-        const ts   = getTypeStyle(group.type);
-        const day  = group.appointment?.day        || '';
-        const from = fmt(group.appointment?.startTime);
-        const to   = fmt(group.appointment?.endTime);
-        const room = group.Room || '';
-
+    const renderSessionCard = ({ item }: { item: SessionCard }) => {
+        const ts = getTypeStyle(item.type);
         return (
-            <View key={group._id + idx} style={styles.slotRow}>
-
-                {/* Day badge */}
-                <View style={[styles.dayBadge, { backgroundColor: accentColor }]}>
-                    <Text style={styles.dayText}>{day.slice(0, 3) || '---'}</Text>
+            <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                    <View style={styles.courseInfoBox}>
+                        <Text style={styles.courseCode}>{item.courseId}</Text>
+                        <Text style={styles.courseName} numberOfLines={1}>{item.courseName}</Text>
+                    </View>
+                    <View style={[styles.typeBadge, { backgroundColor: ts.color + '15' }]}>
+                        <MaterialCommunityIcons name={ts.icon as any} size={13} color={ts.color} />
+                        <Text style={[styles.typeText, { color: ts.color }]}>{item.type}</Text>
+                    </View>
                 </View>
 
-                <View style={styles.slotInfo}>
-                    {/* Type badge */}
-                    <View style={[styles.typeBadge, { backgroundColor: ts.color + '15' }]}>
-                        <MaterialCommunityIcons name={ts.icon as any} size={12} color={ts.color} />
-                        <Text style={[styles.typeText, { color: ts.color }]}>
-                            {group.type || 'Group'}
+                <View style={styles.divider} />
+
+                <View style={styles.cardBody}>
+                    <View style={styles.infoRow}>
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons name="clock-outline" size={20} color="#0284c7" />
+                        </View>
+                        <Text style={styles.infoText}>
+                            {fmt(item.startTime)} – {fmt(item.endTime)}
                         </Text>
                     </View>
 
-                    {/* Time */}
-                    <Text style={styles.timeText}>
-{from && to ? (from + ' – ' + to) : (from || '--:--')}                    </Text>
-
-                    {/* Room */}
-                    {room ? (
-                        <View style={styles.roomRow}>
-                            <MaterialCommunityIcons name="map-marker-outline" size={12} color="#94a3b8" />
-                            <Text style={styles.roomText}>{room}</Text>
+                    <View style={styles.infoRow}>
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons name="map-marker-outline" size={20} color="#16a34a" />
                         </View>
-                    ) : null}
-                </View>
+                        <Text style={styles.infoText}>Room: {item.room}</Text>
+                    </View>
 
-                {/* Group name */}
-                <Text style={styles.groupName} numberOfLines={1}>{group.groupName || ''}</Text>
-            </View>
-        );
-    };
-
-    // ----------------------------------------------------------------
-    // Render one course card
-    // ----------------------------------------------------------------
-    const renderCard = ({ item, index }: { item: CourseCard; index: number }) => {
-        const color = CARD_COLORS[index % CARD_COLORS.length];
-        return (
-            <View style={styles.card}>
-                <View style={[styles.colorBar, { backgroundColor: color }]} />
-                <View style={styles.cardInner}>
-
-                    {/* Course header */}
-                    <View style={styles.cardHeader}>
-                        <View style={[styles.iconBox, { backgroundColor: color + '18' }]}>
-                            <MaterialCommunityIcons name="book-open-variant" size={24} color={color} />
+                    <View style={styles.infoRow}>
+                        <View style={styles.iconContainer}>
+                            <MaterialCommunityIcons name="account-group-outline" size={20} color="#ca8a04" />
                         </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.courseIdText}>{item.courseId}</Text>
-                            <Text style={styles.courseNameText} numberOfLines={2}>{item.courseName}</Text>
-                        </View>
-                        {item.hours > 0 ? (
-                            <View style={[styles.hoursBadge, { backgroundColor: color + '15' }]}>
-                                <Text style={[styles.hoursText, { color }]}>
-                                    {String(item.hours) + ' hrs'}
-                                </Text>
+                        <Text style={styles.infoText}>Group: {item.groupName}</Text>
+                    </View>
+
+                    {item.hours > 0 && (
+                        <View style={styles.infoRow}>
+                            <View style={styles.iconContainer}>
+                                <MaterialCommunityIcons name="book-open-variant" size={20} color="#7c3aed" />
                             </View>
-                        ) : null}
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    {/* Sorted group slots */}
-                    <View style={styles.slotsContainer}>
-                        {item.groups.map((g, i) => renderGroupRow(g, i, color))}
-                    </View>
-
+                            <Text style={styles.infoText}>{item.hours} Credit Hours</Text>
+                        </View>
+                    )}
                 </View>
             </View>
         );
     };
 
-    // ----------------------------------------------------------------
-    // Main render
-    // ----------------------------------------------------------------
+    const activeDaysList = DAYS_OF_WEEK.filter(d => scheduleMap[d] && scheduleMap[d].length > 0);
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar backgroundColor="rgb(23, 42, 70)" barStyle="light-content" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => router.replace('/home' as any)}
@@ -277,49 +241,64 @@ const StudentSchedule = () => {
                 <View style={{ width: 40 }} />
             </View>
 
-            {/* Banner */}
-            <View style={styles.banner}>
-                <View>
-                    <Text style={styles.bannerSub}>
-                        {studentName ? ('Hello, ' + studentName + ' \uD83D\uDC4B') : 'Your timetable'}
-                    </Text>
-                    <Text style={styles.bannerMain}>Registered Courses</Text>
-                </View>
-                <View style={styles.countBadge}>
-                    <Text style={styles.countNumber}>{String(cards.length)}</Text>
-                    <Text style={styles.countLabel}>Courses</Text>
-                </View>
-            </View>
-
-            {/* Content */}
             {loading ? (
-                <View style={styles.center}>
+                <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="rgb(23, 42, 70)" />
                     <Text style={styles.loadingText}>Loading your schedule...</Text>
                 </View>
-            ) : cards.length === 0 ? (
-                <View style={styles.center}>
-                    <MaterialCommunityIcons name="calendar-blank-outline" size={70} color="#cbd5e1" />
+            ) : activeDaysList.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#cbd5e1" />
                     <Text style={styles.emptyTitle}>No courses registered</Text>
-                    <Text style={styles.emptySubtitle}>
-                        Register in courses to see your schedule here.
-                    </Text>
+                    <Text style={styles.emptySub}>Register in courses to see your schedule here.</Text>
                 </View>
             ) : (
-                <FlatList
-                    data={cards}
-                    keyExtractor={(item) => item.courseId}
-                    renderItem={renderCard}
-                    contentContainerStyle={styles.list}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={() => load(true)}
-                            colors={['rgb(23, 42, 70)']}
-                        />
-                    }
-                />
+                <>
+                    <View style={styles.tabsContainer}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.tabsScrollContent}
+                        >
+                            {activeDaysList.map((day) => (
+                                <TouchableOpacity
+                                    key={day}
+                                    style={[styles.tabBtn, selectedDay === day && styles.tabBtnActive]}
+                                    onPress={() => setSelectedDay(day)}
+                                >
+                                    <Text style={[styles.tabText, selectedDay === day && styles.tabTextActive]}>
+                                        {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                                    </Text>
+                                    {selectedDay === day && <View style={styles.activeDot} />}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+
+                    <FlatList
+                        data={scheduleMap[selectedDay] || []}
+                        keyExtractor={(item, index) => item.id + index}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                        renderItem={renderSessionCard}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={() => load(true)}
+                                colors={['rgb(23, 42, 70)']}
+                            />
+                        }
+                        ListEmptyComponent={() => (
+                            <View style={styles.emptyContainer}>
+                                <MaterialCommunityIcons name="calendar-blank-outline" size={80} color="#cbd5e1" />
+                                <Text style={styles.emptyTitle}>No Sessions</Text>
+                                <Text style={styles.emptySub}>
+                                    {'No classes on ' + selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1) + '.'}
+                                </Text>
+                            </View>
+                        )}
+                    />
+                </>
             )}
         </View>
     );
@@ -327,12 +306,8 @@ const StudentSchedule = () => {
 
 export default StudentSchedule;
 
-// ----------------------------------------------------------------
-// Styles
-// ----------------------------------------------------------------
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8faff' },
-
+    container: { flex: 1, backgroundColor: '#f4f7ff' },
     header: {
         backgroundColor: 'rgb(23, 42, 70)',
         paddingTop: Platform.OS === 'ios' ? 55 : (StatusBar.currentHeight || 0) + 10,
@@ -342,88 +317,85 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
     },
-    backBtn:     { padding: 4 },
-    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-
-    banner: {
-        backgroundColor: 'rgb(23, 42, 70)',
+    backBtn:     { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', letterSpacing: 0.5 },
+    tabsContainer: {
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+        elevation: 2,
+    },
+    tabsScrollContent: { paddingHorizontal: 15, gap: 10 },
+    tabBtn: {
+        paddingVertical: 10,
         paddingHorizontal: 20,
-        paddingBottom: 24,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabBtnActive:  { backgroundColor: 'rgb(23, 42, 70)' },
+    tabText:       { fontSize: 14, fontWeight: 'bold', color: '#64748b' },
+    tabTextActive: { color: 'white' },
+    activeDot: {
+        width: 4, height: 4, borderRadius: 2,
+        backgroundColor: '#38bdf8', marginTop: 4,
+    },
+    listContent: { padding: 20, paddingBottom: 40 },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        padding: 20,
+        marginBottom: 15,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        borderLeftWidth: 5,
+        borderLeftColor: 'rgb(23, 42, 70)',
+    },
+    cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
-    bannerSub:  { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 },
-    bannerMain: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-
-    countBadge: {
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        borderRadius: 16, paddingHorizontal: 18, paddingVertical: 10,
-        alignItems: 'center',
+    courseInfoBox: { flex: 1, paddingRight: 10 },
+    courseCode: {
+        fontSize: 12, fontWeight: 'bold',
+        color: '#0284c7', letterSpacing: 1, marginBottom: 4,
     },
-    countNumber: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
-    countLabel:  { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: '600' },
-
-    center:        { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 30 },
-    loadingText:   { color: '#94a3b8', fontSize: 14, marginTop: 10 },
-    emptyTitle:    { color: '#334155', fontSize: 18, fontWeight: 'bold' },
-    emptySubtitle: { color: '#94a3b8', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-
-    list: { padding: 16, gap: 14, paddingBottom: 40 },
-
-    card: {
-        backgroundColor: '#fff', borderRadius: 18,
-        flexDirection: 'row', overflow: 'hidden',
-        elevation: 3, shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07, shadowRadius: 6,
-    },
-    colorBar:  { width: 5 },
-    cardInner: { flex: 1, padding: 16 },
-
-    cardHeader:  { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
-    iconBox:     { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-
-    courseIdText: {
-        fontSize: 11, color: '#94a3b8',
-        fontWeight: '700', letterSpacing: 0.5, marginBottom: 3,
-    },
-    courseNameText: { fontSize: 15, fontWeight: 'bold', color: '#1e293b', lineHeight: 21 },
-
-    hoursBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
-    hoursText:  { fontSize: 12, fontWeight: '700' },
-
-    divider: { height: 1, backgroundColor: '#f1f5f9', marginBottom: 12 },
-
-    slotsContainer: { gap: 10 },
-
-    slotRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: '#f8faff', borderRadius: 12, padding: 10,
-    },
-    dayBadge: {
-        width: 44, height: 44, borderRadius: 10,
-        alignItems: 'center', justifyContent: 'center',
-    },
-    dayText: { color: 'white', fontSize: 11, fontWeight: 'bold' },
-
-    slotInfo: { flex: 1, gap: 4 },
-
+    courseName: { fontSize: 17, fontWeight: 'bold', color: '#1e293b' },
     typeBadge: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
-        alignSelf: 'flex-start',
-        paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
+        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
     },
-    typeText: { fontSize: 11, fontWeight: '700' },
-
-    timeText: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
-
-    roomRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-    roomText: { fontSize: 11, color: '#94a3b8' },
-
-    groupName: {
-        fontSize: 11, color: '#64748b', fontWeight: '600',
-        maxWidth: 70, textAlign: 'right',
+    typeText: { fontSize: 11, fontWeight: 'bold' },
+    divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 15 },
+    cardBody: { gap: 12 },
+    infoRow:  { flexDirection: 'row', alignItems: 'center' },
+    iconContainer: {
+        width: 32, height: 32, borderRadius: 8,
+        backgroundColor: '#f8fafc',
+        alignItems: 'center', justifyContent: 'center',
+        marginRight: 12,
+    },
+    infoText: { fontSize: 14, color: '#475569', fontWeight: '600' },
+    centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    loadingText: { marginTop: 12, fontSize: 15, color: '#64748b', fontWeight: '500' },
+    emptyContainer: {
+        alignItems: 'center', justifyContent: 'center',
+        marginTop: 80, paddingHorizontal: 30,
+    },
+    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#64748b', marginTop: 15 },
+    emptySub: {
+        fontSize: 14, color: '#94a3b8',
+        textAlign: 'center', marginTop: 8, lineHeight: 20,
     },
 });

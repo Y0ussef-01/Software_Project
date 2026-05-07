@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const AcademicRecord = require('../models/AcademicRecord');
 const FinalResult = require('../models/FinalResult');
 const Notification = require('../models/Notification');
+const Complaint = require('../models/Complaint');
 const sendEmail = require('../utils/sendEmail');
 const { getLetterGrade, getCourseGPA } = require("../utils/gradeCalculator");const sendPushNotification = require('../utils/sendPushNotification');
 const bcrypt = require("bcrypt");
@@ -729,6 +730,101 @@ const uploadStudentsExcel = async (req, res) => {
   }
 };
 
+const getStudentsInGroup = async (req, res) => {
+  try {
+    const { courseId, groupName } = req.query;
+
+    if (!courseId || !groupName) {
+      return res.status(400).json({ message: "Course ID and Group Name are required" });
+    }
+
+    let students = [];
+
+    if (groupName.toLowerCase() === 'all') {
+      students = await Student.find({ "registeredCourses.course": courseId })
+          .select('_id name profileImg');
+
+    } else {
+      const group = await Group.findOne({ course: courseId, groupName: groupName })
+          .populate('enrolledStudents', '_id name profileImg');
+
+      if (!group) {
+        return res.status(404).json({ message: "Group not found for this course" });
+      }
+
+      students = group.enrolledStudents;
+    }
+
+    res.status(200).json({
+      message: "Students retrieved successfully",
+      count: students.length,
+      students: students
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+const getTeachersInCourse = async (req, res) => {
+  try {
+    const { courseId } = req.query;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID are required" });
+    }
+
+    let teachers = [];
+
+
+      teachers = await Teacher.find({ "courses.course": courseId })
+          .select('_id name profileImg');
+
+
+    res.status(200).json({
+      message: "Teachers retrieved successfully",
+      count: teachers.length,
+      teachers: teachers
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+const getAllComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find()
+        .populate('student', '_id name')
+        .sort({ createdAt: -1 });
+
+    res.status(200).json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const updateComplaintStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.status(200).json({ message: "Status updated successfully", complaint: updatedComplaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   addStudent,
   deleteStudent,
@@ -748,5 +844,9 @@ module.exports = {
   removeTeacherCourse,
   getDashboardStats,
   uploadFinalGrades,
-  uploadStudentsExcel
+  uploadStudentsExcel,
+  getStudentsInGroup,
+  getTeachersInCourse,
+  getAllComplaints,
+  updateComplaintStatus
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -37,21 +37,13 @@ export default function useResetAdminPassword() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.put(
-        "http://localhost:5000/admin/updatePassword",
-        {
-          oldPassword: formData.oldPassword,
-          newPassword: formData.newPassword,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const response = await axiosInstance.put("/admin/updatePassword", {
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword,
+      });
 
       toast.success(
-        response.data.message ||
+          response.data.message ||
           "Password updated successfully. Please login again.",
       );
 

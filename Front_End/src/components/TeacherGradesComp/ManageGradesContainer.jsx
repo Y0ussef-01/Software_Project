@@ -22,6 +22,7 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 
 import { useTeacherProfile } from "../../hooks/Teacher/useTeacherProfile";
 import { useTeacherGrades } from "../../hooks/Teacher/useTeacherGrades";     
+import ExcelInstructionsCard from "./ExcelInstructionsCard";
 
 function TeacherGradesArea({ courseId, courseName }) {
   const {
@@ -37,6 +38,7 @@ function TeacherGradesArea({ courseId, courseName }) {
 
   return (
     <Box sx={{ width: "100%", mt: 4 }}>
+      <ExcelInstructionsCard />
       <Box
         sx={{
           display: "flex",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
 
 export default function useAddStudent() {
@@ -42,10 +42,10 @@ export default function useAddStudent() {
     e.preventDefault();
 
     if (
-      !formData._id ||
-      !formData.name ||
-      !formData.email ||
-      !formData.password
+        !formData._id ||
+        !formData.name ||
+        !formData.email ||
+        !formData.password
     ) {
       toast.warning("Please fill all required fields!", {
         position: "top-right",
@@ -61,7 +61,7 @@ export default function useAddStudent() {
     }
 
     const strongPasswordRegex =
-      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+        /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
     if (!strongPasswordRegex.test(formData.password)) {
       toast.warning("Password must be stronger (Letters, Numbers & Symbols).", {
         position: "top-right",
@@ -72,8 +72,6 @@ export default function useAddStudent() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       const payload = {
         _id: formData._id,
         name: formData.name,
@@ -82,11 +80,7 @@ export default function useAddStudent() {
         profileImg: "default.jpg",
       };
 
-      const response = await axios.post(
-        "http://localhost:5000/admin/add-student",
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await axiosInstance.post("/admin/add-student", payload);
 
       toast.success(response.data.message || "Student added successfully!", {
         position: "top-right",
@@ -103,16 +97,16 @@ export default function useAddStudent() {
       const errorMessage = errorData?.message?.toLowerCase() || "";
 
       if (
-        errorMessage.includes("exists") ||
-        errorMessage.includes("duplicate") ||
-        error.response?.status === 409
+          errorMessage.includes("exists") ||
+          errorMessage.includes("duplicate") ||
+          error.response?.status === 409
       ) {
         toast.error(
-          `Error: Student with ID ${formData._id} is already exist!`,
-          {
-            position: "top-right",
-            autoClose: 5000,
-          },
+            `Error: Student with ID ${formData._id} is already exist!`,
+            {
+              position: "top-right",
+              autoClose: 5000,
+            },
         );
       } else {
         toast.error(errorData?.message || "Failed to add student.", {
