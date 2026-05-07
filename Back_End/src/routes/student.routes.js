@@ -39,4 +39,6 @@ router.get('/final-results', studentAuth, controller.getFinalResults);
 router.post('/generate-schedules', studentAuth, controller.generateSchedules);
 router.get('/analytics/:courseId', studentAuth, controller.getStudentCourseAnalytics);
 router.post('/submit-complaint', studentAuth, controller.submitComplaint);
+router.post('/myComplaint', studentAuth, controller.getMyComplaints);
+
 module.exports = router;

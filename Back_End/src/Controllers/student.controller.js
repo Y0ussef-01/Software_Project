@@ -967,7 +967,22 @@ const submitComplaint = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+const getMyComplaints = async (req, res) => {
+    try {
+        const student = req.user.id;
+        const complaints = await Complaint.find({student})
+            .select('message status type')
+            .sort({ createdAt: -1 });
 
+        res.status(200).json({
+            success: true,
+            count: complaints.length,
+            complaints: complaints
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
 module.exports = {
     respondToSwapRequest,
     getPendingSwapRequests,
@@ -991,4 +1006,5 @@ module.exports = {
     generateSchedules,
     getStudentCourseAnalytics,
     submitComplaint,
+    getMyComplaints
 };
