@@ -31,13 +31,6 @@ export default function TeacherFeaturesComp() {
       active: location.pathname === "/teacher/schedule",
       path: "/teacher/schedule",
     },
-    {
-      id: 4,
-      title: "Profile",
-      icon: <SchoolIcon fontSize="inherit" />,
-      active: location.pathname === "/teacher/profile",
-      path: "/teacher/profile",
-    },
   ];
 
   return (

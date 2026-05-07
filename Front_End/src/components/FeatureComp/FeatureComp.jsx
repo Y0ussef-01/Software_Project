@@ -13,14 +13,12 @@ const TRANSLATIONS = {
     registration: "Registration",
     appointments: "Appointments",
     grades: "Grades",
-    profile: "Profile",
     Academic: "Academic Record",
   },
   ar: {
     registration: "التسجيل",
     appointments: "المواعيد",
     grades: "الدرجات",
-    profile: "الملف الشخصي",
     Academic: "السجل الاكاديمى",
   },
 };
@@ -50,13 +48,7 @@ export default function FeaturesComp() {
       path: "/grades",
     },
     {
-      id: 5,
-      title: t.profile,
-      icon: <SchoolIcon fontSize="inherit" />,
-      path: "/profile",
-    },
-    {
-      id: 6,
+      id: 4,
       title: t.Academic,
       icon: <MenuBookIcon fontSize="inherit" />,
       path: "/Academic",
