@@ -50,7 +50,6 @@ const EditGrade = () => {
     const [editedScores,    setEditedScores]    = useState<Record<string, string>>({});
     const [saving,          setSaving]          = useState(false);
 
-    // ─── Fetch Groups ─────────────────────────────────────────────────────────
     useEffect(() => {
         (async () => {
             try {
@@ -64,8 +63,8 @@ const EditGrade = () => {
                     if (cId !== courseId) return;
                     const gId   = c.group?._id || c.group?.id || c.groupId || '';
                     const gName = c.group?.groupName || c.group?.name || c.groupName || gId;
-                    if (gId && !seen.has(gId)) {
-                        seen.add(gId);
+                    if (gName && !seen.has(gName)) {
+                        seen.add(gName);
                         courseGroups.push({ groupId: gId, groupName: gName });
                     }
                 });
@@ -78,7 +77,6 @@ const EditGrade = () => {
         })();
     }, [courseId]);
 
-    // ─── Fetch Students ───────────────────────────────────────────────────────
     const fetchStudents = useCallback(async (isRefresh = false) => {
         if (!selectedGroup) return;
         try {
@@ -111,7 +109,6 @@ const EditGrade = () => {
         fetchStudents(true);
     }, [fetchStudents]);
 
-    // ─── Search ───────────────────────────────────────────────────────────────
     const applySearch = (students: StudentGrade[], query: string) => {
         if (!query.trim()) { setFilteredStudents(students); return; }
         const q = query.toLowerCase();
@@ -128,7 +125,6 @@ const EditGrade = () => {
         applySearch(allStudents, text);
     };
 
-    // ─── استخرج الـ outOf من الـ title لو مش موجود ───────────────────────────
     const getOutOf = (degree: Degree): number | null => {
         if (degree.outOf !== null && degree.outOf !== undefined) return degree.outOf;
         const parts = degree.title?.split('/');
@@ -139,9 +135,7 @@ const EditGrade = () => {
         return null;
     };
 
-    // ─── Open Edit Modal ──────────────────────────────────────────────────────
     const openEdit = (student: StudentGrade) => {
-        // ── حدّث الـ outOf من الـ title لو مش موجود ──
         const fixedDegrees = student.degrees.map(d => {
             if (d.outOf === null || d.outOf === undefined) {
                 const parts = d.title?.split('/');
@@ -164,19 +158,16 @@ const EditGrade = () => {
         setModalVisible(true);
     };
 
-    // ─── Validate ─────────────────────────────────────────────────────────────
     const getFieldError = (degree: Degree, value: string): string | null => {
         if (value === '' || value === null) return null;
         if (isNaN(Number(value)) || value.trim() === '') return 'Numbers only';
         const num = parseFloat(value);
         if (num < 0) return 'Cannot be negative';
         const maxAllowed = getOutOf(degree);
-        if (maxAllowed !== null && num > maxAllowed)
-            return `Max is ${maxAllowed}`;
+        if (maxAllowed !== null && num > maxAllowed) return `Max is ${maxAllowed}`;
         return null;
     };
 
-    // ─── هل في أي error دلوقتي؟ ──────────────────────────────────────────────
     const hasAnyError = (): boolean => {
         if (!selectedStudent) return false;
         return selectedStudent.degrees.some(d => {
@@ -185,32 +176,24 @@ const EditGrade = () => {
         });
     };
 
-    // ─── Save ─────────────────────────────────────────────────────────────────
     const handleSave = async () => {
         if (!selectedStudent) return;
 
         for (const d of selectedStudent.degrees) {
             const val = editedScores[d.title] ?? '';
-
             if (val !== '' && (isNaN(Number(val)) || val.trim() === '')) {
                 Alert.alert('❌ Invalid Grade', `${d.label}: Numbers only`);
                 return;
             }
-
             if (val !== '') {
                 const num = parseFloat(val);
-
                 if (num < 0) {
                     Alert.alert('❌ Invalid Grade', `${d.label}: Cannot be negative`);
                     return;
                 }
-
                 const maxAllowed = getOutOf(d);
                 if (maxAllowed !== null && num > maxAllowed) {
-                    Alert.alert(
-                        '❌ Invalid Grade',
-                        `${d.label}: Max allowed is ${maxAllowed}\nYou entered: ${num}`
-                    );
+                    Alert.alert('❌ Invalid Grade', `${d.label}: Max allowed is ${maxAllowed}\nYou entered: ${num}`);
                     return;
                 }
             }
@@ -226,19 +209,16 @@ const EditGrade = () => {
                     onPress: async () => {
                         try {
                             setSaving(true);
-
                             const grades = selectedStudent.degrees.map(d => ({
                                 title: d.title,
                                 score: editedScores[d.title] === '' || editedScores[d.title] == null
                                     ? null
                                     : parseFloat(editedScores[d.title]),
                             }));
-
                             await API.patch(
                                 `/teacher/grades/${courseId}/student/${selectedStudent.studentId}`,
                                 { grades }
                             );
-
                             Alert.alert('✅ Success', 'Grades updated successfully.');
                             setModalVisible(false);
 
@@ -263,7 +243,6 @@ const EditGrade = () => {
                                 );
                             setAllStudents(updater);
                             setFilteredStudents(updater);
-
                         } catch (err: any) {
                             Alert.alert('❌ Failed', err.response?.data?.message || 'Could not save changes.');
                         } finally {
@@ -417,7 +396,6 @@ const EditGrade = () => {
                 </ScrollView>
             )}
 
-            {/* GROUP PICKER MODAL */}
             <Modal visible={groupPickerVisible} animationType="slide" transparent onRequestClose={() => setGroupPickerVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.pickerSheet}>
@@ -456,7 +434,6 @@ const EditGrade = () => {
                 </View>
             </Modal>
 
-            {/* EDIT GRADE MODAL */}
             <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -484,7 +461,6 @@ const EditGrade = () => {
                                     const fieldError = getFieldError(degree, currentVal);
                                     const hasError   = fieldError !== null;
                                     const maxAllowed = getOutOf(degree);
-
                                     const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
                                     const color  = colors[idx % colors.length];
 
@@ -496,7 +472,6 @@ const EditGrade = () => {
                                                 </View>
                                                 <View style={styles.gradeInfo}>
                                                     <Text style={styles.gradeLabel}>{degree.label}</Text>
-                                                    {/* ← التعديل: استخدم maxAllowed بدل degree.outOf */}
                                                     {maxAllowed !== null && (
                                                         <Text style={styles.gradeMax}>Max: {maxAllowed}</Text>
                                                     )}
