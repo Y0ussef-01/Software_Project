@@ -48,6 +48,11 @@ export default function TeacherScheduleComp() {
   const t = SCHEDULE_TRANS[language] || SCHEDULE_TRANS["en"];
   const isAr = language === "ar";
 
+  const filteredScheduleData = scheduleData.filter((row) => {
+    const type = row.group?.type?.toLowerCase() || "";
+    return type.includes("lect") || type === "";
+  });
+
   if (isLoading) {
     return (
       <Paper
@@ -87,7 +92,7 @@ export default function TeacherScheduleComp() {
         </Typography>
       </Box>
 
-      {scheduleData.length === 0 ? (
+      {filteredScheduleData.length === 0 ? (
         <Box
           sx={{
             textAlign: "center",
@@ -148,7 +153,7 @@ export default function TeacherScheduleComp() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {scheduleData.map((row, index) => {
+              {filteredScheduleData.map((row, index) => {
                 const courseInfo = row.course || {};
                 const groupInfo = row.group || {};
                 const appointment = groupInfo.appointment || {};
@@ -161,7 +166,6 @@ export default function TeacherScheduleComp() {
                       "&:hover": { backgroundColor: "#f1f5f9" },
                     }}
                   >
-                    {/* Course Info */}
                     <TableCell sx={{ textAlign: isAr ? "right" : "left" }}>
                       <Typography
                         variant="subtitle2"
@@ -178,7 +182,6 @@ export default function TeacherScheduleComp() {
                       </Typography>
                     </TableCell>
 
-                    {/* Group & Type */}
                     <TableCell sx={{ textAlign: isAr ? "right" : "left" }}>
                       <Box
                         sx={{
@@ -208,7 +211,7 @@ export default function TeacherScheduleComp() {
                           }}
                         >
                           <ClassIcon sx={{ fontSize: 14 }} />
-                          {groupInfo.type || "Lecture"}
+                          {"Lecture"}
                         </Typography>
                       </Box>
                     </TableCell>
