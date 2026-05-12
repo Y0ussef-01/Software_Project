@@ -7,7 +7,7 @@ import {
   Button,
   IconButton,
   InputAdornment,
-  CircularProgress,     
+  CircularProgress,
 } from "@mui/material";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import Visibility from "@mui/icons-material/Visibility";
@@ -26,6 +26,8 @@ export default function ResetPasswordComp() {
   const { language } = useLanguage();
   const t = REST_PASSWORD_TRANS[language] || REST_PASSWORD_TRANS["en"];
 
+  const isAr = language === "ar";
+
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
@@ -40,6 +42,12 @@ export default function ResetPasswordComp() {
       setOldPassword("");
       setNewPassword("");
     }
+  };
+
+  const labelStyles = {
+    transformOrigin: isAr ? "right" : "left",
+    left: isAr ? "auto" : "0",
+    right: isAr ? "30px" : "auto",
   };
 
   return (
@@ -61,15 +69,17 @@ export default function ResetPasswordComp() {
         sx={{
           position: "absolute",
           top: 0,
-          left: 0,
           bottom: 0,
           width: "8px",
           background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
+          ...(isAr ? { right: 0 } : { left: 0 }),
         }}
       />
 
       <Button
-        startIcon={<ArrowBackIcon />}
+        startIcon={
+          <ArrowBackIcon sx={{ transform: isAr ? "scaleX(-1)" : "none" }} />
+        }
         onClick={() => navigate(-1)}
         disabled={isLoading}
         sx={{
@@ -93,7 +103,7 @@ export default function ResetPasswordComp() {
             height: 50,
             borderRadius: "12px",
             backgroundColor: "rgba(21, 43, 72, 0.05)",
-            mr: 2,
+            ...(isAr ? { ml: 2 } : { mr: 2 }),
           }}
         >
           <LockResetIcon sx={{ fontSize: 30, color: "#152b48" }} />
@@ -103,7 +113,6 @@ export default function ResetPasswordComp() {
         </Typography>
       </Box>
 
-      {/* الفورم */}
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           <TextField
@@ -113,7 +122,8 @@ export default function ResetPasswordComp() {
             type={showOldPassword ? "text" : "password"}
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            disabled={isLoading} // تعطيل الإدخال أثناء التحميل
+            disabled={isLoading}
+            InputLabelProps={{ sx: labelStyles }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -146,7 +156,8 @@ export default function ResetPasswordComp() {
             type={showNewPassword ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            disabled={isLoading}     
+            disabled={isLoading}
+            InputLabelProps={{ sx: labelStyles }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -201,4 +212,4 @@ export default function ResetPasswordComp() {
       </form>
     </Paper>
   );
-}
+} 

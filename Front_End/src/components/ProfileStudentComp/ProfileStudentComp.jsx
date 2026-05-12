@@ -121,6 +121,7 @@ export default function ProfileComp() {
             bottom: 0,
             width: "8px",
             background: "linear-gradient(180deg, #152b48 0%, #3b6ba5 100%)",
+            
           }}
         />
         <Box
@@ -134,7 +135,7 @@ export default function ProfileComp() {
             background:
               "radial-gradient(circle, rgba(21,43,72,0.04) 0%, rgba(255,255,255,0) 70%)",
             zIndex: 0,
-            pointerEvents: "none",
+            pointerEvents: "none",  
           }}
         />
 
@@ -182,6 +183,10 @@ export default function ProfileComp() {
                   borderRadius: "10px",
                   textTransform: "none",
                   fontWeight: 600,
+                  "& .MuiButton-startIcon": {
+                    marginLeft: "8px",
+                    marginRight: "0px",
+                  },
                   "&:hover": {
                     backgroundColor: "rgba(21, 43, 72, 0.04)",
                     borderColor: "#152b48",

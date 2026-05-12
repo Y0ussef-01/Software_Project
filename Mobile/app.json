@@ -1,6 +1,6 @@
 {
   "expo": {
-   "name": "Science",
+    "name": "Science",
     "slug": "first-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -63,7 +63,8 @@
         {
           "cameraPermission": "Allow app to access camera for QR scanning"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

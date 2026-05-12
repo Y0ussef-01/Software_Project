@@ -76,42 +76,45 @@ const HelpComp = () => {
             {helpData.map((item, index) => (
               <React.Fragment key={item.id}>
                 <ListItem
-                  sx={{
-                    px: 3,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    "&:hover": { bgcolor: "#eef0f2" },
-                  }}
-                >
-                  <ListItemText
-                    primary={item.title}
-                    slotProps={{
-                      primary: {
-                        sx: {
-                          color: "#04365f",
-                          fontWeight: 500,
-                          fontSize: "1.1rem",
-                          p: "13px 0px",
-                        },
-                      },
-                    }}
-                  />
+  sx={{
+    px: 3,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 2,
+    "&:hover": { bgcolor: "#eef0f2" },
+  }}
+>
+  <ListItemText
+primary={item[language] || item.en}
+    slotProps={{
+      primary: {
+        sx: {
+          color: "#04365f",
+          fontWeight: 500,
+          fontSize: "1.1rem",
+          p: "13px 0px",
+          textAlign: language === "ar" ? "right" : "left",
+        },
+      },
+    }}
+  />
 
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleOpen(item)}
-                    sx={{
-                      textTransform: "none",
-                      borderRadius: "8px",
-                      borderColor: "#ccc",
-                      color: "#555",
-                      px: 3,
-                      boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
-                    }}
-                  >
-                    {t.showVideo}
-                  </Button>
-                </ListItem>
+  <Button
+    variant="outlined"
+    onClick={() => handleOpen(item)}
+    sx={{
+      textTransform: "none",
+      borderRadius: "8px",
+      borderColor: "#ccc",
+      color: "#555",
+      px: 3,
+      boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
+    }}
+  >
+    {t.showVideo}
+  </Button>
+</ListItem>
 
                 {index < helpData.length - 1 && <Divider />}
               </React.Fragment>
@@ -141,7 +144,7 @@ const HelpComp = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-            {selectedItem?.title || t.videoTutorial}
+          {selectedItem?.[language] || selectedItem?.en || t.videoTutorial}
           </Typography>
 
           <IconButton

@@ -64,10 +64,11 @@ const Header = () => {
         elevation={0}
         sx={{
           bgcolor: NAV_BG,
+          direction: "ltr",  //
           margin: 0,
           border: "none",
         }}
-      >
+    >
         <Toolbar
           disableGutters
           sx={{

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -21,8 +21,23 @@ export default function Footer() {
   const [open, setOpen] = useState(false);
   const [openComplaint, setOpenComplaint] = useState(false);
   const [openMyComplaints, setOpenMyComplaints] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
-  // دوال الفتح والقفل لنتيجة التقويم
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payloadBase64 = token.split(".")[1];
+        const decodedJson = atob(payloadBase64);
+        const decodedData = JSON.parse(decodedJson);
+
+        setUserRole(decodedData.role || decodedData.rule);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
+
   const handleOpen = (e) => {
     e.preventDefault();
     setOpen(true);
@@ -31,7 +46,6 @@ export default function Footer() {
     setOpen(false);
   };
 
-  // دوال الفتح والقفل لنموذج الشكاوى
   const handleComplaintOpen = (e) => {
     e.preventDefault();
     setOpenComplaint(true);
@@ -40,7 +54,6 @@ export default function Footer() {
     setOpenComplaint(false);
   };
 
-  // دوال الفتح والقفل لسجل الشكاوى
   const handleMyComplaintsOpen = (e) => {
     e.preventDefault();
     setOpenMyComplaints(true);
@@ -57,7 +70,9 @@ export default function Footer() {
           backgroundColor: "#152b48",
           borderRadius: 0,
           py: 3,
-          mt: "auto",
+          mt: "auto", // هي دي اللي بتزق الفوتر لتحت بشكل سليم
+          direction: "ltr",
+          width: "100%", // للتأكيد على أخذ العرض بالكامل بدون كسر الشاشة
         }}
       >
         <Container maxWidth="lg">
@@ -85,39 +100,43 @@ export default function Footer() {
                 Academic Calendar
               </Link>
 
-              <Link
-                href="#"
-                onClick={handleComplaintOpen}
-                underline="hover"
-                sx={{
-                  color: "#fff",
-                  fontSize: "0.875rem",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                }}
-              >
-                <RateReviewIcon fontSize="small" />
-                Complaints & Suggestions
-              </Link>
+              {userRole === "student" && (
+                <>
+                  <Link
+                    href="#"
+                    onClick={handleComplaintOpen}
+                    underline="hover"
+                    sx={{
+                      color: "#fff",
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <RateReviewIcon fontSize="small" />
+                    Complaints & Suggestions
+                  </Link>
 
-              <Link
-                href="#"
-                onClick={handleMyComplaintsOpen}
-                underline="hover"
-                sx={{
-                  color: "#fff",
-                  fontSize: "0.875rem",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                }}
-              >
-                <HistoryIcon fontSize="small" />
-                My Complaints
-              </Link>
+                  <Link
+                    href="#"
+                    onClick={handleMyComplaintsOpen}
+                    underline="hover"
+                    sx={{
+                      color: "#fff",
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <HistoryIcon fontSize="small" />
+                    My Complaints
+                  </Link>
+                </>
+              )}
             </Stack>
           </Stack>
         </Container>
@@ -174,7 +193,10 @@ export default function Footer() {
       </Dialog>
 
       <ComplaintDialog open={openComplaint} onClose={handleComplaintClose} />
-      <MyComplaintsDialog open={openMyComplaints} onClose={handleMyComplaintsClose} />
+      <MyComplaintsDialog
+        open={openMyComplaints}
+        onClose={handleMyComplaintsClose}
+      />
     </>
   );
 }

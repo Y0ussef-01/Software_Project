@@ -3,7 +3,6 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  // Try to load from localStorage, fallback to 'en'
   const [language, setLanguage] = useState(() => {
     const saved = localStorage.getItem('appLanguage');
     return saved ? saved : 'en';
@@ -11,6 +10,8 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('appLanguage', language);
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
   }, [language]);
 
   const toggleLanguage = (lang) => {
