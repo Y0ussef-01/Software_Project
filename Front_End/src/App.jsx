@@ -40,6 +40,7 @@ import FinalGradesPage from "./pages/AdminPage/FinalGrades/Finalgradespage.jsx";
 import BulkUploadStudentsPage from "./pages/AdminPage/StudentManagement/Bulkuploadstudentspage.jsx";
 import SubjectSchedulesPage from "./pages/SubjectSchedulesPage/SubjectSchedulesPage.jsx";
 import ComplaintsPage from "./pages/AdminPage/ComplaintsPage/ComplaintsPage.jsx";
+import SignupPage from "./pages/SignupPage/SignupPage";
 function App() {
   return (
     <AuthProvider>
@@ -54,6 +55,14 @@ function App() {
                   <LoginPage />
                 </PublicRoute>
               }
+            />
+            <Route
+                path="/signup"
+                element={
+                  <PublicRoute>
+                    <SignupPage />
+                  </PublicRoute>
+                }
             />
 
             {/* 🛡️ منطقة الطالب (Student Zone) */}

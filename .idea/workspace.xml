@@ -5,7 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb785e3e-3aaa-4a07-ab7d-f3202eda0993" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Front_End/src/components/SignupForm/SignupForm.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Front_End/src/hooks/useSignupForm.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Front_End/src/pages/SignupPage/SignupPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/Controllers/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/Controllers/auth.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/routes/auth.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/routes/auth.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Back_End/src/services/auth.services.js" beforeDir="false" afterPath="$PROJECT_DIR$/Back_End/src/services/auth.services.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Front_End/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/Front_End/src/App.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +78,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/youssef/WebstormProjects/Software_Project/Back_End/src/models&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/youssef/WebstormProjects/Software_Project&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -88,9 +96,9 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/Back_End/src/models" />
       <recent name="$PROJECT_DIR$/Back_End" />
-      <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/Back_End" />
@@ -114,7 +122,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.23567.141" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.10315.144" />
       </set>
     </attachedChunks>
   </component>
@@ -273,6 +281,9 @@
       <workItem from="1778100197493" duration="1444000" />
       <workItem from="1778113945794" duration="1076000" />
       <workItem from="1778575974012" duration="382000" />
+      <workItem from="1778583737140" duration="135000" />
+      <workItem from="1780281393133" duration="49000" />
+      <workItem from="1789519918112" duration="1089000" />
     </task>
     <servers />
   </component>
