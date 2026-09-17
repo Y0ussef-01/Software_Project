@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
     "expo": "^55.0.17",
     "expo-device": "~55.0.15",
     "expo-notifications": "~55.0.20",

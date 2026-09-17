@@ -17,4 +17,4 @@ const isTimeConflict = (app1, app2) => {
 
     return start1 < end2 && end1 > start2;
 };
-module.exports = {isTimeConflict};
+module.exports = {isTimeConflict,timeToMinutes};

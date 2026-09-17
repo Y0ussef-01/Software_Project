@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 
@@ -31,6 +31,8 @@ export default function useRegistration() {
   const [sentSwapRequests, setSentSwapRequests] = useState([]);
 
   const [selectedCoursesForGen, setSelectedCoursesForGen] = useState([]);
+  const [numberOfDays, setNumberOfDays] = useState("");
+  const [offDays, setOffDays] = useState([]);
   const [generatedSchedules, setGeneratedSchedules] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -298,13 +300,17 @@ export default function useRegistration() {
     if (!Array.isArray(selectedCoursesForGen) || selectedCoursesForGen.length === 0) return;
     setIsGenerating(true);
     try {
-      const payload = { courseIds: selectedCoursesForGen };
+      const payload = {
+        courseIds: selectedCoursesForGen,
+        ...(numberOfDays !== "" && { numberOfDays: Number(numberOfDays) }),
+        ...(offDays.length > 0 && { offDays }),
+      };
       const response = await axiosInstance.post("/student/generate-schedules", payload);
       const rawData = response.data?.schedules || response.data || [];
       const validData = Array.isArray(rawData) ? rawData : [];
       setGeneratedSchedules(validData);
       if (validData.length === 0) {
-        toast.info("No valid schedules found for selected courses.");
+        toast.info(response.data?.message || "No valid schedules found for selected courses.");
       } else {
         toast.success(`${validData.length} schedules generated!`);
       }
@@ -315,7 +321,7 @@ export default function useRegistration() {
     }
   };
 
-  const handleConfirmSchedule = async (schedule) => {
+  const handleConfirmSchedule = useCallback(async (schedule) => {
     if (!Array.isArray(schedule) || schedule.length === 0) return;
 
     let scheduleTotalHours = 0;
@@ -346,9 +352,13 @@ export default function useRegistration() {
     } finally {
       setIsActionLoading(false);
     }
-  };
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableCourses, registeredHours, maxHours]);
   return {
+    numberOfDays,
+    setNumberOfDays,
+    offDays,
+    setOffDays,
     isLoading,
     isActionLoading,
     availableCourses,

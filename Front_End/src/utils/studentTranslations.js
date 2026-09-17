@@ -12,7 +12,20 @@ export const APPOINTMENTS_TRANS = {
     left: "Left",
     lec: "LEC",
     lab: "LAB",
-    room: "Room:"
+    room: "Room:",
+    numberOfDaysLabel: "Number of days (optional)",
+    numberOfDaysHint: "Leave empty to see all possible schedules",
+    offDaysLabel: "Days you want off",
+    chooseOffDays: "Select days",
+    dayNames: {
+      saturday: "Saturday",
+      sunday: "Sunday",
+      monday: "Monday",
+      tuesday: "Tuesday",
+      wednesday: "Wednesday",
+      thursday: "Thursday",
+      friday: "Friday"
+    }
   },
   ar: {
     loading: "تحميل الملف الشخصي...",
@@ -27,7 +40,20 @@ export const APPOINTMENTS_TRANS = {
     left: "متبقي",
     lec: "محاضرة",
     lab: "معمل",
-    room: "قاعة:"
+    room: "قاعة:",
+    numberOfDaysLabel: "عدد الأيام (اختياري)",
+    numberOfDaysHint: "سيبها فاضية عشان تشوف كل الجداول الممكنة",
+    offDaysLabel: "الأيام اللي عايزها إجازة",
+    chooseOffDays: "اختر الأيام",
+    dayNames: {
+      saturday: "السبت",
+      sunday: "الأحد",
+      monday: "الإثنين",
+      tuesday: "الثلاثاء",
+      wednesday: "الأربعاء",
+      thursday: "الخميس",
+      friday: "الجمعة"
+    }
   }
 };
 

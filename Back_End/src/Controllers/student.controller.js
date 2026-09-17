@@ -10,7 +10,7 @@ const AcademicRecord = require('../models/AcademicRecord');
 const FinalResult = require('../models/FinalResult');
 const Complaint = require('../models/Complaint');
 const sendPushNotification = require('../utils/sendPushNotification');
-const { isTimeConflict } = require('../utils/Test_Conflict');
+const {isTimeConflict, timeToMinutes} = require('../utils/Test_Conflict');
 
 const registerAttendance = async (req, res) => {
     try {
@@ -707,9 +707,48 @@ const getFinalResults = async (req, res) => {
     }
 };
 
+const getAllAppointments = (schedule) =>
+    schedule.flatMap(course =>
+        course.details.map(d => ({ day: d.day, startTime: d.startTime, endTime: d.endTime }))
+    );
+
+const analyzeSchedule = (schedule) => {
+    const appointments = getAllAppointments(schedule);
+    const dayGroups = {};
+
+    appointments.forEach(app => {
+        if (!dayGroups[app.day]) dayGroups[app.day] = [];
+        dayGroups[app.day].push(app);
+    });
+
+    const usedDays = Object.keys(dayGroups);
+    let totalGapMinutes = 0;
+
+    for (const day of usedDays) {
+        const sorted = dayGroups[day]
+            .map(a => ({ start: timeToMinutes(a.startTime), end: timeToMinutes(a.endTime) }))
+            .sort((a, b) => a.start - b.start);
+
+        for (let i = 1; i < sorted.length; i++) {
+            totalGapMinutes += Math.max(0, sorted[i].start - sorted[i - 1].end);
+        }
+    }
+
+    return { usedDaysCount: usedDays.length, usedDays, totalGapMinutes };
+};
+
+const scheduleScore = (stats) => stats.usedDaysCount * 100 + stats.totalGapMinutes;
+
+const respectsOffDays = (schedule, offDays) => {
+    if (!offDays || offDays.length === 0) return true;
+    const normalizedOffDays = offDays.map(d => d.toLowerCase());
+    const appointments = getAllAppointments(schedule);
+    return !appointments.some(app => normalizedOffDays.includes(app.day.toLowerCase()));
+};
+
 const generateSchedules = async (req, res) => {
     try {
-        const { courseIds } = req.body;
+        const { courseIds, numberOfDays, offDays } = req.body;
 
         if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0) {
             return res.status(400).json({ message: 'Please provide an array of courseIds' });
@@ -800,10 +839,37 @@ const generateSchedules = async (req, res) => {
 
         backtrack(0, [], []);
 
+        let filteredSchedules = validSchedules;
+
+        if (Array.isArray(offDays) && offDays.length > 0) {
+            filteredSchedules = filteredSchedules.filter(schedule => respectsOffDays(schedule, offDays));
+        }
+
+        if (numberOfDays) {
+            const maxDays = Number(numberOfDays);
+            filteredSchedules = filteredSchedules.filter(schedule => {
+                const stats = analyzeSchedule(schedule);
+                return stats.usedDaysCount <= maxDays;
+            });
+        }
+
+        if (filteredSchedules.length === 0) {
+            return res.status(200).json({
+                message: 'No schedules match the given constraints',
+                totalValidSchedules: 0,
+                schedules: []
+            });
+        }
+
+        filteredSchedules = filteredSchedules
+            .map(schedule => ({ schedule, stats: analyzeSchedule(schedule) }))
+            .sort((a, b) => scheduleScore(a.stats) - scheduleScore(b.stats))
+            .map(s => s.schedule);
+
         res.status(200).json({
             message: 'Schedules generated successfully',
-            totalValidSchedules: validSchedules.length,
-            schedules: validSchedules
+            totalValidSchedules: filteredSchedules.length,
+            schedules: filteredSchedules
         });
 
     } catch (err) {
@@ -967,6 +1033,7 @@ const submitComplaint = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 const getMyComplaints = async (req, res) => {
     try {
         const student = req.user.id;
