@@ -825,7 +825,81 @@ const updateComplaintStatus = async (req, res) => {
   }
 };
 
+const scheduleImportService = require('../services/scheduleImport.services');
+
+const ALLOWED_JSON_MIMETYPES = [
+  'application/json',
+  'text/json',
+  'application/octet-stream',
+  'text/plain'
+];
+
+const importCourseSchedules = async (req, res) => {
+  try {
+    // same file-access pattern used by uploadStudentsExcel / uploadFinalGrades
+    const file = req.file || (req.files && req.files[0]);
+    if (!file) {
+      return res.status(400).json({ message: 'Please upload a JSON file' });
+    }
+
+    const originalName = String(file.originalname || '').toLowerCase();
+    const looksLikeJson =
+        originalName.endsWith('.json') || ALLOWED_JSON_MIMETYPES.includes(file.mimetype);
+
+    if (!looksLikeJson) {
+      return res.status(400).json({
+        message: 'Invalid file type. Only .json files are accepted'
+      });
+    }
+
+    const text = file.buffer.toString('utf8').replace(/^\uFEFF/, '').trim();
+    if (!text) {
+      return res.status(400).json({ message: 'The uploaded file is empty' });
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      return res.status(400).json({ message: `Invalid JSON file: ${err.message}` });
+    }
+
+    const extracted = scheduleImportService.extractRecords(parsed);
+    if (!extracted.ok) {
+      return res.status(400).json({ message: extracted.reason });
+    }
+
+    const records = extracted.records;
+    if (records.length === 0) {
+      return res.status(400).json({ message: 'The JSON file contains no records' });
+    }
+    if (records.length > scheduleImportService.MAX_RECORDS) {
+      return res.status(400).json({
+        message: `Too many records (${records.length}). Maximum allowed is ${scheduleImportService.MAX_RECORDS}`
+      });
+    }
+
+    const { summary, results } = await scheduleImportService.importCourseSchedules(records);
+
+    return res.status(200).json({
+      message: 'Course schedules imported successfully',
+      summary,
+      results
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+
+
+
+
+
 module.exports = {
+  importCourseSchedules,
   addStudent,
   deleteStudent,
   getStudent,

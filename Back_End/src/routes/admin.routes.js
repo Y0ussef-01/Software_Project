@@ -30,6 +30,8 @@ router.delete('/delete-group/:id', adminAuth, courseController.deleteGroup);
 router.get   ('/courses',         adminAuth, courseController.getAllCourses);
 router.get   ('/course/:id',      adminAuth, courseController.getCourseById);
 
+router.post('/import-course-schedules', adminAuth, upload.any(), adminController.importCourseSchedules);
+
 router.post  ('/assign-student-course', adminAuth, adminController.assignStudentCourse);
 router.delete('/drop-student-course',   adminAuth, adminController.dropStudentCourse);
 router.post  ('/assign-teacher-course', adminAuth, adminController.assignTeacherCourse);

@@ -1,3 +1,11 @@
+// =========================================
+// File: ./Front_End/src/hooks/Admin/ClassManagement/useClassManagement.js
+// MODIFIED — one addition only: `refreshCourses` added to the return value
+// (an alias for the existing `fetchCourses`, so ScheduleJsonImporter can
+// refresh the list after a successful import). Nothing else in this file
+// changed — convertTo12Hour, addCourse, deleteCourse, addGroup, deleteGroup
+// are all untouched, copied verbatim.
+// =========================================
 import { useState, useEffect } from "react";
 import axiosInstance from "../../../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -138,5 +146,6 @@ export default function useClassManagement() {
     deleteCourse,
     addGroup,
     deleteGroup,
+    refreshCourses: fetchCourses, // NEW — lets ScheduleJsonImporter refresh the list after import
   };
 }
